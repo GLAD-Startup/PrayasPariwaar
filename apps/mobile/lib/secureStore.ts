@@ -79,3 +79,7 @@ export async function getStoredUser(): Promise<any | null> {
     return null;
   }
 }
+
+export async function getAuthUser(): Promise<any | null> {
+  return getStoredUser();
+}

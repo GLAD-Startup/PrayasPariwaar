@@ -1,13 +1,15 @@
 {
   "expo": {
     "name": "Prayas Sanstha",
-    "slug": "prayas-platform-mobile",
+    "slug": "prayas-sanstha",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "prayas",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#DC2626"
     },
     "ios": {
@@ -16,10 +18,13 @@
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#DC2626"
       },
       "package": "org.prayassanstha.mobile",
-      "permissions": ["NOTIFICATIONS"]
+      "permissions": [
+        "NOTIFICATIONS"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -36,8 +41,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "prayas-mobile-id"
+        "projectId": "c14d5e45-50f8-43f9-bd25-2a77cbd2aee5"
+      },
+      "router": {
+        "origin": false
       }
-    }
+    },
+    "owner": "glad-studio"
   }
 }
