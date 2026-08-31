@@ -1,236 +1,224 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Heart, Award, CheckCircle2, Send, AlertTriangle } from "lucide-react";
+import { Users, CheckCircle2, Heart, Trees, BookOpen, Stethoscope, Droplet } from "lucide-react";
 
 export default function VolunteerPage() {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    skills: "Logistics & Coordination",
-    availability: "Weekends & On-Call Emergency",
-    areaOfInterest: "Blood Donation Drives",
+    skills: "",
+    availability: "WEEKENDS",
+    areaOfInterest: "Child Education & Evening Tutoring",
     previousExperience: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
+    setSubmitting(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/volunteers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(form),
       });
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to register volunteer");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccess(true);
+      } else {
+        setError(data.error || "Failed to submit volunteer application. Please check all fields.");
       }
-
-      setSuccess(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to submit registration.");
+    } catch (err) {
+      setError("Network error. Please call our office directly at +91 94122 79000.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-      {/* Banner */}
-      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-red-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-            <Users className="w-3.5 h-3.5" />
-            Join the Prayas Seva Taskforce
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-display leading-tight">
-            Be the First Responder in Someone's Time of Need
-          </h1>
-          <p className="text-amber-100 text-sm sm:text-base leading-relaxed">
-            Join over 3,200 active volunteers across Rajasthan and beyond. Whether you have 2 hours a week or are ready for emergency on-call coordination, your time saves lives.
+    <div className="space-y-12 pb-20 max-w-4xl mx-auto px-4 sm:px-6 pt-10">
+      {/* Page Header */}
+      <div className="border-b border-prayas-rule pb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-bold text-prayas-neem">
+          <Users className="w-3.5 h-3.5" />
+          <span>Nishkam Seva • Community Volunteer Program</span>
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+          Volunteer With Prayas Pariwaar in Vrindavan
+        </h1>
+        <p className="text-sm text-prayas-muted leading-relaxed max-w-2xl">
+          Whether you are a student, teacher, doctor, professional, or local resident, your contribution of a few hours each week can transform lives across Mathura district.
+        </p>
+      </div>
+
+      {/* Program Roles Overview Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-2">
+          <BookOpen className="w-5 h-5 text-prayas-neem" />
+          <h3 className="font-serif text-sm font-bold text-prayas-ink">Weekend Teaching & Mentoring</h3>
+          <p className="text-xs text-prayas-muted leading-relaxed">
+            Teach basic mathematics, English, and sciences to underprivileged village children.
+          </p>
+        </div>
+
+        <div className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-2">
+          <Droplet className="w-5 h-5 text-prayas-crimson" />
+          <h3 className="font-serif text-sm font-bold text-prayas-ink">Blood Donation Dispatch</h3>
+          <p className="text-xs text-prayas-muted leading-relaxed">
+            Help coordinate emergency hospital requests and connect with registered donors.
+          </p>
+        </div>
+
+        <div className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-2">
+          <Trees className="w-5 h-5 text-prayas-marigold" />
+          <h3 className="font-serif text-sm font-bold text-prayas-ink">Plantation & Ecology Drives</h3>
+          <p className="text-xs text-prayas-muted leading-relaxed">
+            Participate in seasonal Sunday tree planting drives along the Vrindavan Parikrama Marg.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left Form */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 font-display">
-              Volunteer Registration
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Fill in your details below. Our team coordinator will connect with you on WhatsApp / Phone.
+      {/* Application Form */}
+      <div className="border border-prayas-rule bg-white rounded p-6 sm:p-8 shadow-card space-y-6">
+        <div className="border-b border-prayas-rule pb-3">
+          <h2 className="font-serif text-xl font-bold text-prayas-ink">
+            Volunteer Application Form
+          </h2>
+          <p className="text-xs text-prayas-muted">
+            Our volunteer coordinator will review your profile and connect via phone or WhatsApp.
+          </p>
+        </div>
+
+        {success ? (
+          <div className="p-8 rounded border border-green-200 bg-green-50 text-center space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-prayas-neem mx-auto" />
+            <h3 className="font-serif text-xl font-bold text-green-900">
+              Application Submitted Successfully
+            </h3>
+            <p className="text-xs text-green-800 max-w-md mx-auto leading-relaxed">
+              Thank you for dedicating your time to the service of Vrindavan. Shri Radhey Mohan from our volunteer coordination desk will contact you within 24 hours.
             </p>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            {error && (
+              <div className="p-3.5 rounded border border-red-200 bg-red-50 text-red-800">
+                {error}
+              </div>
+            )}
 
-          {success ? (
-            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-3 text-center">
-              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-              <h3 className="text-xl font-bold">Welcome to the Prayas Family!</h3>
-              <p className="text-xs text-emerald-700 max-w-md mx-auto">
-                Your volunteer application has been received. You will receive an orientation kit and invitation to the volunteer dispatch group shortly.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {errorMessage && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-xs flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Your name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phone / WhatsApp Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="10-digit mobile number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramesh Chandra Sharma"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Email Address *
-                </label>
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Email Address *</label>
                 <input
                   type="email"
                   required
-                  placeholder="your.email@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
+                  placeholder="e.g. ramesh@example.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Skills / Profession *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Medical / Nurse, Driver, IT / Social Media"
-                    value={formData.skills}
-                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Availability *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Weekends, 4 hrs/week, Emergency On-Call"
-                    value={formData.availability}
-                    onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Area of Interest *
-                </label>
-                <select
-                  value={formData.areaOfInterest}
-                  onChange={(e) => setFormData({ ...formData, areaOfInterest: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm bg-white outline-none"
-                >
-                  <option value="Blood Donation Drives">Emergency Blood Donation Drives & Donor Matching</option>
-                  <option value="Medical Equipment Maintenance & Logistics">Medical Equipment Maintenance & Logistics</option>
-                  <option value="Disaster Relief Operations">Disaster & Floods Relief Operations</option>
-                  <option value="Community Healthcare Camps">Community Healthcare Camps</option>
-                  <option value="Digital Media & Helpline Support">Digital Media & Helpline Operations</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Previous Experience / Motivation (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Share a short note on why you'd like to join Prayas"
-                  value={formData.previousExperience}
-                  onChange={(e) => setFormData({ ...formData, previousExperience: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 text-sm outline-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {loading ? "Submitting Application..." : (
-                  <>
-                    <Send className="w-4 h-4" /> Submit Volunteer Application
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* Right Perks & Badges */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-4">
-            <h3 className="text-lg font-bold font-display flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-400" />
-              What You Gain as a Prayas Volunteer
-            </h3>
-            <div className="space-y-3 text-xs text-slate-300">
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span><strong>Official Certificate of Service:</strong> Recognized service hours documentation for students & professionals.</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span><strong>First Responder Training:</strong> Free certified workshops on basic life support (BLS), CPR, and equipment handling.</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span><strong>Direct Impact:</strong> Witness lives saved in real-time through your coordination.</span>
               </div>
             </div>
-          </div>
-        </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">WhatsApp / Mobile Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. +91 98971 23456"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Your Availability *</label>
+                <select
+                  value={form.availability}
+                  onChange={(e) => setForm({ ...form, availability: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                >
+                  <option value="WEEKENDS">Weekends Only (Saturday & Sunday)</option>
+                  <option value="WEEKDAYS_EVENING">Weekday Evenings (5 PM - 8 PM)</option>
+                  <option value="FULL_TIME">Full Time (Daily Active Seva)</option>
+                  <option value="ON_CALL_EMERGENCY">On-Call Emergency Response (Blood/Medical)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink">Primary Area of Interest *</label>
+              <select
+                value={form.areaOfInterest}
+                onChange={(e) => setForm({ ...form, areaOfInterest: e.target.value })}
+                className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+              >
+                <option value="Child Education & Evening Tutoring">Child Education & Evening Tutoring</option>
+                <option value="Emergency Blood Donation Coordination">Emergency Blood Donation Coordination</option>
+                <option value="Medical Equipment Delivery & Maintenance">Medical Equipment Delivery & Maintenance</option>
+                <option value="Native Tree Plantation & Caretaking">Native Tree Plantation & Caretaking</option>
+                <option value="Health Camp Logistics & Doctor Assistance">Health Camp Logistics & Doctor Assistance</option>
+                <option value="Digital Media, Photography & Content">Digital Media, Photography & Content</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink">Key Skills / Profession *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. High school mathematics teacher / BSc nursing student / Graphic designer"
+                value={form.skills}
+                onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink">Previous Social Work or Community Experience (Optional)</label>
+              <textarea
+                rows={3}
+                placeholder="Briefly describe any prior volunteering or seva work you have done..."
+                value={form.previousExperience}
+                onChange={(e) => setForm({ ...form, previousExperience: e.target.value })}
+                className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-3 rounded text-sm font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle disabled:opacity-50"
+              >
+                {submitting ? "Submitting Application..." : "Submit Volunteer Application"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

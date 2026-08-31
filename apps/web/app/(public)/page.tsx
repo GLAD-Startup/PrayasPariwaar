@@ -1,151 +1,196 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 import {
-  Droplet,
-  Activity,
+  GraduationCap,
   Heart,
-  Users,
+  BookOpen,
+  Trees,
+  Stethoscope,
+  Droplet,
   ShieldCheck,
-  PhoneCall,
-  Clock,
   CheckCircle2,
+  Calendar,
+  MapPin,
   ArrowRight,
+  Quote,
   Sparkles,
-  Award,
-  Flame,
+  Users,
 } from "lucide-react";
 
-export default function HomePage() {
+export const revalidate = 60;
+
+export default async function HomePage() {
+  const siteStats = await prisma.siteStat.findMany({ orderBy: { order: "asc" } });
+  const recentEvents = await prisma.post.findMany({
+    where: { published: true },
+    include: { images: { orderBy: { order: "asc" } } },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+  const activeProjects = await prisma.project.findMany({
+    where: { status: "ACTIVE" },
+    include: { images: true },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+  });
+  const testimonials = await prisma.testimonial.findMany({
+    where: { published: true },
+    orderBy: { order: "asc" },
+    take: 3,
+  });
+
+  // Find Aashayein project specifically
+  const aashayeinProject = activeProjects.find((p: any) => p.slug === "aashayein-education") || activeProjects[0];
+  const percentAashayein = aashayeinProject && aashayeinProject.goalAmount > 0
+    ? Math.min(Math.round((aashayeinProject.raisedAmount / aashayeinProject.goalAmount) * 100), 100)
+    : 62;
+
   return (
-    <div className="space-y-20 pb-20">
-      {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-red-50/60 via-white to-slate-50 pt-12 pb-20 lg:pt-20 lg:pb-28">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Content */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-100/80 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold tracking-wide shadow-sm">
-                <span className="flex h-2 w-2 rounded-full bg-red-600 animate-ping" />
-                24/7 Rapid Emergency Response Network
+    <div className="space-y-16 lg:space-y-24 pb-20">
+      {/* 1. HERO SECTION: Full Background Image with Project Aashayein Focus */}
+      <section className="relative overflow-hidden border-b border-prayas-rule pt-16 pb-20 lg:pt-20 lg:pb-24">
+        {/* Full Background Photographic Image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/hero-education-vrindavan.jpg"
+          alt="Village children studying outdoors in Vrindavan - Project Aashayein"
+          className="absolute inset-0 w-full h-full object-cover object-center z-0"
+        />
+        {/* Balanced Dark Cinematic Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/45 z-0" />
+        <div className="absolute inset-0 bg-black/20 z-0" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            {/* Left Narrative: Project Aashayein Mission */}
+            <div className="lg:col-span-7 space-y-6 text-left text-white">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-xs font-bold text-emerald-300 backdrop-blur-md shadow-md">
+                <GraduationCap className="w-4 h-4 text-emerald-400" />
+                <span>Project Aashayein • Educating Rural Children in Vrindavan Since 2006</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-display text-slate-900 tracking-tight leading-[1.15]">
-                When Every Second Counts,{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-rose-600 to-red-700">
-                  Prayas Saves Lives.
-                </span>
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.2] drop-shadow-md">
+                Every child in rural Vrindavan deserves books, devoted teachers, and the dignity to learn.
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Bridging the gap between emergency blood donors, critical medical equipment loans, and patients in need across India. Zero fee, zero delay, pure community action.
+              <p className="text-base sm:text-lg text-slate-100 leading-relaxed max-w-2xl font-light drop-shadow">
+                Through <strong>Project Aashayein</strong>, Prayas Pariwaar provides free schooling, daily evening remedial centers, textbooks, uniforms, and nutritious meals to over 1,200 children from marginalized and daily-wage families across Mathura district.
               </p>
 
-              {/* Call to Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              {/* Direct Educational Actions */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                <Link
+                  href="/donate?project=aashayein-education"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-lg hover:shadow-emerald-950/50 hover:scale-[1.02]"
+                >
+                  <Heart className="w-4 h-4 fill-current text-rose-300" />
+                  Sponsor a Child's Education (₹500/mo)
+                </Link>
+
+                <Link
+                  href="/projects/aashayein-education"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded text-sm font-semibold bg-white/15 text-white border border-white/30 hover:bg-white/25 transition-all backdrop-blur-md shadow-subtle"
+                >
+                  <BookOpen className="w-4 h-4 text-emerald-300" />
+                  Explore Project Aashayein
+                </Link>
+              </div>
+
+              {/* Secondary Community Seva Callout */}
+              <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-200 border-t border-white/20">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  100% Tax-Exempt under Section 80G
+                </span>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  Zero Admin Cut from Public Donations
+                </span>
                 <Link
                   href="/blood-donation"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl text-base font-bold text-white bg-red-600 hover:bg-red-700 shadow-xl shadow-red-600/25 hover:shadow-red-600/40 transition-all hover:-translate-y-0.5"
+                  className="flex items-center gap-1 font-semibold text-rose-300 hover:text-rose-200 underline decoration-rose-400/50"
                 >
-                  <Droplet className="w-5 h-5 fill-current" />
-                  Request Emergency Blood
+                  <Droplet className="w-3.5 h-3.5 fill-current text-rose-400" />
+                  24/7 Blood & Medical Equipment Desk →
                 </Link>
-
-                <Link
-                  href="/medical-equipment"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition-all hover:-translate-y-0.5"
-                >
-                  <Activity className="w-5 h-5 text-emerald-600" />
-                  Medical Equipment Bank
-                </Link>
-
-                <Link
-                  href="/donate"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-sm transition-all"
-                >
-                  <Heart className="w-5 h-5 fill-current" />
-                  Donate (80G)
-                </Link>
-              </div>
-
-              {/* Trust Badges */}
-              <div className="pt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-slate-500 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>100% Free Service</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Verified Donors Only</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Avg Response &lt; 15 Mins</span>
-                </div>
               </div>
             </div>
 
-            {/* Right Card / Live Urgent Request Showcase */}
+            {/* Right Column: Live Student Sponsorship & Impact Card */}
             <div className="lg:col-span-5">
-              <div className="relative mx-auto max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-red-100">
-                {/* Floating Urgent Badge */}
-                <div className="absolute -top-3.5 right-6 bg-red-600 text-white text-xs font-extrabold uppercase px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
-                  Active Emergency Alert
+              <div className="border border-prayas-rule bg-white rounded-xl p-6 sm:p-7 shadow-2xl space-y-5 text-prayas-ink">
+                <div className="flex items-center justify-between border-b border-prayas-rule pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-prayas-neem animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
+                      Project Aashayein Student Desk
+                    </span>
+                  </div>
+                  <span className="text-xs text-prayas-muted font-mono">Academic Year 2026</span>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-red-600 uppercase tracking-wider">
-                        CRITICAL MATCHING
-                      </span>
-                      <h3 className="text-xl font-bold text-slate-900 mt-0.5">
-                        B+ Blood Required
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        SMS Hospital, ICU Ward 4 • Jaipur
-                      </p>
-                    </div>
-                    <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex flex-col items-center justify-center text-red-600 font-display font-extrabold">
-                      <span className="text-lg leading-none">B+</span>
-                      <span className="text-[10px] font-medium uppercase text-red-500">2 Units</span>
-                    </div>
+                {/* Impact Snapshot */}
+                <div className="p-4 rounded-lg bg-prayas-paper border border-prayas-rule space-y-3 text-prayas-ink">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs font-bold text-prayas-ink">Students in Evening Learning Centers</span>
+                    <span className="font-serif text-2xl font-bold text-prayas-neem">320 Children</span>
                   </div>
-
-                  <div className="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs text-slate-600 border border-slate-200">
-                    <div className="flex justify-between">
-                      <span>Patient:</span>
-                      <strong className="text-slate-800">Radha Sharma (Age 42)</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Urgency:</span>
-                      <span className="text-red-600 font-bold">Immediate (Within 2 Hours)</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Status:</span>
-                      <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
-                        <Clock className="w-3 h-3" /> Matching Donors Nearby
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-baseline text-xs text-prayas-muted">
+                    <span>Awaiting Educational Sponsors:</span>
+                    <span className="font-bold text-amber-800">85 Students in Village Centers</span>
                   </div>
+                  <div className="w-full h-2 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
+                    <div
+                      className="h-full bg-prayas-neem rounded-full"
+                      style={{ width: `${percentAashayein}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-prayas-muted leading-relaxed">
+                    ₹{aashayeinProject.raisedAmount.toLocaleString("en-IN")} raised of ₹{aashayeinProject.goalAmount.toLocaleString("en-IN")} goal for books, school bags, and teacher honorariums.
+                  </p>
+                </div>
 
-                  <div className="pt-2 flex gap-3">
+                {/* 3 Clear Sponsorship Tiers */}
+                <div className="space-y-2 text-xs">
+                  <span className="font-bold text-prayas-ink block">Transparent Sponsorship Options:</span>
+                  <div className="grid grid-cols-3 gap-2 text-center">
                     <Link
-                      href="/blood-donation"
-                      className="flex-1 text-center py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-md"
+                      href="/donate?project=aashayein-education&amount=500"
+                      className="p-2.5 rounded-lg border border-prayas-rule bg-prayas-stone hover:bg-green-50 hover:border-prayas-neem transition-colors block text-prayas-ink"
                     >
-                      Respond as Donor
+                      <strong className="block font-serif text-sm font-bold text-prayas-ink">₹500/mo</strong>
+                      <span className="text-[10px] text-prayas-muted block">Books & Tuition</span>
                     </Link>
-                    <a
-                      href="tel:+919876543210"
-                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg flex items-center justify-center gap-1 transition-colors"
+                    <Link
+                      href="/donate?project=aashayein-education&amount=1100"
+                      className="p-2.5 rounded-lg border border-prayas-neem bg-green-50/80 hover:bg-green-100 transition-colors block ring-1 ring-prayas-neem/40 text-prayas-ink"
                     >
-                      <PhoneCall className="w-3.5 h-3.5" /> Call Desk
-                    </a>
+                      <strong className="block font-serif text-sm font-bold text-prayas-neem">₹1,100/mo</strong>
+                      <span className="text-[10px] text-green-900 font-semibold block">Full Care & Meals</span>
+                    </Link>
+                    <Link
+                      href="/donate?project=aashayein-education&amount=6000"
+                      className="p-2.5 rounded-lg border border-prayas-rule bg-prayas-stone hover:bg-green-50 hover:border-prayas-neem transition-colors block text-prayas-ink"
+                    >
+                      <strong className="block font-serif text-sm font-bold text-prayas-ink">₹6,000/yr</strong>
+                      <span className="text-[10px] text-prayas-muted block">Annual Schooling</span>
+                    </Link>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 text-[11px] text-center text-slate-400">
-                  ⚡ Over 18 volunteers notified in real-time via Expo Push
+                <div className="pt-2">
+                  <Link
+                    href="/donate?project=aashayein-education"
+                    className="w-full py-3.5 px-4 rounded-lg text-center font-bold text-sm bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md flex items-center justify-center gap-2"
+                    style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                  >
+                    <Heart className="w-4 h-4 fill-white text-white shrink-0" />
+                    <span className="font-bold text-white text-sm">Sponsor a Student Today (80G) →</span>
+                  </Link>
+                </div>
+
+                <div className="border-t border-prayas-rule pt-2 text-[11px] text-prayas-muted text-center">
+                  Donors receive quarterly student progress report cards and handwritten letters.
                 </div>
               </div>
             </div>
@@ -153,147 +198,324 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. IMPACT NUMBERS COUNTER */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 rounded-3xl p-8 sm:p-12 shadow-xl text-white">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800">
-            <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-5xl font-extrabold font-display text-red-500">
-                14,800+
-              </p>
-              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
-                Blood Units Arranged
+      {/* 2. COMMUNITY AUDIT LEDGER (Education First) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border border-prayas-rule bg-white rounded p-6 shadow-card">
+          <div className="border-b border-prayas-rule pb-3 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-lg font-bold text-prayas-ink">18 Years of Verified Community Impact</h2>
+              <p className="text-xs text-prayas-muted">Direct cumulative metrics verified by Prayas Pariwaar in Mathura district.</p>
+            </div>
+            <span className="text-xs font-mono text-prayas-muted">Vrindavan, UP</span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {siteStats.map((stat: any) => (
+              <div key={stat.id} className="space-y-1">
+                <p className="font-serif text-3xl font-bold text-prayas-ink">
+                  {stat.value}{stat.label.includes("Year") ? "" : "+"}
+                </p>
+                <p className="text-xs font-medium text-prayas-muted leading-snug">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. PROJECT AASHAYEIN: THE 3-PILLAR EDUCATION MODEL */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border-b border-prayas-rule pb-4 mb-8">
+          <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
+            How Project Aashayein Works
+          </span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink mt-1">
+            A Sustainable Model to Keep Rural Children in School
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-3">
+            <div className="w-10 h-10 rounded bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem font-bold">
+              1
+            </div>
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              Daily Evening Village Study Centers
+            </h3>
+            <p className="text-xs text-prayas-muted leading-relaxed">
+              Children from slum areas and rural villages attend 2-hour daily study sessions guided by dedicated volunteer teachers to bridge learning gaps.
+            </p>
+          </div>
+
+          <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-3">
+            <div className="w-10 h-10 rounded bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem font-bold">
+              2
+            </div>
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              100% Free School Supplies & Uniforms
+            </h3>
+            <p className="text-xs text-prayas-muted leading-relaxed">
+              Every sponsored child receives notebooks, geometry boxes, winter sweaters, school bags, and shoes before the academic session starts.
+            </p>
+          </div>
+
+          <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-3">
+            <div className="w-10 h-10 rounded bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem font-bold">
+              3
+            </div>
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              Nutritional Support & Health Tracking
+            </h3>
+            <p className="text-xs text-prayas-muted leading-relaxed">
+              Daily nutritious snacks, seasonal fruits, and regular pediatric dental and eye checkups ensure children stay healthy and focused in school.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. OUR OTHER COMMUNITY SEVA (Secondary Pillars: Blood, Medical Equipment, Plantation, Health) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border-b border-prayas-rule pb-4 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-prayas-muted">
+              Secondary Community Initiatives
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink mt-1">
+              Healthcare, Emergency Blood & Environmental Seva
+            </h2>
+          </div>
+          <Link
+            href="/projects"
+            className="text-xs font-semibold text-prayas-neem hover:underline self-start sm:self-auto"
+          >
+            View all 4 community pillars →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Secondary Card 1: Blood Donation */}
+          <div className="border border-prayas-rule bg-white rounded p-5 shadow-card space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded bg-red-50 border border-prayas-crimsonBorder flex items-center justify-center text-prayas-crimson">
+                <Droplet className="w-4 h-4 fill-current" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-prayas-ink">
+                24/7 Blood Donation Desk
+              </h3>
+              <p className="text-xs text-prayas-muted leading-relaxed">
+                Over 420 emergency units coordinated for trauma & Thalassemia patients across Mathura district hospitals.
               </p>
             </div>
-            <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-5xl font-extrabold font-display text-emerald-400">
-                3,450+
-              </p>
-              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
-                Medical Equipment Loans
+            <div className="pt-2 border-t border-prayas-rule">
+              <Link href="/blood-donation" className="text-xs font-bold text-prayas-crimson hover:underline">
+                View Blood Registry →
+              </Link>
+            </div>
+          </div>
+
+          {/* Secondary Card 2: Medical Equipment Bank */}
+          <div className="border border-prayas-rule bg-white rounded p-5 shadow-card space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem">
+                <Stethoscope className="w-4 h-4" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-prayas-ink">
+                Medical Equipment Bank
+              </h3>
+              <p className="text-xs text-prayas-muted leading-relaxed">
+                Free temporary home loans of 10L oxygen concentrators, hospital beds, and wheelchairs for recovering patients.
               </p>
             </div>
-            <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-5xl font-extrabold font-display text-amber-400">
-                3,200+
-              </p>
-              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
-                Active Volunteers
+            <div className="pt-2 border-t border-prayas-rule">
+              <Link href="/medical-equipment" className="text-xs font-bold text-prayas-neem hover:underline">
+                Borrow Equipment →
+              </Link>
+            </div>
+          </div>
+
+          {/* Secondary Card 3: Tree Plantation */}
+          <div className="border border-prayas-rule bg-white rounded p-5 shadow-card space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded bg-green-50 border border-green-200 flex items-center justify-center text-green-700">
+                <Trees className="w-4 h-4" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-prayas-ink">
+                Vrindavan Harit Kranti
+              </h3>
+              <p className="text-xs text-prayas-muted leading-relaxed">
+                5,400+ native Neem, Peepal, and Pilu saplings planted with tree-guards along Parikrama Marg.
               </p>
             </div>
-            <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-5xl font-extrabold font-display text-sky-400">
-                100%
+            <div className="pt-2 border-t border-prayas-rule">
+              <Link href="/projects/vrindavan-harit-kranti" className="text-xs font-bold text-prayas-neem hover:underline">
+                Plantation Drives →
+              </Link>
+            </div>
+          </div>
+
+          {/* Secondary Card 4: Health Camps */}
+          <div className="border border-prayas-rule bg-white rounded p-5 shadow-card space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                <Users className="w-4 h-4" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-prayas-ink">
+                Jan Swasthya Camps
+              </h3>
+              <p className="text-xs text-prayas-muted leading-relaxed">
+                Monthly free health checkups, geriatric eye screening for cataract surgery, and free medicines.
               </p>
-              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-medium">
-                Free & Transparent
-              </p>
+            </div>
+            <div className="pt-2 border-t border-prayas-rule">
+              <Link href="/projects/jan-swasthya-raksha" className="text-xs font-bold text-prayas-neem hover:underline">
+                View Health Seva →
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. FOUR CORE PILLARS OF ACTION */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-red-600 uppercase tracking-widest">
-            OUR HUMANITARIAN SERVICES
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-display">
-            How Prayas Sanstha Serves the Community
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600">
-            We provide structured, rapid-response humanitarian infrastructure to ensure no patient suffers due to lack of blood or critical equipment.
-          </p>
+      {/* 5. RECENT EDUCATIONAL ACTIVITY & FIELD DISPATCHES */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border-b border-prayas-rule pb-4 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
+              Field Dispatches & Student Activity
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink mt-1">
+              Classroom Moments, Field Reports & Events
+            </h2>
+          </div>
+          <Link
+            href="/blog"
+            className="text-xs font-semibold text-prayas-neem hover:underline self-start sm:self-auto"
+          >
+            View all field dispatches →
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Pillar 1: Blood Donation Network */}
-          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
-              <Droplet className="w-7 h-7 fill-current" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">
-              24/7 Emergency Blood Coordination
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Real-time matching system notifying verified donors within minutes of an emergency blood or platelet request via instant push and SMS.
-            </p>
-            <Link
-              href="/blood-donation"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {recentEvents.map((post: any) => (
+            <article
+              key={post.id}
+              className="border border-prayas-rule bg-white rounded overflow-hidden shadow-card flex flex-col justify-between"
             >
-              Explore Blood Portal <ArrowRight className="w-4 h-4" />
-            </Link>
+              {post.coverImage && (
+                <div className="aspect-[16/10] bg-prayas-stone overflow-hidden border-b border-prayas-rule">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <div className="p-5 flex flex-col flex-grow space-y-3">
+                <div className="flex items-center gap-3 text-xs text-prayas-muted">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(post.eventDate || post.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                  {post.location && (
+                    <span className="flex items-center gap-1 truncate">
+                      <MapPin className="w-3.5 h-3.5 text-prayas-muted" />
+                      {post.location}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="font-serif text-lg font-bold text-prayas-ink leading-snug hover:text-prayas-neem transition-colors">
+                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                </h3>
+
+                <p className="text-xs text-prayas-muted leading-relaxed line-clamp-3 flex-grow">
+                  {post.excerpt || post.content.substring(0, 140) + "..."}
+                </p>
+
+                <div className="pt-2 border-t border-prayas-rule flex items-center justify-between text-xs">
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="font-semibold text-prayas-neem hover:underline"
+                  >
+                    Read full report
+                  </Link>
+                  {post.images && post.images.length > 0 && (
+                    <span className="text-[11px] text-prayas-muted">
+                      📷 {post.images.length} photos
+                    </span>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* 6. TESTIMONIALS FROM VILLAGE FAMILIES & TEACHERS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border border-prayas-rule bg-white rounded p-8 sm:p-10 shadow-card space-y-8">
+          <div className="border-b border-prayas-rule pb-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
+              Voices of Transformation
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink mt-1">
+              Words from Village Parents, Teachers & Beneficiaries
+            </h2>
           </div>
 
-          {/* Pillar 2: Medical Equipment Bank */}
-          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <Activity className="w-7 h-7" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">
-              Medical Equipment Bank
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Free leasing of high-cost life-support equipment including Oxygen Concentrators, BiPAP/CPAP machines, Hospital Beds, and Wheelchairs for home care.
-            </p>
-            <Link
-              href="/medical-equipment"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700"
-            >
-              Request Equipment <ArrowRight className="w-4 h-4" />
-            </Link>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((item: any) => (
+              <div key={item.id} className="space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <Quote className="w-6 h-6 text-prayas-marigold" />
+                  <p className="text-xs text-prayas-ink leading-relaxed italic">
+                    "{item.quote}"
+                  </p>
+                </div>
+                <div className="border-t border-prayas-rule pt-3">
+                  <strong className="block text-xs font-bold text-prayas-ink">
+                    {item.authorName}
+                  </strong>
+                  {item.designation && (
+                    <span className="text-[11px] text-prayas-muted block">
+                      {item.designation}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
 
-          {/* Pillar 3: Volunteer Mobilization */}
-          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
-              <Users className="w-7 h-7" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">
-              Volunteer Taskforce
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Youth and community members trained in first response, hospital coordination, blood donation camps, and disaster relief aid delivery.
-            </p>
+      {/* 7. CALL TO ACTION BANNER (Sponsor a Student / Volunteer) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border border-prayas-rule bg-prayas-stone rounded p-8 sm:p-12 text-center space-y-6 shadow-card">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink max-w-2xl mx-auto leading-tight">
+            For just ₹500 a month, you can ensure a child in Vrindavan does not drop out of school.
+          </h2>
+          <p className="text-sm text-prayas-muted max-w-xl mx-auto leading-relaxed">
+            All educational sponsorships are 100% tax-deductible under Section 80G. You will receive direct progress cards and handwritten letters from the student you sponsor.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link
+              href="/donate?project=aashayein-education"
+              className="px-6 py-3.5 rounded text-sm font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle"
+            >
+              Sponsor a Student (80G)
+            </Link>
             <Link
               href="/volunteer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700"
+              className="px-6 py-3.5 rounded text-sm font-semibold border border-prayas-rule bg-white text-prayas-ink hover:bg-prayas-subtle transition-colors shadow-subtle"
             >
-              Join the Team <ArrowRight className="w-4 h-4" />
+              Volunteer as a Weekend Teacher
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. CALL TO ACTION FOR DONATION (80G) */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-red-600 via-rose-600 to-red-700 rounded-3xl p-8 sm:p-14 text-white shadow-2xl relative overflow-hidden">
-          <div className="max-w-2xl space-y-5 relative z-10">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-              Support Life-Saving Operations
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold font-display leading-tight">
-              Your Contribution Funds Oxygen & Emergency Transfusions
-            </h2>
-            <p className="text-red-100 text-sm sm:text-base leading-relaxed">
-              All donations made to Prayas Sanstha are 50% tax-exempt under Section 80G of the Indian Income Tax Act. Instant 80G certificates are issued for every donation.
-            </p>
-            <div className="pt-2 flex flex-wrap gap-4">
-              <Link
-                href="/donate"
-                className="px-7 py-3.5 bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl shadow-lg transition-all text-sm"
-              >
-                Make a Tax-Deductible Donation
-              </Link>
-              <Link
-                href="/about"
-                className="px-6 py-3.5 bg-red-800/60 hover:bg-red-800/90 text-white font-bold rounded-xl border border-red-400/30 transition-all text-sm"
-              >
-                Read Transparency Report
-              </Link>
-            </div>
           </div>
         </div>
       </section>

@@ -7,7 +7,7 @@ export interface AuthUserPayload {
   userId: string;
   email: string;
   name: string;
-  role: "ADMIN" | "VOLUNTEER" | "DONOR";
+  role: "ADMIN" | "EDITOR" | "VOLUNTEER" | "DONOR" | "USER";
   bloodGroup?: string | null;
 }
 

@@ -11,23 +11,31 @@ const config: Config = {
     extend: {
       colors: {
         prayas: {
-          crimson: "#DC2626",
-          darkred: "#991B1B",
-          lightred: "#FEE2E2",
-          emerald: "#059669",
-          navy: "#0F172A",
-          slate: "#1E293B",
-          amber: "#D97706",
-          accent: "#EF4444",
+          paper: "#F7F5F0",       // Primary surface / Vrindavan sandstone
+          stone: "#EFECE6",       // Subtle container / card surface
+          subtle: "#E7E2D8",      // Hover background
+          rule: "#E2DDD5",        // Border / ledger divider rule
+          ink: "#1C2421",         // Primary typography (high-contrast deep slate)
+          muted: "#596560",       // Secondary text / metadata
+          crimson: "#B91C1C",     // Clinical emergency blood red
+          crimsonBg: "#FEF2F2",   // Blood alert background
+          crimsonBorder: "#FECACA",
+          neem: "#2E5339",        // Environmental foliage / neem green
+          neemBg: "#F0FDF4",      // Green badge background
+          neemBorder: "#BBF7D0",
+          marigold: "#C87D20",    // Traditional seva ochre / recognition
+          marigoldBg: "#FFFBEB",  // Ochre badge background
+          marigoldBorder: "#FDE68A",
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Outfit", "Inter", "system-ui", "sans-serif"],
+        serif: ["Lora", "Georgia", "serif"],
+        sans: ["'Source Sans 3'", "'Source Sans Pro'", "system-ui", "sans-serif"],
+        display: ["Lora", "Georgia", "serif"],
       },
       boxShadow: {
-        glow: "0 0 25px -5px rgba(220, 38, 38, 0.3)",
-        "glow-emerald": "0 0 25px -5px rgba(5, 150, 105, 0.3)",
+        subtle: "0 1px 3px 0 rgba(28, 36, 33, 0.05), 0 1px 2px -1px rgba(28, 36, 33, 0.05)",
+        card: "0 2px 6px 0 rgba(28, 36, 33, 0.06), 0 1px 3px 0 rgba(28, 36, 33, 0.04)",
       },
     },
   },

@@ -1,76 +1,110 @@
 import Link from "next/link";
-import { ShieldCheck, Target, Eye, Users, Award, Heart, CheckCircle2 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { Award, ShieldCheck, Heart, Users, MapPin, CheckCircle2 } from "lucide-react";
 
-export default function AboutPage() {
+export const revalidate = 60;
+
+export default async function AboutPage() {
+  const [aboutPage, missionPage, awards, stats] = await Promise.all([
+    prisma.page.findUnique({ where: { slug: "about-us" } }),
+    prisma.page.findUnique({ where: { slug: "mission-vision" } }),
+    prisma.award.findMany({ orderBy: { order: "asc" }, take: 3 }),
+    prisma.siteStat.findMany({ orderBy: { order: "asc" } }),
+  ]);
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-      {/* Hero */}
-      <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="text-xs font-bold text-red-600 uppercase tracking-widest">
-          ABOUT PRAYAS SANSTHA
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-extrabold font-display text-slate-900 leading-tight">
-          Dedicated to Restoring Health, Dignity, & Hope
+    <div className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+      {/* 1. Header Masthead */}
+      <div className="border-b border-prayas-rule pb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-medium text-prayas-ink">
+          <span>Est. 2006 • Registered Grassroots Society</span>
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink">
+          18 Years of Grassroots Community Seva in Vrindavan
         </h1>
-        <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-          Founded in 2015, Prayas Sanstha is a grassroots non-profit committed to delivering zero-cost life-saving healthcare logistics, emergency blood connectivity, and critical medical devices across India.
+        <p className="text-base sm:text-lg text-prayas-muted max-w-3xl leading-relaxed">
+          Prayas Pariwaar began as an emergency volunteer network in the holy town of Vrindavan. Today, it stands as a trusted institution providing non-commercial assistance across Mathura district.
         </p>
       </div>
 
-      {/* Mission & Vision */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
-            <Target className="w-6 h-6" />
+      {/* 2. Mission & History Two-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="border border-prayas-rule bg-white rounded p-6 sm:p-8 shadow-card space-y-4">
+            <h2 className="font-serif text-2xl font-bold text-prayas-ink border-b border-prayas-rule pb-3">
+              {aboutPage?.title || "Our Origins & Legacy"}
+            </h2>
+            <div className="text-sm text-prayas-ink leading-relaxed space-y-4 whitespace-pre-line">
+              {aboutPage?.content || "In 2006, when emergency medical resources and blood availability in Mathura district were scarce, Prayas began as an emergency response network. Volunteers carried handwritten registries of blood donors and delivered spare oxygen cylinders to homebound elderly patients on bicycles and two-wheelers."}
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display">Our Mission</h2>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            To eliminate preventable deaths caused by the unavailability of blood, platelets, or high-cost medical equipment, and to mobilize compassionate citizens into an agile first-responder network.
-          </p>
+
+          <div className="border border-prayas-rule bg-white rounded p-6 sm:p-8 shadow-card space-y-4">
+            <h2 className="font-serif text-2xl font-bold text-prayas-ink border-b border-prayas-rule pb-3">
+              {missionPage?.title || "Guiding Philosophy: Nishkam Seva"}
+            </h2>
+            <div className="text-sm text-prayas-ink leading-relaxed space-y-4 whitespace-pre-line">
+              {missionPage?.content || "Our philosophy is rooted in Nishkam Seva (selfless community service). Over the past 18 years, Prayas has evolved into a registered grassroots society managing a 24/7 volunteer blood coordination desk, a free medical equipment bank, regular education assistance, and native environmental restoration."}
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-            <Eye className="w-6 h-6" />
+        {/* Right Sidebar: Governance & Registrations */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="border border-prayas-rule bg-prayas-stone rounded p-6 shadow-card space-y-4">
+            <h3 className="font-serif text-lg font-bold text-prayas-ink border-b border-prayas-rule pb-2">
+              Legal & Registration Standing
+            </h3>
+            <ul className="space-y-3 text-xs text-prayas-ink">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
+                <div>
+                  <strong>Societies Registration Act XXI of 1860</strong>
+                  <p className="text-prayas-muted">Registration Number: 142/2006-07 (Mathura, UP)</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
+                <div>
+                  <strong>Income Tax Exemption: Section 12A & 80G</strong>
+                  <p className="text-prayas-muted">Donations eligible for 50% tax exemption for Indian taxpayers.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
+                <div>
+                  <strong>NITI Aayog NGO Darpan</strong>
+                  <p className="text-prayas-muted">Unique Identification: UP/2017/0154210</p>
+                </div>
+              </li>
+            </ul>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display">Our Vision</h2>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            A resilient community where every patient in critical distress receives immediate blood and life-support assistance within 30 minutes, regardless of their economic standing.
-          </p>
-        </div>
-      </div>
 
-      {/* Pillars of Integrity & Governance */}
-      <div className="bg-slate-900 rounded-3xl p-8 sm:p-12 text-white space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h3 className="text-2xl sm:text-3xl font-bold font-display">
-            Governance & Legal Registrations
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Prayas Sanstha adheres to the highest standards of financial auditing and regulatory transparency.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-5 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
-            <p className="text-xs text-red-400 font-bold uppercase">Societies Registration</p>
-            <p className="text-base font-bold text-white">PS-RAJ/2015/0982</p>
-            <p className="text-xs text-slate-400">Registered under Rajasthan Societies Act, 1958.</p>
-          </div>
-          <div className="p-5 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
-            <p className="text-xs text-emerald-400 font-bold uppercase">80G Tax Exemption</p>
-            <p className="text-base font-bold text-white">AAATP1234F2101</p>
-            <p className="text-xs text-slate-400">50% income tax exemption for all donors.</p>
-          </div>
-          <div className="p-5 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
-            <p className="text-xs text-amber-400 font-bold uppercase">NITI Aayog Darpan</p>
-            <p className="text-base font-bold text-white">RJ/2018/019283</p>
-            <p className="text-xs text-slate-400">Verified NGO portal listing with Government of India.</p>
-          </div>
-          <div className="p-5 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
-            <p className="text-xs text-sky-400 font-bold uppercase">12A Certification</p>
-            <p className="text-base font-bold text-white">AAATP1234F2001</p>
-            <p className="text-xs text-slate-400">Permanent tax-exempt non-profit status.</p>
+          <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-4">
+            <h3 className="font-serif text-lg font-bold text-prayas-ink border-b border-prayas-rule pb-2">
+              Recent Honors & Empanelment
+            </h3>
+            <div className="space-y-4">
+              {awards.map((award) => (
+                <div key={award.id} className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between font-bold text-prayas-ink">
+                    <span>{award.title}</span>
+                    {award.year && <span className="text-prayas-neem">{award.year}</span>}
+                  </div>
+                  <p className="text-prayas-muted text-[11px] leading-relaxed">
+                    {award.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="pt-2 border-t border-prayas-rule">
+              <Link
+                href="/about/awards"
+                className="text-xs font-semibold text-prayas-neem hover:underline"
+              >
+                View all institutional awards & certificates →
+              </Link>
+            </div>
           </div>
         </div>
       </div>

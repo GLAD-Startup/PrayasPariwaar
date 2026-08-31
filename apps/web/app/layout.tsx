@@ -1,38 +1,52 @@
 import type { Metadata } from "next";
+import { Lora, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-lora",
+  display: "swap",
+});
+
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--font-source-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://prayas-sanstha.org"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://prayaspariwaar.com"),
   title: {
-    default: "Prayas Sanstha | Emergency Blood & Medical Equipment Assistance NGO",
-    template: "%s | Prayas Sanstha",
+    default: "Prayas Pariwaar | 18 Years of Grassroots Community Seva in Vrindavan, UP",
+    template: "%s | Prayas Pariwaar (Vrindavan)",
   },
   description:
-    "Prayas Sanstha is a registered humanitarian NGO providing 24/7 emergency blood donation connectivity, free medical equipment leasing bank, disaster relief, and volunteer mobilization.",
+    "Registered grassroots non-profit society in Vrindavan, Mathura District, UP. Serving rural communities through free education, 24/7 volunteer emergency blood coordination, medical equipment lending bank, tree plantation, and healthcare camps.",
   keywords: [
-    "Prayas Sanstha",
-    "Emergency Blood Donation",
-    "Medical Equipment Bank",
-    "Oxygen Concentrator NGO",
-    "Blood Donor Network India",
-    "Humanitarian NGO",
-    "Volunteer Social Work",
-    "80G Tax Exemption Donations",
+    "Prayas Pariwaar",
+    "Prayas Sanstha Vrindavan",
+    "NGO in Vrindavan",
+    "Blood Donation Mathura Vrindavan",
+    "Medical Equipment Bank Vrindavan",
+    "Rural Education UP",
+    "Tree Plantation Braj",
+    "80G Tax Exemption Donation India",
+    "Oxygen Concentrator Vrindavan",
   ],
-  authors: [{ name: "Prayas Sanstha Team" }],
+  authors: [{ name: "Prayas Pariwaar" }],
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://prayas-sanstha.org",
-    title: "Prayas Sanstha | Saving Lives Through Community Action",
+    url: "https://prayaspariwaar.com",
+    title: "Prayas Pariwaar | 18 Years of Community Service in Vrindavan",
     description:
-      "24/7 Emergency Blood Coordination, Medical Equipment Support Bank, and Dedicated Volunteers.",
-    siteName: "Prayas Sanstha",
+      "Grassroots humanitarian NGO in Mathura District, UP. 24/7 Emergency Blood Coordination, Medical Equipment Bank, Rural Education, and Environmental Seva.",
+    siteName: "Prayas Pariwaar",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prayas Sanstha | Humanitarian Action",
-    description: "Emergency blood donor network and medical equipment support.",
+    title: "Prayas Pariwaar | Grassroots Seva in Vrindavan",
+    description: "24/7 Emergency Blood Registry, Medical Equipment Bank, and Rural Education in Mathura District.",
   },
   robots: {
     index: true,
@@ -45,54 +59,41 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // JSON-LD structured data for NGO SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NGO",
-    name: "Prayas Sanstha",
-    alternateName: "Prayas Humanitarian Society",
-    url: "https://prayas-sanstha.org",
-    logo: "https://prayas-sanstha.org/logo.png",
+    name: "Prayas Pariwaar",
+    alternateName: "Prayas Sanstha",
+    url: "https://prayaspariwaar.com",
     description:
-      "Non-profit organization dedicated to emergency blood donation matching, free medical equipment loans, and community relief.",
-    foundingDate: "2015",
+      "18-year-old registered grassroots society in Vrindavan, Mathura District, UP, working in education, blood donation, medical equipment lending, and community awareness.",
+    foundingDate: "2006",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Prayas Seva Bhawan, Main Road",
-      addressLocality: "Jaipur",
-      addressRegion: "Rajasthan",
-      postalCode: "302001",
+      streetAddress: "Prayas Seva Karyalaya, Near Raman Reti",
+      addressLocality: "Vrindavan",
+      addressRegion: "Uttar Pradesh",
+      postalCode: "281121",
       addressCountry: "IN",
     },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+91-9876543210",
-      contactType: "Emergency Blood Helpline",
+      telephone: "+91-9412279000",
+      contactType: "Emergency Blood & Seva Helpline",
       availableLanguage: ["Hindi", "English"],
       areaServed: "IN",
     },
-    sameAs: [
-      "https://facebook.com/prayassanstha",
-      "https://twitter.com/prayassanstha",
-      "https://instagram.com/prayassanstha",
-    ],
   };
 
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`${lora.variable} ${sourceSans.variable} scroll-smooth`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col font-sans antialiased text-slate-800 bg-slate-50">
+      <body className="min-h-screen flex flex-col font-sans antialiased text-prayas-ink bg-prayas-paper selection:bg-prayas-neem selection:text-white">
         {children}
       </body>
     </html>

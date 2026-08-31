@@ -7,10 +7,16 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ==========================================================================
+// ENUMS
+// ==========================================================================
+
 enum Role {
   ADMIN
+  EDITOR      // can create/edit posts & projects but not manage users
   VOLUNTEER
   DONOR
+  USER        // plain registered app user (no special access)
 }
 
 enum BloodGroup {
@@ -63,71 +69,330 @@ enum DonationStatus {
   PENDING
   SUCCESS
   FAILED
+  REFUNDED
 }
 
+// "OUR WORK" on the site is grouped into Education / Awareness, each with
+// sub-projects (Aashayein, Aadhar, Health, Blood Donation, Daan Vardaan, Plantation)
+enum ProjectCategory {
+  EDUCATION
+  AWARENESS
+  HEALTH
+  PLANTATION
+  OTHER
+}
+
+enum ProjectStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+// Posts double as the site's "mini_project" activity feed (event write-ups
+// with photo galleries) and as regular news/blog content.
+enum PostType {
+  NEWS
+  EVENT
+  ANNOUNCEMENT
+  ACHIEVEMENT
+}
+
+// MEDIA CENTRE: Electronic Media / Print Media
+enum MediaType {
+  ELECTRONIC
+  PRINT
+}
+
+// GET INVOLVED: Individual partnership / Corporate partnership
+enum PartnershipType {
+  INDIVIDUAL
+  CORPORATE
+}
+
+enum PartnershipStatus {
+  PENDING
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+enum NotificationType {
+  BLOOD_REQUEST
+  EVENT
+  DONATION_RECEIPT
+  EQUIPMENT_UPDATE
+  VOLUNTEER_UPDATE
+  GENERAL
+}
+
+// ==========================================================================
+// USERS & AUTH (shared by admin web login and mobile app login)
+// ==========================================================================
+
 model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
-  passwordHash      String
-  name              String
-  phone             String?
-  role              Role               @default(DONOR)
-  bloodGroup        BloodGroup?
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  avatarUrl    String?
+  bio          String?  @db.Text
+  role         Role     @default(USER)
+  bloodGroup   BloodGroup?
+  city         String?
+  isActive     Boolean  @default(true)
+
   pushTokens        PushToken[]
   volunteerProfile  Volunteer?
   bloodRequests     BloodRequest[]
   equipmentRequests EquipmentRequest[]
   donations         Donation[]
   posts             Post[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  projects          Project[]
+  notifications     Notification[]      @relation("NotificationCreatedBy")
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
   @@map("users")
 }
 
+// Registered on login from the Expo app; used to target push notifications
 model PushToken {
   id            String   @id @default(cuid())
   expoPushToken String   @unique
-  deviceType    String?  @default("MOBILE")
+  deviceType    String   @default("MOBILE") // IOS | ANDROID | MOBILE
   userId        String?
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastActiveAt  DateTime @default(now())
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
   @@index([userId])
   @@map("push_tokens")
 }
 
-model Post {
-  id         String   @id @default(cuid())
-  title      String
-  slug       String   @unique
-  content    String   @db.Text
-  excerpt    String?  @db.Text
-  coverImage String?
-  published  Boolean  @default(true)
-  authorId   String?
-  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+// Log of notifications sent from admin (broadcast or targeted), so the
+// admin dashboard can show notification history.
+model Notification {
+  id               String            @id @default(cuid())
+  title            String
+  body             String            @db.Text
+  type             NotificationType  @default(GENERAL)
+  targetBloodGroup BloodGroup?       // e.g. notify only O_NEGATIVE users
+  targetCity       String?
+  relatedPostId    String?
+  relatedPost      Post?             @relation(fields: [relatedPostId], references: [id], onDelete: SetNull)
+  recipientCount   Int               @default(0)
+  createdById      String?
+  createdBy        User?             @relation("NotificationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime          @default(now())
 
-  @@map("posts")
+  @@map("notifications")
 }
 
-model Project {
+// ==========================================================================
+// CONTENT: Posts (news/events/achievements) with photo galleries,
+// matches the site's "Recent Activity" / mini-project cards
+// ==========================================================================
+
+model Post {
   id          String   @id @default(cuid())
   title       String
   slug        String   @unique
-  description String   @db.Text
-  goalAmount  Float    @default(0)
-  raisedAmount Float   @default(0)
+  type        PostType @default(NEWS)
+  excerpt     String?  @db.Text
+  content     String   @db.Text
   coverImage  String?
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  eventDate   DateTime?   // when the event happened (for EVENT posts)
+  location    String?
+  published   Boolean  @default(true)
+  publishedAt DateTime?
 
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  images        PostImage[]
+  notifications Notification[]
+
+  // basic SEO fields
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, published])
+  @@map("posts")
+}
+
+model PostImage {
+  id       String  @id @default(cuid())
+  postId   String
+  post     Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url      String
+  caption  String?
+  order    Int     @default(0)
+
+  @@index([postId])
+  @@map("post_images")
+}
+
+// "OUR WORK" -> All Projects, grouped by category, each with its own gallery
+model Project {
+  id           String          @id @default(cuid())
+  title        String
+  slug         String          @unique
+  category     ProjectCategory
+  status       ProjectStatus   @default(ACTIVE)
+  description  String          @db.Text
+  coverImage   String?
+  goalAmount   Float           @default(0)
+  raisedAmount Float           @default(0)
+  startDate    DateTime?
+  endDate      DateTime?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  images    ProjectImage[]
+  donations Donation[]
+
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, status])
   @@map("projects")
 }
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  order     Int     @default(0)
+
+  @@index([projectId])
+  @@map("project_images")
+}
+
+// Flexible CMS pages for static content: Mission & Vision, About Us,
+// Awards & Empanelment overview text, etc. Slug drives the route.
+model Page {
+  id      String @id @default(cuid())
+  slug    String @unique // "mission-vision" | "about-us" | "awards-empanelment" ...
+  title   String
+  content String @db.Text
+  coverImage String?
+
+  metaTitle       String?
+  metaDescription String?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("pages")
+}
+
+// "Awards & Empanelment" list items
+model Award {
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+  imageUrl    String?
+  year        Int?
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@map("awards")
+}
+
+// Homepage testimonial carousel
+model Testimonial {
+  id          String  @id @default(cuid())
+  quote       String  @db.Text
+  authorName  String
+  designation String?
+  photoUrl    String?
+  order       Int     @default(0)
+  published   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@map("testimonials")
+}
+
+// "MEDIA CENTRE": Electronic Media / Print Media coverage
+model MediaCoverage {
+  id            String    @id @default(cuid())
+  title         String
+  type          MediaType
+  source        String?   // e.g. "Dainik Jagran", "News18"
+  url           String?
+  imageUrl      String?
+  publishedDate DateTime?
+  order         Int       @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@map("media_coverage")
+}
+
+// Homepage counters: "Projects Completed / Children Helped / Volunteers / Awards Won"
+model SiteStat {
+  id    String @id @default(cuid())
+  label String @unique
+  value Int    @default(0)
+  icon  String?
+  order Int    @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("site_stats")
+}
+
+// "GET INVOLVED" -> Individual partnership / Corporate partnership inquiry forms
+model PartnershipInquiry {
+  id               String             @id @default(cuid())
+  type             PartnershipType
+  name             String
+  email            String
+  phone            String
+  organizationName String?
+  message          String?            @db.Text
+  status           PartnershipStatus  @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, status])
+  @@map("partnership_inquiries")
+}
+
+// Contact Us form submissions
+model ContactMessage {
+  id      String  @id @default(cuid())
+  name    String
+  email   String
+  phone   String?
+  subject String?
+  message String  @db.Text
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+// ==========================================================================
+// CORE PROGRAMS (1: equipment lease, 2: blood donation, 3: volunteers, 6: donations)
+// ==========================================================================
 
 model BloodRequest {
   id           String             @id @default(cuid())
@@ -140,27 +405,32 @@ model BloodRequest {
   status       BloodRequestStatus @default(PENDING)
   contactPhone String
   notes        String?            @db.Text
-  requesterId  String?
-  requester    User?              @relation(fields: [requesterId], references: [id], onDelete: SetNull)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+
+  requesterId String?
+  requester   User?   @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([bloodGroup, status])
+  @@index([city])
   @@map("blood_requests")
 }
 
 model MedicalEquipment {
-  id          String             @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
-  slug        String             @unique
-  description String             @db.Text
-  category    String             @default("General")
-  quantity    Int                @default(1)
-  status      EquipmentStatus    @default(AVAILABLE)
+  slug        String          @unique
+  description String          @db.Text
+  category    String          @default("General")
+  quantity    Int             @default(1)
+  status      EquipmentStatus @default(AVAILABLE)
   imageUrl    String?
-  requests    EquipmentRequest[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+
+  requests EquipmentRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("medical_equipment")
 }
@@ -169,6 +439,7 @@ model EquipmentRequest {
   id              String           @id @default(cuid())
   equipmentId     String
   equipment       MedicalEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
   requesterId     String?
   requester       User?            @relation(fields: [requesterId], references: [id], onDelete: SetNull)
   requesterName   String
@@ -177,10 +448,11 @@ model EquipmentRequest {
   requestedDays   Int              @default(7)
   deliveryAddress String           @db.Text
   status          RequestStatus    @default(PENDING)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
 
-  @@index([equipmentId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([equipmentId, status])
   @@map("equipment_requests")
 }
 
@@ -196,29 +468,35 @@ model Volunteer {
   areaOfInterest     String
   previousExperience String?         @db.Text
   status             VolunteerStatus @default(PENDING)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("volunteers")
 }
 
 model Donation {
-  id                 String         @id @default(cuid())
-  donorId            String?
-  donor              User?          @relation(fields: [donorId], references: [id], onDelete: SetNull)
-  donorName          String
-  donorEmail         String
-  donorPhone         String?
-  amount             Float
-  currency           String         @default("INR")
-  razorpayOrderId    String         @unique
-  razorpayPaymentId  String?        @unique
-  razorpaySignature  String?
-  status             DonationStatus @default(PENDING)
-  projectOrCause     String         @default("General Fund")
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  donorId           String?
+  donor             User?          @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  donorName         String
+  donorEmail        String
+  donorPhone        String?
+  amount            Float
+  currency          String         @default("INR")
 
-  @@index([razorpayOrderId])
+  projectId         String?
+  project           Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectOrCause    String         @default("General Fund")
+
+  razorpayOrderId   String         @unique
+  razorpayPaymentId String?        @unique
+  razorpaySignature String?
+  status            DonationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
   @@map("donations")
 }

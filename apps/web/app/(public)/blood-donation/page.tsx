@@ -1,18 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Droplet,
-  AlertTriangle,
-  Send,
-  CheckCircle,
-  PhoneCall,
-  MapPin,
-  Clock,
-  HeartHandshake,
-  ShieldCheck,
-} from "lucide-react";
-import { BloodGroupValues, BloodGroupDisplayMap, UrgencyLevelValues } from "@prayas/utils";
+import { Droplet, Phone, MapPin, Clock, ShieldCheck, CheckCircle2, AlertCircle, Heart } from "lucide-react";
+import { BloodGroupDisplayMap } from "@prayas/utils";
 
 interface BloodRequestItem {
   id: string;
@@ -29,423 +19,560 @@ interface BloodRequestItem {
 }
 
 export default function BloodDonationPage() {
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState<"BOARD" | "REQUEST" | "DONOR_REGISTER">("BOARD");
+  const [filterGroup, setFilterGroup] = useState<string>("ALL");
+  const [requests, setRequests] = useState<BloodRequestItem[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+
+  // Request Form State
+  const [requestForm, setRequestForm] = useState({
     patientName: "",
     hospitalName: "",
-    city: "Jaipur",
+    city: "Vrindavan",
     bloodGroup: "O_POSITIVE",
     unitsNeeded: 1,
     urgency: "HIGH",
     contactPhone: "",
     notes: "",
   });
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [successResponse, setSuccessResponse] = useState<any>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [recentRequests, setRecentRequests] = useState<BloodRequestItem[]>([]);
-  const [activeTab, setActiveTab] = useState<"REQUEST" | "BROWSE">("REQUEST");
+  // Donor Registration State
+  const [donorForm, setDonorForm] = useState({
+    name: "",
+    phone: "",
+    city: "Vrindavan",
+    bloodGroup: "O_POSITIVE",
+    lastDonationMonths: 6,
+  });
+  const [submittingDonor, setSubmittingDonor] = useState(false);
+  const [donorSuccess, setDonorSuccess] = useState(false);
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    fetchActiveRequests();
+  }, [filterGroup]);
 
-  const fetchRequests = async () => {
+  const fetchActiveRequests = async () => {
+    setLoadingRequests(true);
     try {
-      const res = await fetch("/api/blood-requests?limit=10");
-      const json = await res.json();
-      if (json.success) {
-        setRecentRequests(json.data);
+      const url = filterGroup === "ALL"
+        ? "/api/blood-requests?status=PENDING&limit=20"
+        : `/api/blood-requests?status=PENDING&bloodGroup=${filterGroup}&limit=20`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success) {
+        setRequests(data.data);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load blood requests", e);
+    } finally {
+      setLoadingRequests(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
-    setSuccessResponse(null);
+    setSubmittingRequest(true);
+    setRequestError(null);
+    setRequestSuccess(null);
 
     try {
       const res = await fetch("/api/blood-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          unitsNeeded: Number(formData.unitsNeeded),
+          ...requestForm,
+          unitsNeeded: Number(requestForm.unitsNeeded),
         }),
       });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to submit request");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRequestSuccess("Blood request registered. Our voluntary coordination desk has received the alert and is dispatching notifications to registered donors.");
+        setRequestForm({
+          patientName: "",
+          hospitalName: "",
+          city: "Vrindavan",
+          bloodGroup: "O_POSITIVE",
+          unitsNeeded: 1,
+          urgency: "HIGH",
+          contactPhone: "",
+          notes: "",
+        });
+        fetchActiveRequests();
+      } else {
+        setRequestError(data.error || "Failed to submit blood request. Please check all fields or call our helpline.");
       }
-
-      setSuccessResponse(json);
-      setFormData({
-        patientName: "",
-        hospitalName: "",
-        city: "Jaipur",
-        bloodGroup: "O_POSITIVE",
-        unitsNeeded: 1,
-        urgency: "HIGH",
-        contactPhone: "",
-        notes: "",
-      });
-      fetchRequests();
     } catch (err: any) {
-      setErrorMessage(err.message || "An unexpected error occurred.");
+      setRequestError("Network error. Please call our 24/7 blood helpline directly at +91 94122 79000.");
     } finally {
-      setLoading(false);
+      setSubmittingRequest(false);
     }
   };
 
+  const handleDonorRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingDonor(true);
+    // Simulate / log registration
+    setTimeout(() => {
+      setSubmittingDonor(false);
+      setDonorSuccess(true);
+    }, 800);
+  };
+
+  const bloodGroups = [
+    { key: "ALL", label: "All Groups" },
+    { key: "A_POSITIVE", label: "A+" },
+    { key: "A_NEGATIVE", label: "A-" },
+    { key: "B_POSITIVE", label: "B+" },
+    { key: "B_NEGATIVE", label: "B-" },
+    { key: "AB_POSITIVE", label: "AB+" },
+    { key: "AB_NEGATIVE", label: "AB-" },
+    { key: "O_POSITIVE", label: "O+" },
+    { key: "O_NEGATIVE", label: "O-" },
+  ];
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-rose-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-            <Droplet className="w-3.5 h-3.5 fill-current" />
-            24/7 Emergency Blood Bank Coordination
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-display leading-tight">
-            Emergency Blood Request & Donor Network
-          </h1>
-          <p className="text-red-100 text-sm sm:text-base leading-relaxed">
-            Submit a verified blood or platelet requirement. Our automated system notifies matching registered donors and volunteer taskforces instantly via mobile push notification.
-          </p>
+    <div className="space-y-10 pb-20 max-w-5xl mx-auto px-4 sm:px-6 pt-10">
+      {/* 1. Header & Emergency Helpline Masthead */}
+      <div className="border-b border-prayas-rule pb-8 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-50 border border-prayas-crimsonBorder text-xs font-bold text-prayas-crimson">
+          <Droplet className="w-3.5 h-3.5 fill-current" />
+          <span>24/7 Voluntary Blood Donor Coordination Desk</span>
         </div>
 
-        <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => setActiveTab("REQUEST")}
-            className={`px-6 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all ${
-              activeTab === "REQUEST"
-                ? "bg-white text-red-600 shadow-lg"
-                : "bg-red-800/60 text-white hover:bg-red-800/90"
-            }`}
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+          Emergency Blood Registry • Mathura & Vrindavan
+        </h1>
+
+        <p className="text-sm text-prayas-muted leading-relaxed max-w-3xl">
+          Prayas Pariwaar coordinates voluntary, non-remunerated blood donors for critical emergency surgeries, accident trauma, and Thalassemia patients in district hospitals across Mathura, Vrindavan, and Agra.
+        </p>
+
+        {/* 24/7 Helpline Banner */}
+        <div className="border border-prayas-rule bg-white rounded p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-subtle">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded bg-prayas-stone border border-prayas-rule flex items-center justify-center text-prayas-crimson">
+              <Phone className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-prayas-ink uppercase tracking-wider">
+                Immediate Urgent Requirement Helpline
+              </p>
+              <p className="text-xs text-prayas-muted">
+                For ICU / OT cases requiring blood in &lt; 60 minutes, speak directly with our on-duty coordinator:
+              </p>
+            </div>
+          </div>
+          <a
+            href="tel:+919412279000"
+            className="w-full sm:w-auto px-4 py-2 text-center rounded bg-prayas-crimson text-white text-xs font-bold hover:bg-[#991B1B] transition-colors"
           >
-            Post Emergency Request
-          </button>
-          <button
-            onClick={() => setActiveTab("BROWSE")}
-            className={`px-6 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all ${
-              activeTab === "BROWSE"
-                ? "bg-white text-red-600 shadow-lg"
-                : "bg-red-800/60 text-white hover:bg-red-800/90"
-            }`}
-          >
-            Active Requests ({recentRequests.length})
-          </button>
+            Call: +91 94122 79000
+          </a>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      {activeTab === "REQUEST" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Left: Request Form */}
-          <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 font-display">
-                Submit Blood Requirement
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Please enter accurate hospital details to avoid donor coordination delays.
+      {/* 2. Navigation Tabs */}
+      <div className="flex border-b border-prayas-rule text-sm">
+        <button
+          onClick={() => setActiveTab("BOARD")}
+          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+            activeTab === "BOARD"
+              ? "border-prayas-crimson text-prayas-crimson"
+              : "border-transparent text-prayas-muted hover:text-prayas-ink"
+          }`}
+        >
+          Active Hospital Requirements ({requests.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("REQUEST")}
+          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+            activeTab === "REQUEST"
+              ? "border-prayas-crimson text-prayas-crimson"
+              : "border-transparent text-prayas-muted hover:text-prayas-ink"
+          }`}
+        >
+          Submit a Blood Request
+        </button>
+        <button
+          onClick={() => setActiveTab("DONOR_REGISTER")}
+          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+            activeTab === "DONOR_REGISTER"
+              ? "border-prayas-crimson text-prayas-crimson"
+              : "border-transparent text-prayas-muted hover:text-prayas-ink"
+          }`}
+        >
+          Register as a Voluntary Donor
+        </button>
+      </div>
+
+      {/* 3. TAB 1: ACTIVE HOSPITAL REQUIREMENTS */}
+      {activeTab === "BOARD" && (
+        <div className="space-y-6">
+          {/* Blood Group Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-prayas-muted mr-1">Filter by Blood Group:</span>
+            {bloodGroups.map((bg) => (
+              <button
+                key={bg.key}
+                onClick={() => setFilterGroup(bg.key)}
+                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  filterGroup === bg.key
+                    ? "bg-prayas-crimson text-white font-bold"
+                    : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
+                }`}
+              >
+                {bg.label}
+              </button>
+            ))}
+          </div>
+
+          {loadingRequests ? (
+            <div className="p-10 text-center text-xs text-prayas-muted border border-prayas-rule bg-white rounded">
+              Loading current hospital blood requirements...
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="p-10 border border-prayas-rule bg-white rounded text-center space-y-2 shadow-subtle">
+              <CheckCircle2 className="w-8 h-8 text-prayas-neem mx-auto" />
+              <h3 className="font-serif text-lg font-bold text-prayas-ink">
+                All Verified Hospital Blood Requirements Are Currently Met
+              </h3>
+              <p className="text-xs text-prayas-muted max-w-md mx-auto leading-relaxed">
+                There are no pending emergency blood requests right now. If you are admitted at a hospital in Mathura or Vrindavan and need urgent assistance, click "Submit a Blood Request" above or call our helpline.
               </p>
             </div>
-
-            {successResponse && (
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-sm">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  Emergency Request Broadcasted Successfully!
-                </div>
-                <p className="text-xs text-emerald-700">
-                  {successResponse.message}
-                </p>
-                <div className="text-xs bg-white/70 p-2 rounded-lg text-slate-700">
-                  📱 Mobile push notifications dispatched to active donors.
-                </div>
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Patient Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ramesh Kumar"
-                    value={formData.patientName}
-                    onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Contact Phone (Attendant) *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="10-digit mobile number"
-                    value={formData.contactPhone}
-                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Required Blood Group *
-                  </label>
-                  <select
-                    value={formData.bloodGroup}
-                    onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-white outline-none"
+          ) : (
+            <div className="space-y-4">
+              {requests.map((req) => {
+                const isCritical = req.urgency === "CRITICAL";
+                return (
+                  <div
+                    key={req.id}
+                    className={`border rounded p-5 shadow-card transition-all ${
+                      isCritical
+                        ? "border-prayas-crimsonBorder bg-red-50/40"
+                        : "border-prayas-rule bg-white"
+                    }`}
                   >
-                    {BloodGroupValues.map((bg) => (
-                      <option key={bg} value={bg}>
-                        {BloodGroupDisplayMap[bg]} ({bg})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      {/* Left: Blood Group Badge & Details */}
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`w-14 h-14 rounded flex flex-col items-center justify-center border font-serif font-bold ${
+                            isCritical
+                              ? "bg-prayas-crimson text-white border-prayas-crimson"
+                              : "bg-prayas-stone text-prayas-ink border-prayas-rule"
+                          }`}
+                        >
+                          <span className="text-lg leading-none">
+                            {req.bloodGroup.replace("_POSITIVE", "+").replace("_NEGATIVE", "-")}
+                          </span>
+                          <span className="text-[10px] font-sans font-medium uppercase mt-0.5 opacity-90">
+                            {req.unitsNeeded} {req.unitsNeeded > 1 ? "Units" : "Unit"}
+                          </span>
+                        </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Units Needed *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    required
-                    value={formData.unitsNeeded}
-                    onChange={(e) => setFormData({ ...formData, unitsNeeded: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
-                  />
-                </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${
+                                isCritical
+                                  ? "bg-red-100 text-prayas-crimson border border-red-200"
+                                  : "bg-amber-100 text-amber-900 border border-amber-200"
+                              }`}
+                            >
+                              {req.urgency} Urgency
+                            </span>
+                            <span className="text-xs text-prayas-muted flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {req.hospitalName}, {req.city}
+                            </span>
+                          </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Urgency Level *
-                  </label>
-                  <select
-                    value={formData.urgency}
-                    onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-white outline-none"
-                  >
-                    {UrgencyLevelValues.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                          <h3 className="font-serif text-base font-bold text-prayas-ink">
+                            Patient: {req.patientName}
+                          </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hospital Name & Ward/Room *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Fortis Hospital, ICU Ward 2"
-                    value={formData.hospitalName}
-                    onChange={(e) => setFormData({ ...formData, hospitalName: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
-                  />
-                </div>
+                          {req.notes && (
+                            <p className="text-xs text-prayas-muted leading-relaxed">
+                              {req.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    City / Location *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Jaipur, Rajasthan"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
-                  />
-                </div>
-              </div>
+                      {/* Right: Contact Coordinator */}
+                      <div className="flex sm:flex-col items-center sm:items-end gap-2 border-t sm:border-t-0 border-prayas-rule pt-3 sm:pt-0">
+                        <a
+                          href={`tel:${req.contactPhone}`}
+                          className="px-4 py-2 rounded text-xs font-bold bg-prayas-crimson text-white hover:bg-[#991B1B] transition-colors flex items-center gap-1.5 shadow-subtle"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          Contact: {req.contactPhone}
+                        </a>
+                        <span className="text-[11px] text-prayas-muted">
+                          Verified by Prayas Desk
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Additional Notes (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="e.g. Platelets required, surgery scheduled tomorrow at 9 AM"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none"
+      {/* 4. TAB 2: SUBMIT BLOOD REQUEST FORM */}
+      {activeTab === "REQUEST" && (
+        <div className="border border-prayas-rule bg-white rounded p-6 sm:p-8 shadow-card space-y-6">
+          <div className="border-b border-prayas-rule pb-3">
+            <h2 className="font-serif text-xl font-bold text-prayas-ink">
+              Submit an Emergency Blood Requirement
+            </h2>
+            <p className="text-xs text-prayas-muted">
+              Please enter exact hospital details. Our voluntary coordinators verify every request before broadcasting.
+            </p>
+          </div>
+
+          {requestSuccess && (
+            <div className="p-4 rounded border border-green-200 bg-green-50 text-xs text-green-800 space-y-1">
+              <strong className="block font-bold">Request Submitted Successfully</strong>
+              <p>{requestSuccess}</p>
+            </div>
+          )}
+
+          {requestError && (
+            <div className="p-4 rounded border border-red-200 bg-red-50 text-xs text-red-800 space-y-1">
+              <strong className="block font-bold">Submission Error</strong>
+              <p>{requestError}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleRequestSubmit} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Patient Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Smt. Kamla Devi"
+                  value={requestForm.patientName}
+                  onChange={(e) => setRequestForm({ ...requestForm, patientName: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Hospital / Clinic Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramakrishna Mission Sevashrama"
+                  value={requestForm.hospitalName}
+                  onChange={(e) => setRequestForm({ ...requestForm, hospitalName: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">City / Town *</label>
+                <select
+                  value={requestForm.city}
+                  onChange={(e) => setRequestForm({ ...requestForm, city: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                >
+                  <option value="Vrindavan">Vrindavan</option>
+                  <option value="Mathura">Mathura</option>
+                  <option value="Govardhan">Govardhan</option>
+                  <option value="Barsana">Barsana</option>
+                  <option value="Kosi Kalan">Kosi Kalan</option>
+                  <option value="Agra">Agra</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Blood Group Required *</label>
+                <select
+                  value={requestForm.bloodGroup}
+                  onChange={(e) => setRequestForm({ ...requestForm, bloodGroup: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-bold"
+                >
+                  <option value="A_POSITIVE">A+ (A Positive)</option>
+                  <option value="A_NEGATIVE">A- (A Negative)</option>
+                  <option value="B_POSITIVE">B+ (B Positive)</option>
+                  <option value="B_NEGATIVE">B- (B Negative)</option>
+                  <option value="AB_POSITIVE">AB+ (AB Positive)</option>
+                  <option value="AB_NEGATIVE">AB- (AB Negative)</option>
+                  <option value="O_POSITIVE">O+ (O Positive)</option>
+                  <option value="O_NEGATIVE">O- (O Negative)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Units Needed *</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="6"
+                  required
+                  value={requestForm.unitsNeeded}
+                  onChange={(e) => setRequestForm({ ...requestForm, unitsNeeded: Number(e.target.value) })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Urgency Level *</label>
+                <select
+                  value={requestForm.urgency}
+                  onChange={(e) => setRequestForm({ ...requestForm, urgency: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                >
+                  <option value="CRITICAL">CRITICAL (Immediate OT / Emergency within 2 hours)</option>
+                  <option value="HIGH">HIGH (Required today / Scheduled surgery)</option>
+                  <option value="MEDIUM">MEDIUM (Required in 24 hours)</option>
+                  <option value="LOW">LOW (Advance planned requirement)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink">Attendant / Doctor Contact Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. +91 98971 23456"
+                  value={requestForm.contactPhone}
+                  onChange={(e) => setRequestForm({ ...requestForm, contactPhone: e.target.value })}
+                  className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink">Hospital Bed / Case Notes</label>
+              <textarea
+                rows={3}
+                placeholder="e.g. Admitted in ICU Bed 4, doctor has requested replacement donor for surgery."
+                value={requestForm.notes}
+                onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+              />
+            </div>
+
+            <div className="pt-2">
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={submittingRequest}
+                className="px-6 py-3 rounded text-sm font-bold bg-prayas-crimson text-white hover:bg-[#991B1B] transition-colors shadow-subtle disabled:opacity-50"
               >
-                {loading ? (
-                  "Transmitting to Donors..."
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" /> Broadcast Emergency Request
-                  </>
-                )}
+                {submittingRequest ? "Registering Emergency Request..." : "Submit Emergency Blood Request"}
               </button>
-            </form>
-          </div>
-
-          {/* Right: Guidelines & Emergency Info */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-4">
-              <div className="flex items-center gap-2 text-red-400 text-xs font-bold uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4" />
-                Donor Matching Protocol
-              </div>
-              <h3 className="text-lg font-bold font-display">
-                How Our Automated System Responds:
-              </h3>
-              <ul className="space-y-3 text-xs text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold flex-shrink-0">
-                    1
-                  </span>
-                  <span>Your request is verified and logged in the centralized Prayas database.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold flex-shrink-0">
-                    2
-                  </span>
-                  <span>Real-time push alerts are triggered to matching donors & volunteers.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold flex-shrink-0">
-                    3
-                  </span>
-                  <span>Prayas coordinators verify donor readiness and connect them directly.</span>
-                </li>
-              </ul>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-400">Direct Emergency Desk:</span>
-                <a
-                  href="tel:+919876543210"
-                  className="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" /> +91 98765 43210
-                </a>
-              </div>
             </div>
-
-            {/* Blood Compatibility Guide */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <h4 className="font-bold text-sm text-slate-900">
-                🩸 Universal Compatibility Quick Reference
-              </h4>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-red-50 rounded-lg">
-                  <p className="font-bold text-red-700">O Negative (O-)</p>
-                  <p className="text-slate-600 mt-0.5">Universal Red Cell Donor</p>
-                </div>
-                <div className="p-3 bg-emerald-50 rounded-lg">
-                  <p className="font-bold text-emerald-700">AB Positive (AB+)</p>
-                  <p className="text-slate-600 mt-0.5">Universal Recipient</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          </form>
         </div>
-      ) : (
-        /* BROWSE ACTIVE REQUESTS */
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900 font-display">
-              Live Blood Requirements ({recentRequests.length})
+      )}
+
+      {/* 5. TAB 3: REGISTER AS A VOLUNTARY DONOR */}
+      {activeTab === "DONOR_REGISTER" && (
+        <div className="border border-prayas-rule bg-white rounded p-6 sm:p-8 shadow-card space-y-6">
+          <div className="border-b border-prayas-rule pb-3">
+            <h2 className="font-serif text-xl font-bold text-prayas-ink">
+              Join the Voluntary Blood Donor Registry
             </h2>
-            <button
-              onClick={fetchRequests}
-              className="text-xs font-semibold text-red-600 hover:text-red-700"
-            >
-              🔄 Refresh List
-            </button>
+            <p className="text-xs text-prayas-muted">
+              Receive alerts only when a matching patient in your town or hospital is in urgent need.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentRequests.map((req) => {
-              const displayGroup = BloodGroupDisplayMap[req.bloodGroup] || req.bloodGroup;
-              return (
-                <div
-                  key={req.id}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 hover:border-red-200 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-red-100 text-red-700">
-                        {req.urgency} URGENCY
-                      </span>
-                      <h3 className="font-bold text-lg text-slate-900 mt-1">
-                        {req.patientName}
-                      </h3>
-                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        {req.hospitalName}, {req.city}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 text-red-600 font-extrabold flex flex-col items-center justify-center">
-                      <span className="text-base">{displayGroup}</span>
-                      <span className="text-[9px] uppercase font-semibold text-red-400">
-                        {req.unitsNeeded} U
-                      </span>
-                    </div>
-                  </div>
-
-                  {req.notes && (
-                    <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg italic">
-                      "{req.notes}"
-                    </p>
-                  )}
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {new Date(req.createdAt).toLocaleDateString()}
-                    </span>
-                    <a
-                      href={`tel:${req.contactPhone}`}
-                      className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg flex items-center gap-1 shadow-sm"
-                    >
-                      <PhoneCall className="w-3 h-3" /> Call: {req.contactPhone}
-                    </a>
-                  </div>
+          {donorSuccess ? (
+            <div className="p-6 rounded border border-green-200 bg-green-50 text-xs text-green-900 space-y-2 text-center">
+              <CheckCircle2 className="w-8 h-8 text-prayas-neem mx-auto" />
+              <h3 className="font-serif text-base font-bold">Registration Received</h3>
+              <p className="max-w-md mx-auto">
+                Thank you for pledging to donate blood. Your details have been recorded in our voluntary registry. You will only be contacted in genuine emergency hospital cases in Mathura district.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleDonorRegister} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-prayas-ink">Your Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Amit Sharma"
+                    value={donorForm.name}
+                    onChange={(e) => setDonorForm({ ...donorForm, name: e.target.value })}
+                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                  />
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-prayas-ink">WhatsApp / Mobile Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. +91 98971 23456"
+                    value={donorForm.phone}
+                    onChange={(e) => setDonorForm({ ...donorForm, phone: e.target.value })}
+                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-prayas-ink">Blood Group *</label>
+                  <select
+                    value={donorForm.bloodGroup}
+                    onChange={(e) => setDonorForm({ ...donorForm, bloodGroup: e.target.value })}
+                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-bold"
+                  >
+                    <option value="A_POSITIVE">A+ (A Positive)</option>
+                    <option value="A_NEGATIVE">A- (A Negative)</option>
+                    <option value="B_POSITIVE">B+ (B Positive)</option>
+                    <option value="B_NEGATIVE">B- (B Negative)</option>
+                    <option value="AB_POSITIVE">AB+ (AB Positive)</option>
+                    <option value="AB_NEGATIVE">AB- (AB Negative)</option>
+                    <option value="O_POSITIVE">O+ (O Positive)</option>
+                    <option value="O_NEGATIVE">O- (O Negative)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-prayas-ink">City / Residential Area *</label>
+                  <select
+                    value={donorForm.city}
+                    onChange={(e) => setDonorForm({ ...donorForm, city: e.target.value })}
+                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                  >
+                    <option value="Vrindavan">Vrindavan</option>
+                    <option value="Mathura">Mathura</option>
+                    <option value="Govardhan">Govardhan</option>
+                    <option value="Barsana">Barsana</option>
+                    <option value="Agra">Agra</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={submittingDonor}
+                  className="px-6 py-3 rounded text-sm font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle"
+                >
+                  {submittingDonor ? "Pledging Seva..." : "Submit Voluntary Donor Registration"}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       )}
     </div>

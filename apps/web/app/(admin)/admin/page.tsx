@@ -1,156 +1,190 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Droplet, Activity, Users, Heart, ArrowUpRight, Flame, Clock, MapPin } from "lucide-react";
+import { Droplet, Stethoscope, Users, Heart, ArrowUpRight, MessageSquare, Building2, Bell } from "lucide-react";
 import { BloodGroupDisplayMap } from "@prayas/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  let pendingBloodCount = 0;
-  let activeEquipmentCount = 0;
-  let volunteerCount = 0;
-  let donationSum = 0;
-  let recentBloodRequests: any[] = [];
+  const [
+    pendingBloodCount,
+    pendingEquipmentCount,
+    pendingVolunteersCount,
+    pendingInquiriesCount,
+    unreadMessagesCount,
+    donationsAggregate,
+    recentBloodRequests,
+  ] = await Promise.all([
+    prisma.bloodRequest.count({ where: { status: "PENDING" } }),
+    prisma.equipmentRequest.count({ where: { status: "PENDING" } }),
+    prisma.volunteer.count({ where: { status: "PENDING" } }),
+    prisma.partnershipInquiry.count({ where: { status: "PENDING" } }),
+    prisma.contactMessage.count({ where: { isRead: false } }),
+    prisma.donation.aggregate({
+      _sum: { amount: true },
+      where: { status: "SUCCESS" },
+    }),
+    prisma.bloodRequest.findMany({
+      take: 6,
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
-  try {
-    const [bloodCount, equipCount, volCount, donAggregate, recentRequests] = await Promise.all([
-      prisma.bloodRequest.count({ where: { status: "PENDING" } }),
-      prisma.medicalEquipment.count({ where: { status: "AVAILABLE" } }),
-      prisma.volunteer.count(),
-      prisma.donation.aggregate({
-        _sum: { amount: true },
-        where: { status: "SUCCESS" },
-      }),
-      prisma.bloodRequest.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
-
-    pendingBloodCount = bloodCount;
-    activeEquipmentCount = equipCount;
-    volunteerCount = volCount;
-    donationSum = donAggregate._sum.amount || 0;
-    recentBloodRequests = recentRequests;
-  } catch (e) {
-    console.warn("DB not connected yet or empty");
-  }
+  const totalDonations = donationsAggregate._sum.amount || 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-6xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-            Operations Command Overview
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+            Administrative Operations & Dispatch Desk
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Real-time monitoring of blood requests, equipment leases, and volunteer mobilization.
+          <p className="text-xs text-prayas-muted mt-1">
+            Real-time management of emergency blood coordination, medical equipment loans, and volunteer applications in Mathura district.
           </p>
         </div>
 
         <Link
-          href="/admin/blood-requests"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
+          href="/admin/notifications"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle self-start sm:self-auto"
         >
-          <Droplet className="w-4 h-4 fill-current" /> Manage Blood Requests
+          <Bell className="w-3.5 h-3.5" /> Broadcast Push Alert
         </Link>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Pending Blood Needs</span>
-            <Droplet className="w-4 h-4 text-red-500 fill-red-500" />
+      {/* Pending Queues Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Link
+          href="/admin/blood-requests"
+          className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-1 hover:border-prayas-crimson transition-colors block"
+        >
+          <div className="flex items-center justify-between text-prayas-crimson">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Blood Requests</span>
+            <Droplet className="w-4 h-4 fill-current" />
           </div>
-          <p className="text-3xl font-bold font-display text-white">{pendingBloodCount}</p>
-          <span className="text-[11px] text-red-400 font-medium">Requires immediate response</span>
-        </div>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{pendingBloodCount}</p>
+          <span className="text-[10px] text-prayas-crimson font-medium block">
+            {pendingBloodCount > 0 ? "Requires active matching" : "All cases resolved"}
+          </span>
+        </Link>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Available Equipment</span>
-            <Activity className="w-4 h-4 text-emerald-500" />
+        <Link
+          href="/admin/equipment"
+          className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-1 hover:border-prayas-neem transition-colors block"
+        >
+          <div className="flex items-center justify-between text-prayas-neem">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Equipment Leases</span>
+            <Stethoscope className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold font-display text-white">{activeEquipmentCount}</p>
-          <span className="text-[11px] text-emerald-400 font-medium">Ready for dispatch</span>
-        </div>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{pendingEquipmentCount}</p>
+          <span className="text-[10px] text-prayas-muted font-medium block">Pending deliveries</span>
+        </Link>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Registered Volunteers</span>
-            <Users className="w-4 h-4 text-amber-500" />
+        <Link
+          href="/admin/volunteers"
+          className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-1 hover:border-prayas-marigold transition-colors block"
+        >
+          <div className="flex items-center justify-between text-prayas-marigold">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Volunteers</span>
+            <Users className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold font-display text-white">{volunteerCount}</p>
-          <span className="text-[11px] text-amber-400 font-medium">Active nationwide</span>
-        </div>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{pendingVolunteersCount}</p>
+          <span className="text-[10px] text-prayas-muted font-medium block">New applications</span>
+        </Link>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Donations Received</span>
-            <Heart className="w-4 h-4 text-rose-500" />
+        <Link
+          href="/admin/inquiries"
+          className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-1 hover:border-prayas-ink transition-colors block"
+        >
+          <div className="flex items-center justify-between text-prayas-ink">
+            <span className="text-[11px] font-bold uppercase tracking-wider">CSR & Partners</span>
+            <Building2 className="w-4 h-4 text-prayas-muted" />
           </div>
-          <p className="text-3xl font-bold font-display text-white">₹{donationSum.toLocaleString()}</p>
-          <span className="text-[11px] text-slate-400 font-medium">Via Razorpay (80G)</span>
-        </div>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{pendingInquiriesCount}</p>
+          <span className="text-[10px] text-prayas-muted font-medium block">Inquiry proposals</span>
+        </Link>
+
+        <Link
+          href="/admin/donations"
+          className="border border-prayas-rule bg-white rounded p-4 shadow-subtle space-y-1 hover:border-prayas-neem transition-colors block"
+        >
+          <div className="flex items-center justify-between text-prayas-neem">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Donations</span>
+            <Heart className="w-4 h-4" />
+          </div>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">₹{totalDonations.toLocaleString("en-IN")}</p>
+          <span className="text-[10px] text-prayas-muted font-medium block">Verified 80G funds</span>
+        </Link>
       </div>
 
-      {/* Recent Emergency Requests Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white font-display flex items-center gap-2">
-            <Flame className="w-5 h-5 text-red-500" /> Recent Emergency Blood Requests
+      {/* Recent Emergency Blood Requests Table */}
+      <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-4">
+        <div className="flex items-center justify-between border-b border-prayas-rule pb-3">
+          <h2 className="font-serif text-lg font-bold text-prayas-ink flex items-center gap-2">
+            <Droplet className="w-4 h-4 text-prayas-crimson fill-current" />
+            Recent Emergency Blood Requirements
           </h2>
           <Link
             href="/admin/blood-requests"
-            className="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1"
+            className="text-xs text-prayas-crimson font-bold hover:underline flex items-center gap-1"
           >
-            View All <ArrowUpRight className="w-3.5 h-3.5" />
+            Manage Queue <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {recentBloodRequests.length === 0 ? (
-          <div className="py-8 text-center text-slate-500 text-xs">
-            No blood requests logged yet. Submit a test request via the mobile app or web portal!
+          <div className="py-8 text-center text-prayas-muted text-xs">
+            No blood requests in database.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-800/60 text-slate-400 uppercase text-[10px] font-bold">
+            <table className="w-full text-left text-xs text-prayas-ink">
+              <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold">
                 <tr>
-                  <th className="p-3">Patient Name</th>
-                  <th className="p-3">Group</th>
-                  <th className="p-3">Hospital & City</th>
-                  <th className="p-3">Urgency</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Phone</th>
-                  <th className="p-3">Created</th>
+                  <th className="p-2.5">Patient Name</th>
+                  <th className="p-2.5">Group & Units</th>
+                  <th className="p-2.5">Hospital & City</th>
+                  <th className="p-2.5">Urgency</th>
+                  <th className="p-2.5">Status</th>
+                  <th className="p-2.5">Contact Phone</th>
+                  <th className="p-2.5">Time Logged</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-prayas-rule">
                 {recentBloodRequests.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-800/40">
-                    <td className="p-3 font-semibold text-white">{item.patientName}</td>
-                    <td className="p-3 font-bold text-red-400">
+                  <tr key={item.id} className="hover:bg-prayas-paper">
+                    <td className="p-2.5 font-bold">{item.patientName}</td>
+                    <td className="p-2.5 font-bold text-prayas-crimson">
                       {BloodGroupDisplayMap[item.bloodGroup] || item.bloodGroup} ({item.unitsNeeded}U)
                     </td>
-                    <td className="p-3 text-slate-400">
+                    <td className="p-2.5 text-prayas-muted">
                       {item.hospitalName}, {item.city}
                     </td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-red-950/80 text-red-300 text-[10px] font-bold border border-red-800/60">
+                    <td className="p-2.5">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          item.urgency === "CRITICAL"
+                            ? "bg-red-100 text-prayas-crimson border border-red-200"
+                            : "bg-amber-100 text-amber-900 border border-amber-200"
+                        }`}
+                      >
                         {item.urgency}
                       </span>
                     </td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">
+                    <td className="p-2.5">
+                      <span className="px-2 py-0.5 rounded bg-prayas-stone border border-prayas-rule text-[10px] font-bold">
                         {item.status}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-300 font-mono">{item.contactPhone}</td>
-                    <td className="p-3 text-slate-500">
-                      {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    <td className="p-2.5 font-mono">{item.contactPhone}</td>
+                    <td className="p-2.5 text-prayas-muted">
+                      {new Date(item.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </td>
                   </tr>
                 ))}

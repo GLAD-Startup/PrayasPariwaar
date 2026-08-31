@@ -4,51 +4,63 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: #F7F5F0;
+    --foreground: #1C2421;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased selection:bg-red-500 selection:text-white;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #F7F5F0;
+    color: #1C2421;
+    font-family: 'Source Sans 3', 'Source Sans Pro', system-ui, sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Lora', Georgia, serif;
+    color: #1C2421;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  /* Accessible focus indicators for all interactive elements */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #2E5339;
+    outline-offset: 2px;
   }
 }
 
-/* Custom UI Utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+/* Institutional Ledger & Dispatch Utilities */
+.ledger-border {
+  border: 1px solid #E2DDD5;
 }
 
-.glass-panel-dark {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
+.ledger-divider {
+  border-color: #E2DDD5;
 }
 
-.gradient-blood {
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+.bg-paper {
+  background-color: #F7F5F0;
 }
 
-.gradient-emerald {
-  background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+.bg-stone-surface {
+  background-color: #EFECE6;
 }
 
-.gradient-navy {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-}
-
-/* Pulse animation for critical alerts */
-@keyframes pulse-emergency {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-.pulse-emergency {
-  animation: pulse-emergency 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-}
