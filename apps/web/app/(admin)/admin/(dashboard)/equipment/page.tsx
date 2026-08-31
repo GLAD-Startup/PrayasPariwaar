@@ -17,6 +17,10 @@ import {
   Send,
   Loader2,
   RefreshCw,
+  Search,
+  CheckCircle,
+  Package,
+  Wrench,
 } from "lucide-react";
 
 export default function AdminEquipmentPage() {
@@ -29,6 +33,7 @@ export default function AdminEquipmentPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // New Device Form State
   const [newDevice, setNewDevice] = useState({
@@ -101,65 +106,25 @@ export default function AdminEquipmentPage() {
       });
       fetchData();
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to create device.");
+      setErrorMsg(err.message || "Something went wrong.");
     } finally {
       setSubmittingDevice(false);
     }
   };
 
-  const updateDeviceStatus = async (id: string, newStatus: string) => {
-    setActionLoading(id);
+  const updateRequestStatus = async (requestId: string, newStatus: string) => {
+    setActionLoading(requestId);
     try {
-      const res = await fetch(`/api/equipment/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        setEquipmentList((prev) =>
-          prev.map((eq) => (eq.id === id ? { ...eq, status: newStatus } : eq))
-        );
-        setSuccessMsg(`Device status updated to ${newStatus}`);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const deleteDevice = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this device from inventory?")) return;
-
-    setActionLoading(id);
-    try {
-      const res = await fetch(`/api/equipment/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setEquipmentList((prev) => prev.filter((eq) => eq.id !== id));
-        setSuccessMsg("Device deleted from inventory.");
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const updateRequestStatus = async (id: string, newStatus: string) => {
-    setActionLoading(id);
-    try {
-      const res = await fetch(`/api/equipment/requests/${id}`, {
+      const res = await fetch(`/api/equipment/requests/${requestId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
         setRequestsList((prev) =>
-          prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+          prev.map((r) => (r.id === requestId ? { ...r, status: newStatus } : r))
         );
-        setSuccessMsg(`Loan request updated to ${newStatus}`);
+        fetchData();
       }
     } catch (e) {
       console.error(e);
@@ -168,17 +133,18 @@ export default function AdminEquipmentPage() {
     }
   };
 
-  const deleteRequest = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this patient loan request?")) return;
-
-    setActionLoading(id);
+  const updateDeviceStatus = async (deviceId: string, newStatus: string) => {
+    setActionLoading(deviceId);
     try {
-      const res = await fetch(`/api/equipment/requests/${id}`, {
-        method: "DELETE",
+      const res = await fetch(`/api/equipment/${deviceId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        setRequestsList((prev) => prev.filter((r) => r.id !== id));
-        setSuccessMsg("Loan request deleted.");
+        setEquipmentList((prev) =>
+          prev.map((eq) => (eq.id === deviceId ? { ...eq, status: newStatus } : eq))
+        );
       }
     } catch (e) {
       console.error(e);
@@ -187,83 +153,160 @@ export default function AdminEquipmentPage() {
     }
   };
 
+  const deleteDevice = async (deviceId: string) => {
+    if (!confirm("Are you sure you want to remove this medical equipment asset?")) return;
+    setActionLoading(deviceId);
+    try {
+      const res = await fetch(`/api/equipment/${deviceId}`, { method: "DELETE" });
+      if (res.ok) {
+        setEquipmentList((prev) => prev.filter((eq) => eq.id !== deviceId));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    if (!confirm("Are you sure you want to remove this patient borrowing request?")) return;
+    setActionLoading(requestId);
+    try {
+      const res = await fetch(`/api/equipment/requests/${requestId}`, { method: "DELETE" });
+      if (res.ok) {
+        setRequestsList((prev) => prev.filter((r) => r.id !== requestId));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const totalDevices = equipmentList.reduce((sum, eq) => sum + (eq.totalUnits || 1), 0);
+  const availableDevices = equipmentList.filter((eq) => eq.status === "AVAILABLE").length;
+  const pendingLoans = requestsList.filter((r) => r.status === "PENDING").length;
+  const activeLoans = requestsList.filter((r) => r.status === "ACTIVE" || r.status === "APPROVED").length;
+
+  const filteredEquipment = equipmentList.filter((eq) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return eq.name.toLowerCase().includes(q) || eq.category.toLowerCase().includes(q);
+  });
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink flex items-center gap-2">
-            <Stethoscope className="w-6 h-6 text-prayas-neem" />
-            <span>Medical Equipment Bank & Loan Queue</span>
+    <div className="space-y-6">
+      {/* 1. Header with Add Button */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+            <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Free Community Medical Lending Bank</span>
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+            Medical Equipment Bank & Loan Queue
           </h1>
-          <p className="text-xs text-prayas-muted mt-1">
-            Manage oxygen concentrators, hospital beds, wheelchairs, and review incoming patient home loan requests.
+          <p className="text-xs text-prayas-muted max-w-2xl">
+            Manage oxygen concentrators, hospital beds, wheelchairs, and review incoming patient home loan requests across Mathura district.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => {
-              setIsAddingDevice(!isAddingDevice);
-              setActiveTab("INVENTORY");
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#2E5339] text-white font-bold text-xs rounded-lg shadow-md hover:bg-[#23432b] transition-all"
+            onClick={() => setIsAddingDevice(!isAddingDevice)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
           >
             {isAddingDevice ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            <span>{isAddingDevice ? "Cancel" : "Add New Device Asset"}</span>
+            <span>{isAddingDevice ? "Cancel Form" : "Add New Device Asset"}</span>
           </button>
 
           <button
             onClick={fetchData}
-            className="p-2 bg-white hover:bg-prayas-stone text-prayas-ink rounded-lg border border-prayas-rule shadow-sm"
-            title="Refresh"
+            disabled={loading}
+            className="p-2.5 bg-prayas-stone hover:bg-prayas-paper text-prayas-ink rounded-xl border border-prayas-rule shadow-sm transition-colors disabled:opacity-50"
+            title="Refresh Inventory"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-prayas-neem" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Messages */}
+      {/* 2. Top Stats Counters */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="border border-prayas-rule bg-white rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-prayas-muted uppercase tracking-wider">Total Inventory Assets</span>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{equipmentList.length}</p>
+          <span className="text-[10px] text-slate-400">{totalDevices} total units in bank</span>
+        </div>
+
+        <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Available in Center</span>
+          <p className="font-serif text-2xl font-bold text-emerald-950">{availableDevices}</p>
+          <span className="text-[10px] text-emerald-700 font-medium">Ready for dispatch</span>
+        </div>
+
+        <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Active Patient Loans</span>
+          <p className="font-serif text-2xl font-bold text-blue-950">{activeLoans}</p>
+          <span className="text-[10px] text-blue-700">In patient homecare</span>
+        </div>
+
+        <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Pending Requests</span>
+          <p className="font-serif text-2xl font-bold text-amber-950">{pendingLoans}</p>
+          <span className="text-[10px] text-amber-700">Awaiting coordinator review</span>
+        </div>
+      </div>
+
+      {/* Notifications */}
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-900 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0" />
-            <span>{successMsg}</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)} className="text-green-700 hover:text-green-900">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setSuccessMsg(null)}>
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-prayas-crimson shrink-0" />
-            <span>{errorMsg}</span>
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span className="font-semibold">{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg(null)} className="text-red-700 hover:text-red-900">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setErrorMsg(null)}>
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* ADD NEW DEVICE FORM */}
+      {/* 3. Collapsible Add New Device Form */}
       {isAddingDevice && (
-        <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card space-y-5">
-          <div className="border-b border-prayas-rule pb-3">
-            <h2 className="font-serif text-lg font-bold text-prayas-ink">
-              Register New Medical Equipment to Bank
-            </h2>
-            <p className="text-xs text-prayas-muted">
-              Add oxygen concentrators, hospital beds, or monitors available for free community lending.
-            </p>
+        <div className="border border-emerald-900/20 bg-white rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-in fade-in duration-200">
+          <div className="border-b border-prayas-rule pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-xl font-bold text-prayas-ink">
+                Register New Medical Equipment to Bank
+              </h2>
+              <p className="text-xs text-prayas-muted mt-0.5">
+                Add 10L oxygen concentrators, hospital beds, wheelchairs, or monitors available for free community lending.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsAddingDevice(false)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <form onSubmit={handleAddDevice} className="space-y-4 text-xs">
+          <form onSubmit={handleAddDevice} className="space-y-5 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="font-bold text-prayas-ink block">Equipment Name *</label>
                 <input
                   type="text"
@@ -271,16 +314,16 @@ export default function AdminEquipmentPage() {
                   placeholder="e.g. Philips EverFlo 10L Oxygen Concentrator"
                   value={newDevice.name}
                   onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium text-xs sm:text-sm"
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="font-bold text-prayas-ink block">Category *</label>
                 <select
                   value={newDevice.category}
                   onChange={(e) => setNewDevice({ ...newDevice, category: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold text-xs sm:text-sm"
                 >
                   <option value="OXYGEN_CONCENTRATOR">Oxygen Concentrator (5L / 10L)</option>
                   <option value="HOSPITAL_BED">Hospital Bed (Semi-Fowler / Full)</option>
@@ -293,7 +336,7 @@ export default function AdminEquipmentPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="font-bold text-prayas-ink block">Total Units In Bank *</label>
                 <input
                   type="number"
@@ -307,16 +350,16 @@ export default function AdminEquipmentPage() {
                       availableUnits: Number(e.target.value),
                     })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono text-xs sm:text-sm"
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="font-bold text-prayas-ink block">Initial Status *</label>
                 <select
                   value={newDevice.status}
                   onChange={(e) => setNewDevice({ ...newDevice, status: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold text-xs sm:text-sm"
                 >
                   <option value="AVAILABLE">AVAILABLE (In Center)</option>
                   <option value="LEASED">LEASED (At Patient Home)</option>
@@ -324,7 +367,7 @@ export default function AdminEquipmentPage() {
                 </select>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <ImageUpload
                   label="Device Photograph (Saved to Server)"
                   value={newDevice.imageUrl}
@@ -333,14 +376,14 @@ export default function AdminEquipmentPage() {
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="font-bold text-prayas-ink block">Specifications & Usage Notes</label>
               <textarea
                 rows={2}
                 placeholder="Include flow rate, accessories included (cannula, mask, humidifier bottle)..."
                 value={newDevice.description}
                 onChange={(e) => setNewDevice({ ...newDevice, description: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem text-xs sm:text-sm"
               />
             </div>
 
@@ -348,60 +391,85 @@ export default function AdminEquipmentPage() {
               <button
                 type="button"
                 onClick={() => setIsAddingDevice(false)}
-                className="px-4 py-2 rounded-lg border border-prayas-rule font-semibold text-prayas-ink hover:bg-prayas-stone"
+                className="px-5 py-2.5 rounded-xl border border-prayas-rule font-semibold text-prayas-ink hover:bg-prayas-stone"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submittingDevice}
-                className="px-6 py-2 rounded-lg font-bold bg-[#2E5339] text-white hover:bg-[#23432b] shadow-sm disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl font-bold bg-[#2E5339] text-white hover:bg-[#23432b] shadow-md flex items-center gap-2 disabled:opacity-50"
                 style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
               >
-                {submittingDevice ? "Registering..." : "Add to Medical Bank →"}
+                {submittingDevice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+                <span>{submittingDevice ? "Registering..." : "Add to Medical Bank →"}</span>
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-prayas-rule pb-2">
-        <button
-          onClick={() => setActiveTab("REQUESTS")}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
-            activeTab === "REQUESTS"
-              ? "bg-[#2E5339] text-white shadow-sm"
-              : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
-          }`}
-          style={activeTab === "REQUESTS" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
-        >
-          Patient Borrowing Requests ({requestsList.length})
-        </button>
+      {/* 4. Tab Navigation & Search Toolbar */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-4 shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab("REQUESTS")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "REQUESTS"
+                  ? "bg-[#2E5339] text-white shadow-md"
+                  : "bg-prayas-stone/60 hover:bg-prayas-stone text-prayas-ink border border-prayas-rule"
+              }`}
+              style={activeTab === "REQUESTS" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
+            >
+              Patient Loan Requests ({requestsList.length})
+            </button>
 
-        <button
-          onClick={() => setActiveTab("INVENTORY")}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
-            activeTab === "INVENTORY"
-              ? "bg-[#2E5339] text-white shadow-sm"
-              : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
-          }`}
-          style={activeTab === "INVENTORY" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
-        >
-          Equipment Inventory Assets ({equipmentList.length})
-        </button>
+            <button
+              onClick={() => setActiveTab("INVENTORY")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "INVENTORY"
+                  ? "bg-[#2E5339] text-white shadow-md"
+                  : "bg-prayas-stone/60 hover:bg-prayas-stone text-prayas-ink border border-prayas-rule"
+              }`}
+              style={activeTab === "INVENTORY" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
+            >
+              Equipment Inventory Assets ({equipmentList.length})
+            </button>
+          </div>
+
+          {activeTab === "INVENTORY" && (
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-prayas-muted absolute left-3.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search equipment..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-1.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* TAB 1: PATIENT BORROWING REQUESTS QUEUE */}
+      {/* 5. TAB 1: PATIENT BORROWING REQUESTS QUEUE */}
       {activeTab === "REQUESTS" && (
-        <div className="bg-white border border-prayas-rule rounded-xl overflow-hidden shadow-card">
+        <div className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card">
           {loading ? (
-            <div className="p-12 text-center text-prayas-muted text-xs">
-              Loading borrowing queue...
+            <div className="p-16 text-center text-prayas-muted text-xs">
+              <RefreshCw className="w-6 h-6 text-prayas-neem animate-spin mx-auto mb-2" />
+              <p className="font-semibold text-prayas-ink">Loading patient equipment loan queue...</p>
             </div>
           ) : requestsList.length === 0 ? (
-            <div className="p-12 text-center text-prayas-muted text-xs">
-              No active patient borrowing requests in queue.
+            <div className="p-16 text-center text-prayas-muted text-xs space-y-3">
+              <CheckCircle2 className="w-10 h-10 text-prayas-neem mx-auto" />
+              <h3 className="font-serif text-lg font-bold text-prayas-ink">
+                No Active Patient Borrowing Requests
+              </h3>
+              <p className="max-w-md mx-auto leading-relaxed">
+                All patient equipment loans have been processed and dispatched. New incoming borrowing requests will appear here in real-time.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -418,7 +486,7 @@ export default function AdminEquipmentPage() {
                 </thead>
                 <tbody className="divide-y divide-prayas-rule">
                   {requestsList.map((r) => (
-                    <tr key={r.id} className="hover:bg-prayas-paper transition-colors">
+                    <tr key={r.id} className="hover:bg-prayas-stone/30 transition-colors">
                       <td className="p-4">
                         <div className="font-bold text-prayas-ink text-sm">{r.requesterName}</div>
                         <a
@@ -448,7 +516,7 @@ export default function AdminEquipmentPage() {
                         )}
                       </td>
 
-                      <td className="p-4 text-prayas-muted max-w-xs truncate">
+                      <td className="p-4 text-prayas-muted max-w-xs">
                         <div className="flex items-center gap-1 text-[11px]">
                           <MapPin className="w-3.5 h-3.5 shrink-0 text-prayas-muted" />
                           <span className="truncate">{r.deliveryAddress}</span>
@@ -457,9 +525,9 @@ export default function AdminEquipmentPage() {
 
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                             r.status === "ACTIVE"
-                              ? "bg-green-100 text-emerald-900 border border-green-200"
+                              ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
                               : r.status === "APPROVED"
                               ? "bg-blue-100 text-blue-900 border border-blue-200"
                               : r.status === "PENDING"
@@ -473,12 +541,12 @@ export default function AdminEquipmentPage() {
                         </span>
                       </td>
 
-                      <td className="p-4 text-right space-x-1.5">
+                      <td className="p-4 text-right space-x-2">
                         {r.status === "PENDING" && (
                           <button
                             onClick={() => updateRequestStatus(r.id, "APPROVED")}
                             disabled={actionLoading === r.id}
-                            className="px-2.5 py-1 bg-[#2E5339] hover:bg-[#23432b] text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50"
+                            className="px-3 py-1.5 bg-[#2E5339] hover:bg-[#23432b] text-white text-[11px] font-bold rounded-xl shadow-sm disabled:opacity-50"
                             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                           >
                             Approve
@@ -489,7 +557,7 @@ export default function AdminEquipmentPage() {
                           <button
                             onClick={() => updateRequestStatus(r.id, "ACTIVE")}
                             disabled={actionLoading === r.id}
-                            className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl shadow-sm disabled:opacity-50"
                           >
                             Delivered
                           </button>
@@ -499,7 +567,7 @@ export default function AdminEquipmentPage() {
                           <button
                             onClick={() => updateRequestStatus(r.id, "RETURNED")}
                             disabled={actionLoading === r.id}
-                            className="px-2.5 py-1 bg-prayas-stone hover:bg-slate-200 text-slate-800 text-[11px] font-bold rounded border border-prayas-rule disabled:opacity-50"
+                            className="px-3 py-1.5 bg-prayas-stone hover:bg-slate-200 text-slate-800 text-[11px] font-bold rounded-xl border border-prayas-rule disabled:opacity-50"
                           >
                             Mark Returned
                           </button>
@@ -508,7 +576,7 @@ export default function AdminEquipmentPage() {
                         <button
                           onClick={() => deleteRequest(r.id)}
                           disabled={actionLoading === r.id}
-                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors inline-flex items-center disabled:opacity-50"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
                           title="Delete request"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -523,51 +591,65 @@ export default function AdminEquipmentPage() {
         </div>
       )}
 
-      {/* TAB 2: EQUIPMENT INVENTORY ASSETS */}
+      {/* 6. TAB 2: EQUIPMENT INVENTORY ASSETS (Fluid Grid) */}
       {activeTab === "INVENTORY" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {equipmentList.map((eq) => (
-            <div
-              key={eq.id}
-              className="bg-white border border-prayas-rule rounded-xl p-5 shadow-card space-y-3 flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                {eq.imageUrl && (
-                  <div className="aspect-[16/10] rounded-lg overflow-hidden border border-prayas-rule bg-prayas-stone mb-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={eq.imageUrl}
-                      alt={eq.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {filteredEquipment.map((eq) => {
+            const isAvail = eq.status === "AVAILABLE";
+            return (
+              <div
+                key={eq.id}
+                className="bg-white border border-prayas-rule rounded-2xl p-5 shadow-card hover:shadow-lg transition-all duration-200 flex flex-col justify-between space-y-4 group"
+              >
+                <div className="space-y-3">
+                  {/* Photo Container */}
+                  <div className="aspect-[16/10] rounded-xl overflow-hidden border border-prayas-rule bg-prayas-stone/50 relative flex items-center justify-center">
+                    {eq.imageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={eq.imageUrl}
+                        alt={eq.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="text-center p-4 text-prayas-muted">
+                        <Stethoscope className="w-10 h-10 mx-auto text-prayas-neem/60 mb-1" />
+                        <span className="text-[10px] uppercase font-bold">Equipment Asset</span>
+                      </div>
+                    )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-prayas-neem bg-green-50 px-2 py-0.5 rounded border border-green-100">
-                    {eq.category}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      eq.status === "AVAILABLE"
-                        ? "bg-green-100 text-emerald-900 border border-green-200"
-                        : "bg-amber-100 text-amber-900 border border-amber-200"
-                    }`}
-                  >
-                    {eq.status}
-                  </span>
+                    <div className="absolute top-2 right-2">
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm ${
+                          isAvail
+                            ? "bg-emerald-600 text-white"
+                            : eq.status === "MAINTENANCE"
+                            ? "bg-amber-600 text-white"
+                            : "bg-blue-600 text-white"
+                        }`}
+                      >
+                        {eq.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-block uppercase tracking-wider">
+                      {eq.category.replace(/_/g, " ")}
+                    </span>
+
+                    <h3 className="font-serif text-base font-bold text-prayas-ink line-clamp-1 group-hover:text-[#2E5339] transition-colors">
+                      {eq.name}
+                    </h3>
+
+                    <p className="text-xs text-prayas-muted leading-relaxed line-clamp-2">
+                      {eq.description || "Maintained in free community circulation for Vrindavan homecare."}
+                    </p>
+                  </div>
                 </div>
 
-                <h3 className="font-serif text-base font-bold text-prayas-ink">
-                  {eq.name}
-                </h3>
-                <p className="text-xs text-prayas-muted leading-relaxed">
-                  {eq.description || "In free circulation for Vrindavan homecare."}
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-prayas-rule flex items-center justify-between text-xs">
-                <div className="space-x-1">
+                <div className="pt-3 border-t border-prayas-rule flex items-center justify-between text-xs">
                   <button
                     onClick={() =>
                       updateDeviceStatus(
@@ -576,23 +658,24 @@ export default function AdminEquipmentPage() {
                       )
                     }
                     disabled={actionLoading === eq.id}
-                    className="text-[11px] font-semibold text-prayas-neem hover:underline"
+                    className="text-[11px] font-semibold text-prayas-neem hover:underline flex items-center gap-1 disabled:opacity-50"
                   >
-                    Toggle {eq.status === "AVAILABLE" ? "Maintenance" : "Available"}
+                    <Wrench className="w-3 h-3" />
+                    <span>Set {eq.status === "AVAILABLE" ? "Maintenance" : "Available"}</span>
+                  </button>
+
+                  <button
+                    onClick={() => deleteDevice(eq.id)}
+                    disabled={actionLoading === eq.id}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                    title="Delete device"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-
-                <button
-                  onClick={() => deleteDevice(eq.id)}
-                  disabled={actionLoading === eq.id}
-                  className="text-red-600 hover:text-red-800 p-1"
-                  title="Delete device"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

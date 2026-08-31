@@ -34,17 +34,17 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   ];
 
   return (
-    <div className="space-y-12 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-12 pb-20 max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* Page Header */}
-      <div className="border-b border-prayas-rule pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-medium text-prayas-ink">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-medium text-prayas-ink">
             <span>Direct Field Programs</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+          <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink leading-tight">
             Our Work in Vrindavan & Mathura District
           </h1>
-          <p className="text-sm sm:text-base text-prayas-muted max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-2xl 2xl:max-w-3xl leading-relaxed">
             Four specialized program pillars aimed at breaking cycles of poverty, restoring local ecology, and securing emergency healthcare access.
           </p>
         </div>

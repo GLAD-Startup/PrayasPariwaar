@@ -50,19 +50,19 @@ export default function Navbar() {
   return (
     <>
       {/* Top Ledger Strip: Education Mission & Blood Desk */}
-      <div className="bg-prayas-stone border-b border-prayas-rule text-xs text-prayas-muted py-2 px-3 sm:px-6 select-none w-full">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2">
+      <div className="bg-prayas-stone border-b border-prayas-rule text-xs 2xl:text-sm text-prayas-muted py-2 px-3 sm:px-6 lg:px-8 2xl:px-12 select-none w-full">
+        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Primary Education Mission */}
           <div className="flex items-center gap-2 text-center sm:text-left justify-center sm:justify-start">
             <span className="inline-block w-2 h-2 rounded-full bg-prayas-neem animate-pulse shrink-0" aria-hidden="true" />
-            <Link href="/projects/aashayein-education" className="font-semibold text-prayas-ink hover:text-prayas-neem transition-colors flex items-center gap-1.5 text-[11px] sm:text-xs">
-              <GraduationCap className="w-3.5 h-3.5 text-prayas-neem shrink-0" />
+            <Link href="/projects/aashayein-education" className="font-semibold text-prayas-ink hover:text-prayas-neem transition-colors flex items-center gap-1.5 text-[11px] sm:text-xs 2xl:text-sm">
+              <GraduationCap className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-prayas-neem shrink-0" />
               <span>Project Aashayein: Sponsor a Rural Student for ₹500/mo</span>
             </Link>
           </div>
 
           {/* Right: Tax Exemption & Secondary Emergency Blood Helpline */}
-          <div className="flex items-center gap-3 text-[11px] sm:text-xs justify-center sm:justify-end">
+          <div className="flex items-center gap-3 text-[11px] sm:text-xs 2xl:text-sm justify-center sm:justify-end flex-wrap">
             <span className="text-prayas-neem font-semibold hidden sm:inline">
               ✓ 80G Tax-Exempt Certified
             </span>
@@ -71,7 +71,7 @@ export default function Navbar() {
               href="tel:+919412279000"
               className="flex items-center gap-1 font-medium text-prayas-crimson hover:underline"
             >
-              <Droplet className="w-3 h-3 fill-current shrink-0" />
+              <Droplet className="w-3 h-3 2xl:w-3.5 2xl:h-3.5 fill-current shrink-0" />
               <span>24/7 Blood Desk: +91 94122 79000</span>
             </a>
             <span className="text-prayas-rule">|</span>
@@ -87,20 +87,20 @@ export default function Navbar() {
 
       {/* Main Header / Navigation Bar */}
       <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-prayas-rule shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20 gap-3">
+        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+          <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
             {/* Brand Logo: Prayas Pariwaar */}
             <Link href="/" className="flex items-center gap-2 group shrink-0 py-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/prayas-logo.png"
                 alt="Prayas Pariwaar - A Trial to Move Ahead"
-                className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                className="h-9 sm:h-11 2xl:h-14 w-auto object-contain transition-transform group-hover:scale-105"
               />
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs font-semibold text-slate-800">
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 2xl:gap-3 text-xs xl:text-[13px] 2xl:text-sm font-semibold text-slate-800">
               {/* Home */}
               <Link
                 href="/"

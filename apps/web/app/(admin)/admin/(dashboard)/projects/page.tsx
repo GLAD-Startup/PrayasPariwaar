@@ -193,27 +193,30 @@ export default function AdminProjectsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink flex items-center gap-2">
-            <FolderKanban className="w-6 h-6 text-prayas-neem" />
-            <span>Programs & Project Causes</span>
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+            <FolderKanban className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Grassroots Program Administration</span>
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+            Programs & Project Causes
           </h1>
-          <p className="text-xs text-prayas-muted mt-1">
-            Create and manage community initiatives, upload high-res field photo galleries, track funding goals, and update project status.
+          <p className="text-xs text-prayas-muted max-w-2xl">
+            Create and manage community initiatives, upload high-res field photo galleries, track funding goals, and update project status in Mathura district.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start md:self-auto">
           <button
             onClick={() => {
               setIsCreating(!isCreating);
               setErrorMsg(null);
               setSuccessMsg(null);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
           >
             {isCreating ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}

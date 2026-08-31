@@ -173,19 +173,19 @@ export default function BloodDonationPage() {
   ];
 
   return (
-    <div className="space-y-10 pb-20 max-w-5xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-10 pb-20 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* 1. Header & Emergency Helpline Masthead */}
-      <div className="border-b border-prayas-rule pb-8 space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-50 border border-prayas-crimsonBorder text-xs font-bold text-prayas-crimson">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-50 border border-prayas-crimsonBorder text-xs 2xl:text-sm font-bold text-prayas-crimson">
           <Droplet className="w-3.5 h-3.5 fill-current" />
           <span>24/7 Voluntary Blood Donor Coordination Desk</span>
         </div>
 
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink">
           Emergency Blood Registry • Mathura & Vrindavan
         </h1>
 
-        <p className="text-sm text-prayas-muted leading-relaxed max-w-3xl">
+        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted leading-relaxed max-w-3xl 2xl:max-w-4xl">
           Prayas Pariwaar coordinates voluntary, non-remunerated blood donors for critical emergency surgeries, accident trauma, and Thalassemia patients in district hospitals across Mathura, Vrindavan, and Agra.
         </p>
 

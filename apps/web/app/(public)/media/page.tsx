@@ -25,17 +25,17 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
   });
 
   return (
-    <div className="space-y-12 pb-20 max-w-6xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-12 pb-20 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* Page Masthead */}
-      <div className="border-b border-prayas-rule pb-8 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-bold text-prayas-neem">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-bold text-prayas-neem">
           <Newspaper className="w-3.5 h-3.5" />
           <span>Press Archive & Media Clippings</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-prayas-ink leading-tight">
           Media Centre • News & Reports
         </h1>
-        <p className="text-sm sm:text-base text-prayas-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-3xl 2xl:max-w-4xl leading-relaxed">
           Scanned press clippings, print articles, and television broadcast reports documenting Prayas Pariwaar’s grassroots interventions across Mathura, Vrindavan, and Braj region.
         </p>
       </div>

@@ -21,6 +21,8 @@ import {
   Loader2,
   Edit2,
   RefreshCw,
+  Search,
+  Sparkles,
 } from "lucide-react";
 
 export default function AdminPostsPage() {
@@ -32,6 +34,7 @@ export default function AdminPostsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Form State
   const [formData, setFormData] = useState<{
@@ -150,29 +153,35 @@ export default function AdminPostsPage() {
         published: formData.published,
       };
 
-      const url = editingPostId ? `/api/posts/${editingPostId}` : "/api/posts";
-      const method = editingPostId ? "PATCH" : "POST";
+      let res;
+      if (editingPostId) {
+        res = await fetch(`/api/posts/${editingPostId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/posts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to save post.");
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to save post.");
       }
 
       setSuccessMsg(
         editingPostId
-          ? "Field dispatch updated successfully!"
-          : "Field dispatch published successfully!"
+          ? "Field dispatch updated successfully."
+          : "New field story published successfully!"
       );
       handleCancelForm();
       fetchPosts();
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to submit post.");
+      setErrorMsg(err.message || "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
@@ -217,21 +226,38 @@ export default function AdminPostsPage() {
     }
   };
 
+  const filteredPosts = posts.filter((p) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      (p.location && p.location.toLowerCase().includes(q)) ||
+      (p.type && p.type.toLowerCase().includes(q))
+    );
+  });
+
+  const eventCount = posts.filter((p) => p.type === "EVENT").length;
+  const achievementCount = posts.filter((p) => p.type === "ACHIEVEMENT").length;
+  const newsCount = posts.filter((p) => p.type === "NEWS").length;
+
   return (
-    <div className="space-y-8 max-w-6xl">
-      {/* Header */}
-      <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink flex items-center gap-2">
-            <FileText className="w-6 h-6 text-prayas-neem" />
-            <span>Field Dispatches & Events Publisher</span>
+    <div className="space-y-6">
+      {/* 1. Header with Publisher Button */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Community Editorial & Press Desk</span>
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+            Field Dispatches & Events Publisher
           </h1>
-          <p className="text-xs text-prayas-muted mt-1">
-            Publish, edit, and manage event reports, photo galleries, and community announcements.
+          <p className="text-xs text-prayas-muted max-w-2xl">
+            Publish, edit, and manage grassroots event reports, photo galleries, and field announcements across Vrindavan, Mathura, and Braj rural centers.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => {
               if (isCreating) {
@@ -240,7 +266,7 @@ export default function AdminPostsPage() {
                 setIsCreating(true);
               }
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
           >
             {isCreating ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -255,56 +281,92 @@ export default function AdminPostsPage() {
 
           <button
             onClick={fetchPosts}
-            className="p-2 bg-white hover:bg-prayas-stone text-prayas-ink rounded-lg border border-prayas-rule shadow-sm"
-            title="Refresh"
+            disabled={loading}
+            className="p-2.5 bg-prayas-stone hover:bg-prayas-paper text-prayas-ink rounded-xl border border-prayas-rule shadow-sm transition-colors disabled:opacity-50"
+            title="Refresh List"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-prayas-neem" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Status Messages */}
+      {/* 2. Top Stats Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="border border-prayas-rule bg-white rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-prayas-muted uppercase tracking-wider">Total Published</span>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{posts.length}</p>
+          <span className="text-[10px] text-slate-400">Public stories</span>
+        </div>
+
+        <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Field Events & Camps</span>
+          <p className="font-serif text-2xl font-bold text-emerald-950">{eventCount}</p>
+          <span className="text-[10px] text-emerald-700 font-medium">On-ground seva</span>
+        </div>
+
+        <div className="border border-purple-200 bg-purple-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-purple-800 uppercase tracking-wider">Achievements & Awards</span>
+          <p className="font-serif text-2xl font-bold text-purple-950">{achievementCount}</p>
+          <span className="text-[10px] text-purple-700">Milestones verified</span>
+        </div>
+
+        <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Press & News Bulletins</span>
+          <p className="font-serif text-2xl font-bold text-blue-950">{newsCount}</p>
+          <span className="text-[10px] text-blue-700">Official notices</span>
+        </div>
+      </div>
+
+      {/* Notifications */}
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-900 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)} className="text-green-700 hover:text-green-900">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-700 hover:text-emerald-900">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-prayas-crimson shrink-0" />
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{errorMsg}</span>
           </div>
           <button onClick={() => setErrorMsg(null)} className="text-red-700 hover:text-red-900">
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* CREATE / EDIT DISPATCH FORM */}
+      {/* 3. CREATE / EDIT DISPATCH FORM */}
       {isCreating && (
-        <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
+        <div className="border border-emerald-900/20 bg-white rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-in fade-in duration-200">
           <div className="border-b border-prayas-rule pb-3 flex items-center justify-between">
-            <h2 className="font-serif text-lg font-bold text-prayas-ink">
-              {editingPostId ? "Edit Field Report / Event" : "Create New Field Report / Event Story"}
-            </h2>
-            <span className="text-xs text-prayas-muted font-medium">
-              {editingPostId ? "Editing existing dispatch" : "All photos saved to server folder"}
-            </span>
+            <div>
+              <h2 className="font-serif text-xl font-bold text-prayas-ink">
+                {editingPostId ? "Edit Field Report / Event" : "Create New Field Report / Event Story"}
+              </h2>
+              <p className="text-xs text-prayas-muted mt-0.5">
+                {editingPostId ? "Updating existing field dispatch" : "All photos uploaded will be stored in /uploads and published to the public gallery."}
+              </p>
+            </div>
+            <button
+              onClick={handleCancelForm}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 text-xs">
             {/* Title & Slug */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-prayas-ink">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-prayas-ink">
                   Event / Story Title *
                 </label>
                 <input
@@ -313,12 +375,12 @@ export default function AdminPostsPage() {
                   placeholder="e.g. Annual School Bag & Sweater Distribution in Raman Reti"
                   value={formData.title}
                   onChange={handleTitleChange}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium text-xs sm:text-sm"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-prayas-ink">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-prayas-ink">
                   URL Slug (Auto-generated) *
                 </label>
                 <input
@@ -327,21 +389,21 @@ export default function AdminPostsPage() {
                   placeholder="annual-school-bag-distribution"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono text-xs sm:text-sm"
                 />
               </div>
             </div>
 
             {/* Type, Date, Location */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-prayas-ink">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-prayas-ink">
                   Post Category / Type *
                 </label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold text-xs sm:text-sm"
                 >
                   <option value="EVENT">EVENT (Field Camp / Distribution)</option>
                   <option value="NEWS">NEWS (Organization Milestone)</option>
@@ -350,8 +412,8 @@ export default function AdminPostsPage() {
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-prayas-ink">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-prayas-ink">
                   Event / Activity Date *
                 </label>
                 <input
@@ -359,12 +421,12 @@ export default function AdminPostsPage() {
                   required
                   value={formData.eventDate}
                   onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono text-xs sm:text-sm"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-prayas-ink">
+              <div className="space-y-1.5">
+                <label className="block font-bold text-prayas-ink">
                   Location / Village *
                 </label>
                 <input
@@ -373,13 +435,13 @@ export default function AdminPostsPage() {
                   placeholder="e.g. Raman Reti Center, Vrindavan"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium text-xs sm:text-sm"
                 />
               </div>
             </div>
 
-            {/* MODULAR IMAGE UPLOAD: Cover Photo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-xl bg-prayas-stone/40 border border-prayas-rule">
+            {/* MODULAR IMAGE UPLOADS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 rounded-2xl bg-prayas-stone/30 border border-prayas-rule">
               <div>
                 <ImageUpload
                   label="Primary Cover Photo"
@@ -389,7 +451,6 @@ export default function AdminPostsPage() {
                 />
               </div>
 
-              {/* MODULAR IMAGE UPLOAD: Multi-Photo Gallery */}
               <div>
                 <ImageUpload
                   multiple={true}
@@ -402,8 +463,8 @@ export default function AdminPostsPage() {
             </div>
 
             {/* Summary / Excerpt */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-prayas-ink">
+            <div className="space-y-1.5">
+              <label className="block font-bold text-prayas-ink">
                 Short Summary / Excerpt
               </label>
               <textarea
@@ -411,13 +472,13 @@ export default function AdminPostsPage() {
                 placeholder="Brief 1-2 sentence overview shown in homepage feed and search previews..."
                 value={formData.excerpt}
                 onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem text-xs sm:text-sm"
               />
             </div>
 
             {/* Full Story Content */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-prayas-ink">
+            <div className="space-y-1.5">
+              <label className="block font-bold text-prayas-ink">
                 Full Field Report Content *
               </label>
               <textarea
@@ -426,7 +487,7 @@ export default function AdminPostsPage() {
                 placeholder="Detailed field write-up, beneficiaries count, volunteer names, and impact summary..."
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem leading-relaxed text-xs sm:text-sm"
               />
             </div>
 
@@ -446,14 +507,14 @@ export default function AdminPostsPage() {
                 <button
                   type="button"
                   onClick={handleCancelForm}
-                  className="px-4 py-2.5 rounded-lg border border-prayas-rule text-xs font-semibold text-prayas-ink hover:bg-prayas-stone"
+                  className="px-5 py-2.5 rounded-xl border border-prayas-rule font-semibold text-prayas-ink hover:bg-prayas-stone"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 rounded-lg text-xs font-bold bg-[#2E5339] text-white hover:bg-[#23432b] shadow-md flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl font-bold bg-[#2E5339] text-white hover:bg-[#23432b] shadow-md flex items-center gap-2 disabled:opacity-50"
                   style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                 >
                   {submitting ? (
@@ -475,27 +536,39 @@ export default function AdminPostsPage() {
         </div>
       )}
 
-      {/* DISPATCHES DATA TABLE */}
+      {/* 4. DISPATCHES DATA TABLE */}
       <div className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card">
-        <div className="p-4 border-b border-prayas-rule flex items-center justify-between">
-          <span className="font-serif font-bold text-sm text-prayas-ink">
+        <div className="p-4 border-b border-prayas-rule flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="font-serif font-bold text-base text-prayas-ink">
             Published Field Dispatches & Stories ({posts.length})
           </span>
-          <button
-            onClick={fetchPosts}
-            className="text-xs font-semibold text-prayas-neem hover:underline"
-          >
-            Refresh List
-          </button>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-prayas-muted absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search stories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+            />
+          </div>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-prayas-muted text-xs">
-            Loading field reports...
+          <div className="p-16 text-center text-prayas-muted text-xs">
+            <RefreshCw className="w-6 h-6 text-prayas-neem animate-spin mx-auto mb-2" />
+            <p className="font-semibold text-prayas-ink">Loading field reports...</p>
           </div>
-        ) : posts.length === 0 ? (
-          <div className="p-12 text-center text-prayas-muted text-xs">
-            No dispatches published yet. Click "Create New Dispatch" to upload photos and publish.
+        ) : filteredPosts.length === 0 ? (
+          <div className="p-16 text-center text-prayas-muted text-xs space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-prayas-neem mx-auto" />
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              No Field Dispatches Found
+            </h3>
+            <p className="max-w-md mx-auto leading-relaxed">
+              No field stories match your search. Click "Create New Dispatch / Event" to write a report and upload photos.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -511,12 +584,12 @@ export default function AdminPostsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-prayas-rule">
-                {posts.map((post) => (
-                  <tr key={post.id} className="hover:bg-prayas-paper transition-colors">
+                {filteredPosts.map((post) => (
+                  <tr key={post.id} className="hover:bg-prayas-stone/30 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {post.coverImage ? (
-                          <div className="w-12 h-10 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                          <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={post.coverImage}
@@ -525,29 +598,35 @@ export default function AdminPostsPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-10 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                          <div className="w-14 h-11 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
                             <ImageIcon className="w-4 h-4" />
                           </div>
                         )}
                         <div>
-                          <span className="font-bold text-prayas-ink block hover:text-prayas-neem">
+                          <span className="font-bold text-prayas-ink text-sm block hover:text-prayas-neem line-clamp-1">
                             {post.title}
                           </span>
                           <span className="text-[10px] text-prayas-muted font-mono">
-                            /{post.slug}
+                            /blog/{post.slug}
                           </span>
                         </div>
                       </div>
                     </td>
 
                     <td className="p-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-prayas-neem border border-green-200">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                        post.type === "ACHIEVEMENT"
+                          ? "bg-purple-50 text-purple-800 border-purple-200"
+                          : post.type === "NEWS"
+                          ? "bg-blue-50 text-blue-800 border-blue-200"
+                          : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      }`}>
                         {post.type || "EVENT"}
                       </span>
                     </td>
 
                     <td className="p-4">
-                      <div className="text-prayas-ink font-medium">
+                      <div className="text-prayas-ink font-semibold">
                         {post.eventDate
                           ? new Date(post.eventDate).toLocaleDateString("en-IN", {
                               day: "numeric",
@@ -561,8 +640,8 @@ export default function AdminPostsPage() {
                       </div>
                       {post.location && (
                         <div className="text-[11px] text-prayas-muted flex items-center gap-1 mt-0.5 truncate max-w-xs">
-                          <MapPin className="w-3 h-3 text-prayas-muted" />
-                          <span>{post.location}</span>
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{post.location}</span>
                         </div>
                       )}
                     </td>
@@ -573,8 +652,8 @@ export default function AdminPostsPage() {
                         disabled={actionLoading === post.id}
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
                           post.published
-                            ? "bg-green-100 text-emerald-900 border border-green-200 hover:bg-green-200"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            ? "bg-emerald-100 text-emerald-900 border border-emerald-200 hover:bg-emerald-200"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
                         }`}
                       >
                         {post.published ? (
@@ -593,38 +672,37 @@ export default function AdminPostsPage() {
 
                     <td className="p-4 text-prayas-muted text-[11px]">
                       {post.images && post.images.length > 0 ? (
-                        <span className="font-semibold text-prayas-ink">
+                        <span className="font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule">
                           📷 {post.images.length} photos
                         </span>
                       ) : (
-                        <span>1 photo</span>
+                        <span className="text-slate-400">1 photo</span>
                       )}
                     </td>
 
-                    <td className="p-4 text-right space-x-1.5">
+                    <td className="p-4 text-right space-x-2">
                       <button
                         onClick={() => handleStartEdit(post)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 hover:bg-green-100 text-prayas-neem text-[11px] font-bold rounded border border-green-200 transition-colors shadow-sm"
-                        title="Edit dispatch"
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
                       >
-                        <Edit2 className="w-3 h-3" />
+                        <Edit2 className="w-3 h-3 text-emerald-700" />
                         <span>Edit</span>
                       </button>
 
                       <Link
                         href={`/blog/${post.slug}`}
                         target="_blank"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-prayas-stone hover:bg-white text-prayas-ink text-[11px] font-bold rounded border border-prayas-rule transition-colors shadow-sm"
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3 h-3 text-slate-500" />
                         <span>View</span>
                       </Link>
 
                       <button
                         onClick={() => handleDelete(post.id)}
                         disabled={actionLoading === post.id}
-                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors inline-flex items-center disabled:opacity-50"
-                        title="Delete dispatch"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
+                        title="Delete post"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

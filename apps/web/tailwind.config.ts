@@ -9,6 +9,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: "480px",
+        "2xl": "1536px",
+        "3xl": "1920px",
+      },
       colors: {
         prayas: {
           paper: "#F7F5F0",       // Primary surface / Vrindavan sandstone

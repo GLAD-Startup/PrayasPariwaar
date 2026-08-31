@@ -226,7 +226,7 @@
   transform: translateY(-50%);
 }
 
-@media (max-width: 639px) {
+@media (max-width: 1023px) {
   .journey-connector::after {
     display: none;
   }

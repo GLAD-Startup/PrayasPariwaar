@@ -16,9 +16,9 @@ export default function PublicLayout({
       <main className="flex-grow">{children}</main>
 
       {/* Grounded Institutional Footer */}
-      <footer className="bg-[#1C2421] text-[#EFECE6] pt-14 pb-10 border-t border-prayas-rule">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-[#2C3632]">
+      <footer className="bg-[#1C2421] text-[#EFECE6] pt-12 sm:pt-14 pb-10 border-t border-prayas-rule">
+        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 2xl:gap-12 pb-12 border-b border-[#2C3632]">
             {/* Column 1: Institutional Statement */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">

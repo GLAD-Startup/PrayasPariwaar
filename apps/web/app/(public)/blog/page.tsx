@@ -38,16 +38,16 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   ];
 
   return (
-    <div className="space-y-10 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-10 pb-20 max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* Header */}
-      <div className="border-b border-prayas-rule pb-8 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-bold text-prayas-neem">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-bold text-prayas-neem">
           <span>Journal & Activity Log</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-prayas-ink leading-tight">
           Field Dispatches & Grassroots Reports
         </h1>
-        <p className="text-sm sm:text-base text-prayas-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-3xl 2xl:max-w-4xl leading-relaxed">
           First-hand reporting, event write-ups, and photo documentation from our volunteer activities across Vrindavan, Mathura, and surrounding rural communities.
         </p>
       </div>

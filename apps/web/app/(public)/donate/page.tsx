@@ -136,17 +136,17 @@ export default function DonatePage() {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
-      <div className="space-y-12 pb-20 max-w-5xl mx-auto px-4 sm:px-6 pt-10">
+      <div className="space-y-8 sm:space-y-12 pb-20 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
         {/* Page Header */}
-        <div className="border-b border-prayas-rule pb-8 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-green-50 border border-green-200 text-xs font-bold text-prayas-neem">
+        <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-green-50 border border-green-200 text-xs 2xl:text-sm font-bold text-prayas-neem">
             <GraduationCap className="w-4 h-4" />
             <span>Project Aashayein Educational Sponsorship • Section 80G Tax-Exempt</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+          <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink leading-tight">
             Sponsor a Child's Education in Rural Vrindavan
           </h1>
-          <p className="text-sm text-prayas-muted max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-2xl 2xl:max-w-3xl leading-relaxed">
             Your recurring or one-time contribution directly funds school admissions, evening tutoring, textbooks, school bags, uniforms, and nutritious meals for village children.
           </p>
         </div>

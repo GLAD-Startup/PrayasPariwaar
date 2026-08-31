@@ -109,11 +109,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           </>
         )}
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
+        <div className="relative z-10 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 space-y-6">
           {/* Back link */}
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs 2xl:text-sm font-semibold text-white/80 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to All Programs</span>
@@ -121,22 +121,22 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
           {/* Category & Status */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${catStyle.bg} ${catStyle.text} ${catStyle.border} border`}>
+            <span className={`px-3 py-1 rounded-full text-[11px] 2xl:text-xs font-bold uppercase tracking-wider ${catStyle.bg} ${catStyle.text} ${catStyle.border} border`}>
               {project.category}
             </span>
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
+            <span className="flex items-center gap-1.5 text-xs 2xl:text-sm font-semibold text-emerald-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Active Grassroots Program
             </span>
           </div>
 
           {/* Title */}
-          <h1 className={`font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.15] ${project.coverImage ? "text-white drop-shadow-lg" : "text-prayas-ink"}`}>
+          <h1 className={`font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold leading-[1.15] ${project.coverImage ? "text-white drop-shadow-lg" : "text-prayas-ink"}`}>
             {project.title}
           </h1>
 
           {/* Quick stats strip */}
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-xs">
+          <div className="flex flex-wrap gap-4 sm:gap-6 text-xs 2xl:text-sm">
             {project.goalAmount > 0 && (
               <span className={`flex items-center gap-1.5 font-medium ${project.coverImage ? "text-white/90" : "text-prayas-muted"}`}>
                 <Heart className="w-3.5 h-3.5 text-rose-400 fill-current" />
@@ -158,7 +158,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       {/* ====================================================================== */}
       {/* MAIN CONTENT GRID                                                     */}
       {/* ====================================================================== */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-8 relative z-10 space-y-12">
+      <div className="max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 -mt-8 relative z-10 space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column: Narrative & Photos */}
           <div className="lg:col-span-8 space-y-8">

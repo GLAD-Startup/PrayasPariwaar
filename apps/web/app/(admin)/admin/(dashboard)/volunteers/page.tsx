@@ -18,6 +18,9 @@ import {
   Droplet,
   BookOpen,
   Sparkles,
+  MapPin,
+  Calendar,
+  CheckCircle,
 } from "lucide-react";
 
 export default function AdminVolunteersPage() {
@@ -60,17 +63,17 @@ export default function AdminVolunteersPage() {
         setVolunteers((prev) =>
           prev.map((v) => (v.id === id ? { ...v, status: newStatus } : v))
         );
-        setSuccessMsg(`Volunteer status updated to ${newStatus}`);
+        setSuccessMsg(`Volunteer status updated to ${newStatus}.`);
       }
     } catch (e) {
-      console.error("Failed to update status", e);
+      console.error(e);
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this volunteer application?")) return;
+  const deleteVolunteer = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this volunteer application?")) return;
 
     setActionLoading(id);
     try {
@@ -92,7 +95,7 @@ export default function AdminVolunteersPage() {
   const getVolunteerType = (vol: any) => {
     const area = (vol.areaOfInterest || "").toLowerCase();
     const skills = (vol.skills || "").toLowerCase();
-    const isBlood = area.includes("blood") || skills.includes("blood group");
+    const isBlood = area.includes("blood") || skills.includes("blood");
     const isGeneral =
       area.includes("education") ||
       area.includes("tutoring") ||
@@ -121,99 +124,142 @@ export default function AdminVolunteersPage() {
     return matchesStatus && matchesType && matchesSearch;
   });
 
+  const pendingCount = volunteers.filter((v) => v.status === "PENDING").length;
+  const approvedCount = volunteers.filter((v) => v.status === "APPROVED").length;
+  const bloodCount = volunteers.filter((v) => getVolunteerType(v) === "BLOOD_DONOR" || getVolunteerType(v) === "DUAL_SEVA").length;
+  const generalCount = volunteers.filter((v) => getVolunteerType(v) === "GENERAL" || getVolunteerType(v) === "DUAL_SEVA").length;
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink flex items-center gap-2">
-            <Users className="w-6 h-6 text-prayas-marigold" />
-            <span>Volunteer & Blood Donor Roster</span>
+    <div className="space-y-6">
+      {/* 1. Header with Stats Ribbon */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-bold text-amber-900">
+            <Users className="w-3.5 h-3.5 text-amber-700" />
+            <span>Nishkam Seva Volunteer Network</span>
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+            Volunteer & Blood Donor Roster
           </h1>
-          <p className="text-xs text-prayas-muted mt-1">
-            Review and approve applications for General Seva (Teaching, Plantation, Camps) and Emergency Blood Donors.
+          <p className="text-xs text-prayas-muted max-w-2xl">
+            Review and approve applications for General Seva (Weekend Teaching, Native Plantation, Health Camps) and Emergency Blood Donors across Mathura district.
           </p>
         </div>
 
         <button
           onClick={fetchVolunteers}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-prayas-stone text-prayas-ink font-semibold text-xs rounded-lg border border-prayas-rule shadow-sm transition-colors self-start sm:self-auto"
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-prayas-stone hover:bg-prayas-paper text-prayas-ink font-semibold text-xs rounded-xl border border-prayas-rule shadow-sm transition-colors self-start md:self-auto disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-700" : ""}`} />
           <span>Refresh Roster</span>
         </button>
       </div>
 
-      {/* Success alert */}
+      {/* 2. Top Stats Counters */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="border border-prayas-rule bg-white rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-prayas-muted uppercase tracking-wider">Total Applications</span>
+          <p className="font-serif text-2xl font-bold text-prayas-ink">{volunteers.length}</p>
+          <span className="text-[10px] text-slate-400">Registered in system</span>
+        </div>
+
+        <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Pending Review</span>
+          <p className="font-serif text-2xl font-bold text-amber-950">{pendingCount}</p>
+          <span className="text-[10px] text-amber-700 font-medium">Requires verification</span>
+        </div>
+
+        <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Active Approved</span>
+          <p className="font-serif text-2xl font-bold text-emerald-950">{approvedCount}</p>
+          <span className="text-[10px] text-emerald-700 font-medium">Ready for deployment</span>
+        </div>
+
+        <div className="border border-rose-200 bg-rose-50/50 rounded-xl p-4 shadow-card space-y-1">
+          <span className="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Blood Donors</span>
+          <p className="font-serif text-2xl font-bold text-rose-950">{bloodCount}</p>
+          <span className="text-[10px] text-rose-700 font-medium">Voluntary emergency pool</span>
+        </div>
+      </div>
+
+      {/* Success Notification */}
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-green-900 text-xs flex items-center justify-between shadow-sm">
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)} className="text-green-700 hover:text-green-900">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-700 hover:text-emerald-900">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-prayas-rule shadow-sm text-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-prayas-ink">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-prayas-paper border border-prayas-rule text-prayas-ink rounded-lg px-2.5 py-1.5 font-medium outline-none focus:ring-2 focus:ring-prayas-neem"
-            >
-              <option value="ALL">All ({volunteers.length})</option>
-              <option value="PENDING">PENDING</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
-            </select>
+      {/* 3. Search and Filter Bar */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-4 shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-prayas-muted absolute left-3.5 top-3" />
+            <input
+              type="text"
+              placeholder="Search name, skills, phone, email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-xs text-prayas-ink placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+            />
           </div>
 
-          {/* Volunteer Type Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-prayas-ink">Type:</span>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="bg-prayas-paper border border-prayas-rule text-prayas-ink rounded-lg px-2.5 py-1.5 font-semibold outline-none focus:ring-2 focus:ring-prayas-neem"
-            >
-              <option value="ALL">All Categories</option>
-              <option value="GENERAL">🎓 General Seva Volunteer</option>
-              <option value="BLOOD_DONOR">🩸 Emergency Blood Donor</option>
-              <option value="DUAL_SEVA">🌟 Dual Seva (General + Blood)</option>
-            </select>
-          </div>
-        </div>
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-prayas-muted">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-prayas-stone/60 border border-prayas-rule text-prayas-ink rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-prayas-neem"
+              >
+                <option value="ALL">All Statuses ({volunteers.length})</option>
+                <option value="PENDING">PENDING ({pendingCount})</option>
+                <option value="APPROVED">APPROVED ({approvedCount})</option>
+                <option value="REJECTED">REJECTED</option>
+              </select>
+            </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-prayas-muted absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by name, skill, phone, blood group..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-prayas-rule bg-prayas-paper text-xs text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem"
-          />
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-prayas-muted">Category:</span>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-prayas-stone/60 border border-prayas-rule text-prayas-ink rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-prayas-neem"
+              >
+                <option value="ALL">All Categories</option>
+                <option value="GENERAL">General Seva (Education/Plantation)</option>
+                <option value="BLOOD_DONOR">Emergency Blood Donors</option>
+                <option value="DUAL_SEVA">Dual Seva</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Volunteers Table */}
-      <div className="bg-white border border-prayas-rule rounded-xl overflow-hidden shadow-card">
+      {/* 4. Volunteer Roster List / Table */}
+      <div className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card">
         {loading ? (
-          <div className="p-12 text-center text-prayas-muted text-xs">
-            Loading volunteer applications...
+          <div className="p-16 text-center text-prayas-muted text-xs">
+            <RefreshCw className="w-6 h-6 text-amber-700 animate-spin mx-auto mb-2" />
+            <p className="font-semibold text-prayas-ink">Fetching volunteer applications...</p>
           </div>
         ) : filteredVolunteers.length === 0 ? (
-          <div className="p-12 text-center text-prayas-muted text-xs">
-            No applications found matching the selected criteria.
+          <div className="p-16 text-center text-prayas-muted text-xs space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-prayas-neem mx-auto" />
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              No Volunteer Applications Found
+            </h3>
+            <p className="max-w-md mx-auto leading-relaxed">
+              No volunteer signups match your current search and filter criteria. New volunteer submissions from the public website will be listed here automatically.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -221,132 +267,120 @@ export default function AdminVolunteersPage() {
               <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="p-4">Volunteer Name & Contact</th>
-                  <th className="p-4">Volunteer Seva Category</th>
-                  <th className="p-4">Skills & Availability</th>
+                  <th className="p-4">Area of Interest</th>
+                  <th className="p-4">Skills & Background</th>
+                  <th className="p-4">Availability</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4">Phone / WhatsApp</th>
+                  <th className="p-4">Date Applied</th>
                   <th className="p-4 text-right">Approval Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-prayas-rule">
                 {filteredVolunteers.map((vol) => {
                   const volType = getVolunteerType(vol);
+                  const isApproved = vol.status === "APPROVED";
 
                   return (
-                    <tr key={vol.id} className="hover:bg-prayas-paper transition-colors">
+                    <tr key={vol.id} className="hover:bg-prayas-stone/30 transition-colors">
                       <td className="p-4">
-                        <div className="font-bold text-prayas-ink text-sm flex items-center gap-1.5">
-                          <span>{vol.name}</span>
+                        <div className="font-bold text-prayas-ink text-sm">{vol.name}</div>
+                        <div className="text-[11px] text-prayas-muted flex items-center gap-1 mt-0.5">
+                          <Mail className="w-3 h-3 text-slate-400" />
+                          <span>{vol.email}</span>
                         </div>
                         <a
-                          href={`mailto:${vol.email}`}
-                          className="text-prayas-muted text-xs hover:text-prayas-neem flex items-center gap-1 mt-0.5"
+                          href={`tel:${vol.phone}`}
+                          className="text-[11px] text-prayas-neem font-mono font-bold hover:underline flex items-center gap-1 mt-0.5"
                         >
-                          <Mail className="w-3 h-3" />
-                          <span>{vol.email}</span>
+                          <PhoneCall className="w-3 h-3" />
+                          <span>{vol.phone}</span>
                         </a>
                       </td>
 
                       <td className="p-4">
-                        {volType === "DUAL_SEVA" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold text-[11px]">
-                            <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
-                            <span>Dual Seva (General + Donor)</span>
-                          </span>
-                        )}
+                        <span className="font-semibold text-prayas-ink block">
+                          {vol.areaOfInterest || "General Seva"}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 border uppercase tracking-wider ${
+                            volType === "BLOOD_DONOR"
+                              ? "bg-rose-50 text-rose-800 border-rose-200"
+                              : volType === "DUAL_SEVA"
+                              ? "bg-purple-50 text-purple-800 border-purple-200"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          }`}
+                        >
+                          {volType.replace("_", " ")}
+                        </span>
+                      </td>
 
-                        {volType === "BLOOD_DONOR" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 border border-red-200 text-red-900 font-bold text-[11px]">
-                            <Droplet className="w-3 h-3 text-red-600 fill-current shrink-0" />
-                            <span>Blood Donor Volunteer</span>
-                          </span>
-                        )}
-
-                        {volType === "GENERAL" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-green-50 border border-green-200 text-green-900 font-semibold text-[11px]">
-                            <BookOpen className="w-3 h-3 text-prayas-neem shrink-0" />
-                            <span>{vol.areaOfInterest || "General Volunteer"}</span>
-                          </span>
-                        )}
-
-                        {vol.areaOfInterest && volType !== "GENERAL" && (
-                          <span className="text-[10px] text-prayas-muted block mt-0.5 truncate max-w-xs">
-                            {vol.areaOfInterest}
-                          </span>
+                      <td className="p-4 max-w-xs">
+                        <p className="text-xs text-prayas-ink leading-relaxed">
+                          {vol.skills || "Eager to contribute time and support."}
+                        </p>
+                        {vol.previousExperience && (
+                          <p className="text-[11px] text-prayas-muted italic mt-1 line-clamp-1">
+                            Exp: "{vol.previousExperience}"
+                          </p>
                         )}
                       </td>
 
-                      <td className="p-4">
-                        <div className="font-medium text-prayas-ink">{vol.skills || "Eager to help"}</div>
-                        <div className="text-prayas-muted text-[11px] flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          <span>{vol.availability}</span>
-                        </div>
+                      <td className="p-4 text-prayas-muted text-[11px]">
+                        <span className="bg-prayas-stone px-2 py-1 rounded-md border border-prayas-rule font-medium inline-block">
+                          {vol.availability || "Flexible"}
+                        </span>
                       </td>
 
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            vol.status === "ACTIVE"
-                              ? "bg-green-100 text-emerald-900 border border-green-200"
-                              : vol.status === "APPROVED"
-                              ? "bg-blue-100 text-blue-900 border border-blue-200"
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            vol.status === "APPROVED"
+                              ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
                               : vol.status === "PENDING"
                               ? "bg-amber-100 text-amber-900 border border-amber-200"
-                              : "bg-slate-100 text-slate-700"
+                              : "bg-red-100 text-red-900 border border-red-200"
                           }`}
                         >
                           {vol.status}
                         </span>
                       </td>
 
-                      <td className="p-4 font-mono text-xs">
-                        <a
-                          href={`tel:${vol.phone}`}
-                          className="text-prayas-neem font-bold hover:underline flex items-center gap-1"
-                        >
-                          <PhoneCall className="w-3.5 h-3.5" />
-                          <span>{vol.phone}</span>
-                        </a>
+                      <td className="p-4 text-prayas-muted text-[11px]">
+                        {new Date(vol.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </td>
 
-                      <td className="p-4 text-right space-x-1.5">
-                        {vol.status === "PENDING" && (
+                      <td className="p-4 text-right space-x-2">
+                        {vol.status !== "APPROVED" && (
                           <button
                             onClick={() => updateStatus(vol.id, "APPROVED")}
                             disabled={actionLoading === vol.id}
-                            className="px-2.5 py-1 bg-[#2E5339] hover:bg-[#23432b] text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50"
+                            className="px-3 py-1.5 bg-[#2E5339] hover:bg-[#23432b] text-white text-[11px] font-bold rounded-xl transition-colors shadow-sm disabled:opacity-50 inline-flex items-center gap-1"
                             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                           >
-                            Approve
+                            <UserCheck className="w-3.5 h-3.5" />
+                            <span>Approve</span>
                           </button>
                         )}
 
                         {vol.status === "APPROVED" && (
                           <button
-                            onClick={() => updateStatus(vol.id, "ACTIVE")}
+                            onClick={() => updateStatus(vol.id, "PENDING")}
                             disabled={actionLoading === vol.id}
-                            className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50"
+                            className="px-2.5 py-1.5 bg-prayas-stone hover:bg-slate-200 text-slate-800 text-[11px] font-bold rounded-xl border border-prayas-rule disabled:opacity-50"
                           >
-                            Mark Active
-                          </button>
-                        )}
-
-                        {vol.status === "ACTIVE" && (
-                          <button
-                            onClick={() => updateStatus(vol.id, "INACTIVE")}
-                            disabled={actionLoading === vol.id}
-                            className="px-2.5 py-1 bg-prayas-stone hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded border border-prayas-rule disabled:opacity-50"
-                          >
-                            Set Inactive
+                            Reset
                           </button>
                         )}
 
                         <button
-                          onClick={() => handleDelete(vol.id)}
+                          onClick={() => deleteVolunteer(vol.id)}
                           disabled={actionLoading === vol.id}
-                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors inline-flex items-center disabled:opacity-50"
-                          title="Delete volunteer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
+                          title="Delete application"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

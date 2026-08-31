@@ -10,18 +10,18 @@ export default async function AwardsPage() {
   });
 
   return (
-    <div className="space-y-12 pb-20 max-w-5xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-12 pb-20 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       <div className="space-y-3 border-b border-prayas-rule pb-6">
         <Link
           href="/about"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-prayas-muted hover:text-prayas-ink"
+          className="inline-flex items-center gap-1.5 text-xs 2xl:text-sm font-semibold text-prayas-muted hover:text-prayas-ink"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to About Us
         </Link>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink leading-tight">
           Awards, Recognitions & Empanelment
         </h1>
-        <p className="text-sm text-prayas-muted max-w-2xl leading-relaxed">
+        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-2xl 2xl:max-w-3xl leading-relaxed">
           State and district commendations honoring 18 years of uninterrupted community service in Mathura district.
         </p>
       </div>

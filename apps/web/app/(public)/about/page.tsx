@@ -13,16 +13,16 @@ export default async function AboutPage() {
   ]);
 
   return (
-    <div className="space-y-16 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-12 sm:space-y-16 pb-20 max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* 1. Header Masthead */}
-      <div className="border-b border-prayas-rule pb-8 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-medium text-prayas-ink">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-medium text-prayas-ink">
           <span>Est. 2006 • Registered Grassroots Society</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-prayas-ink leading-tight">
           18 Years of Grassroots Community Seva in Vrindavan
         </h1>
-        <p className="text-base sm:text-lg text-prayas-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base md:text-lg 2xl:text-xl text-prayas-muted max-w-3xl 2xl:max-w-4xl leading-relaxed">
           Prayas Pariwaar began as an emergency volunteer network in the holy town of Vrindavan. Today, it stands as a trusted institution providing non-commercial assistance across Mathura district.
         </p>
       </div>

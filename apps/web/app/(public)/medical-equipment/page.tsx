@@ -103,19 +103,19 @@ export default function MedicalEquipmentPage() {
     : items.filter((it) => it.category === selectedCategory);
 
   return (
-    <div className="space-y-12 pb-20 max-w-6xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-8 sm:space-y-12 pb-20 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
       {/* 1. Masthead Header */}
-      <div className="border-b border-prayas-rule pb-8 space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-bold text-prayas-neem">
+      <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-bold text-prayas-neem">
           <Stethoscope className="w-3.5 h-3.5" />
           <span>Free Community Medical Equipment Lending Bank</span>
         </div>
 
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink">
           Medical Equipment Bank • Vrindavan & Mathura
         </h1>
 
-        <p className="text-sm text-prayas-muted leading-relaxed max-w-3xl">
+        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted leading-relaxed max-w-3xl 2xl:max-w-4xl">
           Prayas Pariwaar maintains a bank of critical homecare equipment — 10L oxygen concentrators, hospital beds, wheelchairs, and air mattresses — available on free temporary loan for elderly and recovering patients.
         </p>
 

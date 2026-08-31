@@ -17,6 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "db:generate": "npm run db:generate --workspace=@prayas/database",
     "db:push": "npm run db:push --workspace=@prayas/database",
+    "db:seed": "npm run db:seed --workspace=@prayas/database",
     "db:migrate": "npm run db:migrate --workspace=@prayas/database",
     "db:studio": "npm run db:studio --workspace=@prayas/database",
     "postinstall": "npm run db:generate",
@@ -40,4 +41,4 @@
     "node": ">=18.18.0",
     "npm": ">=9.0.0"
   }
-}
+} 
