@@ -1,0 +1,72 @@
+# Dependencies & Package Managers
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+
+# Turborepo
+.turbo/
+
+# Next.js Build Outputs
+.next/
+out/
+build/
+dist/
+web-build/
+
+# TypeScript Cache
+*.tsbuildinfo
+
+# Expo & React Native
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.keystore
+*.mobileprovision
+*.orig.*
+
+# Environment Variables & Secrets (Keep .env.example tracked)
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# Database & SQLite temporary files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# IDE & Editor files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files & Certificates
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+*.pem
+

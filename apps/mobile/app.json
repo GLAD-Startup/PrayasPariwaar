@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Prayas Sanstha",
+    "slug": "prayas-platform-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "prayas",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#DC2626"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.prayassanstha.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#DC2626"
+      },
+      "package": "org.prayassanstha.mobile",
+      "permissions": ["NOTIFICATIONS"]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#DC2626"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "prayas-mobile-id"
+      }
+    }
+  }
+}

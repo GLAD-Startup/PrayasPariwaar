@@ -1,0 +1,224 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  VOLUNTEER
+  DONOR
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BloodRequestStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  CANCELLED
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  LEASED
+  MAINTENANCE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  RETURNED
+  REJECTED
+}
+
+enum VolunteerStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  INACTIVE
+}
+
+enum DonationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String
+  phone             String?
+  role              Role               @default(DONOR)
+  bloodGroup        BloodGroup?
+  pushTokens        PushToken[]
+  volunteerProfile  Volunteer?
+  bloodRequests     BloodRequest[]
+  equipmentRequests EquipmentRequest[]
+  donations         Donation[]
+  posts             Post[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("users")
+}
+
+model PushToken {
+  id            String   @id @default(cuid())
+  expoPushToken String   @unique
+  deviceType    String?  @default("MOBILE")
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_tokens")
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  content    String   @db.Text
+  excerpt    String?  @db.Text
+  coverImage String?
+  published  Boolean  @default(true)
+  authorId   String?
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("posts")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  goalAmount  Float    @default(0)
+  raisedAmount Float   @default(0)
+  coverImage  String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("projects")
+}
+
+model BloodRequest {
+  id           String             @id @default(cuid())
+  patientName  String
+  hospitalName String
+  city         String
+  bloodGroup   BloodGroup
+  unitsNeeded  Int                @default(1)
+  urgency      UrgencyLevel       @default(HIGH)
+  status       BloodRequestStatus @default(PENDING)
+  contactPhone String
+  notes        String?            @db.Text
+  requesterId  String?
+  requester    User?              @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([bloodGroup, status])
+  @@map("blood_requests")
+}
+
+model MedicalEquipment {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  description String             @db.Text
+  category    String             @default("General")
+  quantity    Int                @default(1)
+  status      EquipmentStatus    @default(AVAILABLE)
+  imageUrl    String?
+  requests    EquipmentRequest[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("medical_equipment")
+}
+
+model EquipmentRequest {
+  id              String           @id @default(cuid())
+  equipmentId     String
+  equipment       MedicalEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  requesterId     String?
+  requester       User?            @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  requesterName   String
+  contactPhone    String
+  purpose         String           @db.Text
+  requestedDays   Int              @default(7)
+  deliveryAddress String           @db.Text
+  status          RequestStatus    @default(PENDING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([equipmentId])
+  @@map("equipment_requests")
+}
+
+model Volunteer {
+  id                 String          @id @default(cuid())
+  userId             String?         @unique
+  user               User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  email              String
+  phone              String
+  skills             String          @db.Text
+  availability       String
+  areaOfInterest     String
+  previousExperience String?         @db.Text
+  status             VolunteerStatus @default(PENDING)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("volunteers")
+}
+
+model Donation {
+  id                 String         @id @default(cuid())
+  donorId            String?
+  donor              User?          @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  donorName          String
+  donorEmail         String
+  donorPhone         String?
+  amount             Float
+  currency           String         @default("INR")
+  razorpayOrderId    String         @unique
+  razorpayPaymentId  String?        @unique
+  razorpaySignature  String?
+  status             DonationStatus @default(PENDING)
+  projectOrCause     String         @default("General Fund")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([razorpayOrderId])
+  @@map("donations")
+}

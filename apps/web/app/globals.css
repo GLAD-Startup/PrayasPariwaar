@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-red-500 selection:text-white;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom UI Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.gradient-blood {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+}
+
+.gradient-emerald {
+  background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+}
+
+.gradient-navy {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Pulse animation for critical alerts */
+@keyframes pulse-emergency {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
+  }
+}
+
+.pulse-emergency {
+  animation: pulse-emergency 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
