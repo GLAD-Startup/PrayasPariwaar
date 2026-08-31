@@ -1,333 +1,479 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  FlatList,
-  SafeAreaView,
+  ScrollView,
+  Image,
   StatusBar,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Colors, Shadows } from "../../lib/theme";
 
 const { width } = Dimensions.get("window");
-
-interface Slide {
-  id: string;
-  badge: string;
-  emoji: string;
-  title: string;
-  subtitle: string;
-  color: string;
-}
-
-const ONBOARDING_SLIDES: Slide[] = [
-  {
-    id: "1",
-    badge: "24/7 EMERGENCY LIFELINE",
-    emoji: "🩸",
-    title: "Voluntary Blood Donor Network",
-    subtitle:
-      "Instant voluntary blood donor coordination for critical surgeries, accident trauma, and Thalassemia patients in Mathura & Vrindavan hospitals.",
-    color: "#DC2626",
-  },
-  {
-    id: "2",
-    badge: "JAN SWASTHYA SEVA",
-    emoji: "🩺",
-    title: "Free Medical Equipment Bank",
-    subtitle:
-      "Zero-cost home loans of 10L oxygen concentrators, wheelchairs, CPAP/BiPAP machines, and adjustable hospital beds for patients in need.",
-    color: "#2E5339",
-  },
-  {
-    id: "3",
-    badge: "SHIKSHA & HARIT KRANTI",
-    emoji: "🎓",
-    title: "Project Aashayein & Rural Seva",
-    subtitle:
-      "Empowering underprivileged village children through evening tuition centers, school kits, and native tree planting drives along Braj Parikrama.",
-    color: "#D97706",
-  },
-];
+const COLLAGE_SIZE = Math.min(width - 48, 320);
+const QUADRANT_SIZE = (COLLAGE_SIZE - 10) / 2;
+const CENTER_CIRCLE_SIZE = 92;
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-
-  const handleNext = () => {
-    if (currentIndex < ONBOARDING_SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({
-        index: currentIndex + 1,
-        animated: true,
-      });
-    } else {
-      router.push("/(auth)/signup" as any);
-    }
-  };
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
-
-      {/* Top Bar with Skip */}
-      <View style={styles.topBar}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandBadge}>
-            <Text style={styles.brandIcon}>🌿</Text>
-          </View>
-          <View>
-            <Text style={styles.brandName}>Prayas Pariwaar</Text>
-            <Text style={styles.brandTag}>Vrindavan Nishkam Seva</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => router.replace("/(tabs)/home" as any)}
-          style={styles.skipBtn}
-        >
-          <Text style={styles.skipBtnText}>Skip to App →</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Carousel */}
-      <FlatList
-        ref={flatListRef}
-        data={ONBOARDING_SLIDES}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(e) => {
-          const index = Math.round(e.nativeEvent.contentOffset.x / width);
-          setCurrentIndex(index);
-        }}
-        renderItem={({ item }) => (
-          <View style={[styles.slide, { width }]}>
-            <View style={[styles.illustrationCard, { borderColor: item.color + "30" }]}>
-              <View style={[styles.emojiCircle, { backgroundColor: item.color + "15" }]}>
-                <Text style={styles.emojiText}>{item.emoji}</Text>
-              </View>
-              <View style={[styles.badgeTag, { backgroundColor: item.color + "15" }]}>
-                <Text style={[styles.badgeTagText, { color: item.color }]}>
-                  {item.badge}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.textContainer}>
-              <Text style={styles.slideTitle}>{item.title}</Text>
-              <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
-            </View>
-          </View>
-        )}
-        keyExtractor={(item) => item.id}
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={Platform.OS === "android"}
       />
 
-      {/* Footer Controls */}
-      <View style={styles.footer}>
-        {/* Pagination Dots */}
-        <View style={styles.dotsContainer}>
-          {ONBOARDING_SLIDES.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                currentIndex === index ? styles.activeDot : null,
-              ]}
-            />
-          ))}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: Math.max(insets.top > 0 ? 8 : 16, 12), paddingBottom: Math.max(insets.bottom, 20) + 10 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Organization Emblem */}
+        <View style={styles.brandHeader}>
+          <View style={styles.emblemWrapper}>
+            <View style={styles.sunRays}>
+              <Ionicons name="sunny-outline" size={32} color="#F59E0B" />
+            </View>
+            <View style={styles.emblemCircle}>
+              <MaterialCommunityIcons name="hand-heart" size={26} color="#D97706" />
+            </View>
+          </View>
+
+          <Text style={styles.orgName}>Prayas Pariwaar</Text>
+
+          {/* Subtitle with divider lines */}
+          <View style={styles.taglineRow}>
+            <View style={styles.goldLine} />
+            <Text style={styles.taglineText}>Seva Today, Better Tomorrow</Text>
+            <View style={styles.goldLine} />
+          </View>
         </View>
 
-        {/* Primary Action Button */}
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleNext}>
-          <Text style={styles.primaryBtnText}>
-            {currentIndex === ONBOARDING_SLIDES.length - 1
-              ? "Join Prayas Community →"
-              : "Continue →"}
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <View style={styles.welcomeTitleRow}>
+            <Text style={styles.welcomeTitle}>Welcome!</Text>
+            <Text style={styles.heartEmoji}>💛</Text>
+          </View>
+          <Text style={styles.welcomeDesc}>
+            Together, we can build a stronger, healthier and compassionate society.
           </Text>
-        </TouchableOpacity>
+        </View>
 
-        {/* Secondary Auth Links */}
-        <View style={styles.authLinksRow}>
+        {/* 5-Piece Photo Collage */}
+        <View style={styles.collageContainer}>
+          <View style={[styles.collageGrid, { width: COLLAGE_SIZE, height: COLLAGE_SIZE }]}>
+            {/* Top-Left: Free Education */}
+            <View style={[styles.quadrant, styles.quadrantTL, { width: QUADRANT_SIZE, height: QUADRANT_SIZE }]}>
+              <Image
+                source={require("../../assets/onboarding/education.jpg")}
+                style={styles.quadrantImage}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Top-Right: Tree Plantation */}
+            <View style={[styles.quadrant, styles.quadrantTR, { width: QUADRANT_SIZE, height: QUADRANT_SIZE }]}>
+              <Image
+                source={require("../../assets/onboarding/plantation.jpg")}
+                style={styles.quadrantImage}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Bottom-Left: Blood Donation */}
+            <View style={[styles.quadrant, styles.quadrantBL, { width: QUADRANT_SIZE, height: QUADRANT_SIZE }]}>
+              <Image
+                source={require("../../assets/onboarding/blood.jpg")}
+                style={styles.quadrantImage}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Bottom-Right: Vocational Seva */}
+            <View style={[styles.quadrant, styles.quadrantBR, { width: QUADRANT_SIZE, height: QUADRANT_SIZE }]}>
+              <Image
+                source={require("../../assets/onboarding/equipment.jpg")}
+                style={styles.quadrantImage}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Center Circular Badge: Jeev Jal Seva */}
+            <View
+              style={[
+                styles.centerCircle,
+                {
+                  width: CENTER_CIRCLE_SIZE,
+                  height: CENTER_CIRCLE_SIZE,
+                  borderRadius: CENTER_CIRCLE_SIZE / 2,
+                },
+              ]}
+            >
+              <Image
+                source={require("../../assets/onboarding/jeev_jal.jpg")}
+                style={[
+                  styles.centerImage,
+                  {
+                    width: CENTER_CIRCLE_SIZE - 8,
+                    height: CENTER_CIRCLE_SIZE - 8,
+                    borderRadius: (CENTER_CIRCLE_SIZE - 8) / 2,
+                  },
+                ]}
+                resizeMode="cover"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* 5 Service Category Icon Circles */}
+        <View style={styles.servicesRow}>
+          {/* Free Education */}
+          <View style={styles.serviceItem}>
+            <View style={[styles.serviceCircle, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]}>
+              <Ionicons name="school-outline" size={20} color="#16A34A" />
+            </View>
+            <Text style={styles.serviceLabel}>Free{"\n"}Education</Text>
+          </View>
+
+          {/* Blood Donation */}
+          <View style={styles.serviceItem}>
+            <View style={[styles.serviceCircle, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
+              <Ionicons name="water-outline" size={20} color="#DC2626" />
+            </View>
+            <Text style={styles.serviceLabel}>Blood{"\n"}Donation</Text>
+          </View>
+
+          {/* Plantation */}
+          <View style={styles.serviceItem}>
+            <View style={[styles.serviceCircle, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]}>
+              <MaterialCommunityIcons name="sprout-outline" size={20} color="#15803D" />
+            </View>
+            <Text style={styles.serviceLabel}>Tree{"\n"}Plantation</Text>
+          </View>
+
+          {/* Jeev Jal Seva */}
+          <View style={styles.serviceItem}>
+            <View style={[styles.serviceCircle, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
+              <MaterialCommunityIcons name="bird" size={20} color="#2563EB" />
+            </View>
+            <Text style={styles.serviceLabel}>Jeev Jal{"\n"}Seva</Text>
+          </View>
+
+          {/* Vocational & Medical */}
+          <View style={styles.serviceItem}>
+            <View style={[styles.serviceCircle, { backgroundColor: "#FAF5FF", borderColor: "#E9D5FF" }]}>
+              <Ionicons name="medkit-outline" size={20} color="#9333EA" />
+            </View>
+            <Text style={styles.serviceLabel}>Equipment{"\n"}Loan</Text>
+          </View>
+        </View>
+
+        {/* Motto Banner */}
+        <View style={styles.mottoRow}>
+          <Text style={styles.mottoArrows}>❯❯</Text>
+          <Text style={styles.mottoText}>Small Acts, Big Impact</Text>
+          <Text style={styles.mottoArrows}>❮❮</Text>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsContainer}>
+          {/* Primary Get Started Button */}
           <TouchableOpacity
-            style={styles.authLink}
+            style={styles.primaryBtn}
+            onPress={() => router.push("/(auth)/signup" as any)}
+            activeOpacity={0.88}
+          >
+            <Text style={styles.primaryBtnText}>Get Started</Text>
+            <View style={styles.arrowCircle}>
+              <Ionicons name="arrow-forward" size={14} color={Colors.primary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Secondary Explore App Button */}
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={() => router.replace("/(tabs)/home" as any)}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons name="hand-heart-outline" size={18} color={Colors.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.secondaryBtnText}>Explore the App</Text>
+          </TouchableOpacity>
+
+          {/* Sign In Link */}
+          <TouchableOpacity
+            style={styles.signInRow}
             onPress={() => router.push("/(auth)/login" as any)}
           >
-            <Text style={styles.authLinkText}>
-              Already registered? <Text style={styles.authLinkBold}>Sign In</Text>
+            <Text style={styles.signInText}>
+              Already have an account? <Text style={styles.signInBold}>Sign In</Text>
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  brandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
-  },
-  brandBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: "#2E5339",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandIcon: {
-    fontSize: 18,
-  },
-  brandName: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#1E293B",
-  },
-  brandTag: {
-    fontSize: 11,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  skipBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#E2E8F0",
-  },
-  skipBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475569",
-  },
-  slide: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-  },
-  illustrationCard: {
-    width: 220,
-    height: 220,
-    borderRadius: 40,
     backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  brandHeader: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  emblemWrapper: {
+    position: "relative",
+    width: 60,
+    height: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  sunRays: {
+    position: "absolute",
+    opacity: 0.85,
+  },
+  emblemCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFBEB",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
-    marginBottom: 32,
+    borderColor: "#FDE68A",
   },
-  emojiCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  emojiText: {
-    fontSize: 48,
-  },
-  badgeTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  badgeTagText: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  textContainer: {
-    alignItems: "center",
-    paddingHorizontal: 10,
-  },
-  slideTitle: {
+  orgName: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0F172A",
-    textAlign: "center",
-    marginBottom: 12,
-    lineHeight: 28,
+    color: "#164E2E",
+    letterSpacing: -0.3,
+    marginTop: 2,
   },
-  slideSubtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 28,
-    paddingTop: 12,
-  },
-  dotsContainer: {
+  taglineRow: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
     gap: 8,
-    marginBottom: 20,
+    marginTop: 4,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#CBD5E1",
-  },
-  activeDot: {
+  goldLine: {
     width: 24,
-    backgroundColor: "#2E5339",
+    height: 1,
+    backgroundColor: "#D97706",
+    opacity: 0.6,
   },
-  primaryBtn: {
-    height: 52,
-    backgroundColor: "#2E5339",
-    borderRadius: 16,
+  taglineText: {
+    fontSize: 11,
+    color: "#6B7280",
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+  welcomeSection: {
+    alignItems: "center",
+    marginVertical: 10,
+    paddingHorizontal: 16,
+  },
+  welcomeTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#15803D",
+    fontStyle: "italic",
+    letterSpacing: 0.2,
+  },
+  heartEmoji: {
+    fontSize: 16,
+  },
+  welcomeDesc: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 18,
+    maxWidth: 290,
+  },
+  collageContainer: {
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#2E5339",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    marginVertical: 12,
+  },
+  collageGrid: {
+    position: "relative",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignContent: "space-between",
+  },
+  quadrant: {
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#E2E8F0",
+  },
+  quadrantTL: {
+    borderTopLeftRadius: 44,
+  },
+  quadrantTR: {
+    borderTopRightRadius: 44,
+  },
+  quadrantBL: {
+    borderBottomLeftRadius: 44,
+  },
+  quadrantBR: {
+    borderBottomRightRadius: 44,
+  },
+  quadrantImage: {
+    width: "100%",
+    height: "100%",
+  },
+  centerCircle: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -CENTER_CIRCLE_SIZE / 2 }, { translateY: -CENTER_CIRCLE_SIZE / 2 }],
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 4,
+    borderColor: "#FFFFFF",
+    ...Shadows.card,
+    zIndex: 10,
+  },
+  centerImage: {
+    overflow: "hidden",
+  },
+  servicesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    maxWidth: 340,
+    marginTop: 10,
+    marginBottom: 14,
+    paddingHorizontal: 4,
+  },
+  serviceItem: {
+    alignItems: "center",
+    width: 60,
+  },
+  serviceCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    marginBottom: 6,
+    ...Shadows.soft,
+  },
+  serviceLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#334155",
+    textAlign: "center",
+    lineHeight: 12,
+  },
+  mottoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  mottoArrows: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#166534",
+  },
+  mottoText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#166534",
+    letterSpacing: 0.4,
+  },
+  actionsContainer: {
+    width: "100%",
+    maxWidth: 330,
+    gap: 10,
+    marginTop: 2,
+  },
+  primaryBtn: {
+    height: 50,
+    backgroundColor: "#1B432E",
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.primaryBtn,
   },
   primaryBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "800",
+    letterSpacing: 0.3,
   },
-  authLinksRow: {
-    marginTop: 14,
+  arrowCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
   },
-  authLink: {
+  secondaryBtn: {
+    height: 48,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#1B432E",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.soft,
+  },
+  secondaryBtnText: {
+    color: "#1B432E",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  signInRow: {
+    alignItems: "center",
     paddingVertical: 6,
+    marginTop: 2,
   },
-  authLinkText: {
-    fontSize: 13,
+  signInText: {
+    fontSize: 12,
     color: "#64748B",
+    fontWeight: "500",
   },
-  authLinkBold: {
-    color: "#2E5339",
+  signInBold: {
+    color: "#1B432E",
     fontWeight: "800",
   },
 });

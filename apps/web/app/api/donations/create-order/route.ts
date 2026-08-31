@@ -16,22 +16,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const { amount, currency, donorName, donorEmail, donorPhone, projectOrCause } = validated.data;
+    const {
+      amount,
+      currency,
+      frequency,
+      paymentMethod,
+      donorName,
+      donorEmail,
+      donorPhone,
+      projectOrCause,
+      isAnonymous,
+    } = validated.data;
     const authUser = await getAuthUser(req);
 
     const razorpay = getRazorpayClient();
     let razorpayOrderId = `order_sim_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const receiptNumber = `SDT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     if (razorpay) {
       try {
         const order = await razorpay.orders.create({
           amount: Math.round(amount * 100), // amount in paise
           currency: currency || "INR",
-          receipt: `rcpt_${Date.now().toString().slice(-8)}`,
+          receipt: receiptNumber,
           notes: {
-            donorName,
+            donorName: isAnonymous ? "Anonymous Donor" : donorName,
             donorEmail,
             projectOrCause,
+            frequency,
           },
         });
         razorpayOrderId = order.id;
@@ -44,10 +56,14 @@ export async function POST(req: Request) {
       data: {
         amount,
         currency,
-        donorName,
+        frequency,
+        paymentMethod: paymentMethod || "UPI",
+        donorName: isAnonymous ? "Anonymous Donor" : donorName,
         donorEmail: donorEmail.toLowerCase().trim(),
         donorPhone: donorPhone || null,
         projectOrCause,
+        receiptNumber,
+        isAnonymous,
         razorpayOrderId,
         donorId: authUser?.userId || null,
         status: "PENDING",
@@ -57,6 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       orderId: razorpayOrderId,
+      receiptNumber,
       amount: Math.round(amount * 100),
       currency,
       keyId: process.env.RAZORPAY_KEY_ID || "rzp_test_mock_key",

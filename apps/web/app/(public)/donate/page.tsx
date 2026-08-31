@@ -25,6 +25,7 @@ export default function DonatePage() {
   const initialAmount = searchParams.get("amount");
 
   const [amount, setAmount] = useState<number>(initialAmount ? Number(initialAmount) : 1100);
+  const [frequency, setFrequency] = useState<"ONE_TIME" | "MONTHLY" | "YEARLY">("ONE_TIME");
   const [customAmount, setCustomAmount] = useState<string>("");
   const [isCustom, setIsCustom] = useState(false);
   const [donorName, setDonorName] = useState("");
@@ -70,6 +71,7 @@ export default function DonatePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: selectedAmount,
+          frequency,
           donorName,
           donorEmail,
           donorPhone,
@@ -189,10 +191,33 @@ export default function DonatePage() {
                   </div>
                 )}
 
-                {/* 1. Select Sponsorship Tier */}
-                <div className="space-y-3">
+                {/* Frequency Selector */}
+                <div className="space-y-2">
                   <label className="font-bold text-prayas-ink text-sm block">
-                    1. Select Student Sponsorship Tier (INR ₹) *
+                    1. Donation Frequency
+                  </label>
+                  <div className="flex bg-prayas-stone p-1 rounded-xl border border-prayas-rule">
+                    {(["ONE_TIME", "MONTHLY", "YEARLY"] as const).map((freq) => (
+                      <button
+                        key={freq}
+                        type="button"
+                        onClick={() => setFrequency(freq)}
+                        className={`flex-1 py-2 rounded-lg font-bold text-xs transition-all ${
+                          frequency === freq
+                            ? "bg-[#2E5339] text-white shadow-sm"
+                            : "text-prayas-muted hover:text-prayas-ink"
+                        }`}
+                      >
+                        {freq === "ONE_TIME" ? "One Time" : freq === "MONTHLY" ? "Monthly Seva" : "Yearly Seva"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Select Sponsorship Tier */}
+                <div className="space-y-3 pt-2">
+                  <label className="font-bold text-prayas-ink text-sm block">
+                    2. Select Donation / Sponsorship Amount (INR ₹) *
                   </label>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

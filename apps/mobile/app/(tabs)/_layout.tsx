@@ -1,17 +1,18 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Colors } from "../../lib/theme";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#DC2626",
+        tabBarActiveTintColor: "#166534",
         tabBarInactiveTintColor: "#64748B",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
-          borderTopColor: "#E2E8F0",
-          height: 60,
+          borderTopColor: "#F1F5F9",
+          height: 62,
           paddingBottom: 8,
           paddingTop: 6,
         },
@@ -25,35 +26,65 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18 }}>🏠</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="blood-donation"
+        name="seva"
         options={{
-          title: "Blood",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18 }}>🩸</Text>,
+          title: "Seva",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "grid" : "grid-outline"}
+              size={20}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="equipment"
+        name="blogs"
         options={{
-          title: "Equipment",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18 }}>🫁</Text>,
+          title: "Blogs",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "newspaper" : "newspaper-outline"}
+              size={21}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="volunteer"
+        name="donate"
         options={{
-          title: "Volunteer",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18 }}>🤝</Text>,
+          title: "Donate",
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? "hand-heart" : "hand-heart-outline"}
+              size={22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18 }}>👤</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={21}
+              color={color}
+            />
+          ),
         }}
       />
     </Tabs>

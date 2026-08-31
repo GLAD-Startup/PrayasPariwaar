@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Heart, CheckCircle2, XCircle, Clock, ShieldCheck, Download, IndianRupee } from "lucide-react";
+import { Heart, CheckCircle2, XCircle, Clock, ShieldCheck, Download, IndianRupee, Tag } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export default async function AdminDonationsPage() {
             Donation Ledger & 80G Tax Receipts
           </h1>
           <p className="text-xs text-prayas-muted max-w-2xl">
-            Razorpay transaction logs, payment signatures, and tax certificates issued for Project Aashayein and Vrindavan Seva initiatives.
+            Razorpay transaction logs, payment signatures, and tax certificates issued for Education, Blood Donation, Plantation, Jeev Jal, and Vocational Seva.
           </p>
         </div>
 
@@ -48,19 +48,19 @@ export default async function AdminDonationsPage() {
       <div className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card">
         {donations.length === 0 ? (
           <div className="p-16 text-center text-prayas-muted text-xs space-y-2">
-            <Heart className="w-8 h-8 text-prayas-crimson/50 mx-auto" />
+            <Heart className="w-8 h-8 text-rose-500/50 mx-auto" />
             <p className="font-bold text-prayas-ink">No donation transactions recorded yet.</p>
-            <p>Direct online contributions via Razorpay will be logged here automatically.</p>
+            <p>Direct online contributions via UPI, Cards, NetBanking, and Wallets will be logged here automatically.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-prayas-ink">
               <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-                  <th className="p-4">Donor Name & Email</th>
-                  <th className="p-4">Amount (₹)</th>
-                  <th className="p-4">Allocated Program</th>
-                  <th className="p-4">Razorpay Order ID</th>
+                  <th className="p-4">Donor & Contact</th>
+                  <th className="p-4">Amount & Frequency</th>
+                  <th className="p-4">Allocated Cause</th>
+                  <th className="p-4">Method & Receipt #</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Date</th>
                 </tr>
@@ -69,10 +69,12 @@ export default async function AdminDonationsPage() {
                 {donations.map((d) => (
                   <tr key={d.id} className="hover:bg-prayas-stone/30 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-prayas-ink text-sm">{d.donorName}</div>
+                      <div className="font-bold text-prayas-ink text-sm">
+                        {d.isAnonymous ? "Anonymous Donor 🤍" : d.donorName}
+                      </div>
                       <div className="text-prayas-muted text-[11px] font-mono">{d.donorEmail}</div>
                       {d.donorPhone && (
-                        <div className="text-prayas-muted text-[10px]">{d.donorPhone}</div>
+                        <div className="text-emerald-700 text-[10px] font-mono">{d.donorPhone}</div>
                       )}
                     </td>
 
@@ -80,19 +82,24 @@ export default async function AdminDonationsPage() {
                       <span className="font-serif text-base font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 inline-block">
                         ₹{d.amount.toLocaleString("en-IN")}
                       </span>
+                      <span className="block mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {d.frequency ? d.frequency.replace("_", " ") : "ONE TIME"}
+                      </span>
                     </td>
 
                     <td className="p-4">
                       <span className="font-semibold text-prayas-ink block">
-                        {d.cause || "Project Aashayein"}
-                      </span>
-                      <span className="text-[10px] text-prayas-muted">
-                        {d.isAnonymous ? "Anonymous Donation" : "Named Sponsor"}
+                        {d.projectOrCause || "General Fund"}
                       </span>
                     </td>
 
-                    <td className="p-4 font-mono text-[11px] text-slate-500">
-                      {d.razorpayPaymentId || d.razorpayOrderId || "DIRECT_SEVA"}
+                    <td className="p-4">
+                      <span className="font-bold text-slate-700 text-xs block">
+                        {d.paymentMethod || "UPI / QR"}
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-700 font-bold block">
+                        {d.receiptNumber || d.razorpayOrderId?.slice(0, 16) || "SDT-REC"}
+                      </span>
                     </td>
 
                     <td className="p-4">
@@ -102,7 +109,7 @@ export default async function AdminDonationsPage() {
                             ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
                             : d.status === "PENDING"
                             ? "bg-amber-100 text-amber-900 border border-amber-200"
-                            : "bg-red-100 text-red-900"
+                            : "bg-red-100 text-red-900 border border-red-200"
                         }`}
                       >
                         {d.status}

@@ -122,21 +122,15 @@ export default function BloodDonationPage() {
     setDonorAlreadyRegistered(null);
 
     try {
-      const emailValue = donorForm.email || `donor.${donorForm.phone.replace(/[^0-9]/g, "")}@prayaspariwaar.local`;
-
       const payload = {
         name: donorForm.name,
-        email: emailValue,
+        email: donorForm.email || undefined,
         phone: donorForm.phone,
-        skills: `Voluntary Blood Donor (${donorForm.bloodGroup})`,
-        availability: "EMERGENCY_ON_CALL",
-        areaOfInterest: `Emergency Blood Donor (${donorForm.bloodGroup})`,
-        isBloodDonor: true,
         bloodGroup: donorForm.bloodGroup,
         city: donorForm.city,
       };
 
-      const res = await fetch("/api/volunteers", {
+      const res = await fetch("/api/blood-donors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -28,7 +28,7 @@ export default function EntryScreen() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#2E5339" />
+      <ActivityIndicator size="large" color="#166534" />
     </View>
   );
 }
@@ -36,7 +36,7 @@ export default function EntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },

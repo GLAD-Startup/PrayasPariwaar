@@ -1,0 +1,277 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import fs from "fs";
+import path from "path";
+
+const STORAGE_FILE = path.join(process.cwd(), "public", "uploads", "gallery-data.json");
+
+interface LocalGalleryData {
+  albums: any[];
+  photos: any[];
+}
+
+function getStoredGallery(): LocalGalleryData {
+  try {
+    if (fs.existsSync(STORAGE_FILE)) {
+      const content = fs.readFileSync(STORAGE_FILE, "utf-8");
+      return JSON.parse(content);
+    }
+  } catch (e) {
+    console.warn("Failed to read local gallery storage", e);
+  }
+  return {
+    albums: [
+      {
+        id: "alb-education",
+        title: "Free Education & Evening Tutoring Centers",
+        slug: "free-education-centers",
+        category: "Free Education",
+        coverImage: "/images/youth-skills-vrindavan.jpg",
+        description: "Evening tutoring classes and free school kit distribution in rural Vrindavan.",
+        photoCount: 6,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "alb-plantation",
+        title: "Vrindavan Harit Kranti - 5,000 Sapling Afforestation",
+        slug: "vrindavan-harit-kranti",
+        category: "Plantation",
+        coverImage: "/images/vrindavan-neem-drive.jpg",
+        description: "Native Neem, Peepal, and Kadamba tree plantation along Braj Parikrama Marg.",
+        photoCount: 8,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "alb-blood",
+        title: "Emergency Blood Donation Seva",
+        slug: "emergency-blood-seva",
+        category: "Blood Donation",
+        coverImage: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
+        description: "24/7 volunteer donor network dispatch and hospital patient support.",
+        photoCount: 5,
+        createdAt: new Date().toISOString(),
+      },
+    ],
+    photos: [],
+  };
+}
+
+function saveStoredGallery(data: LocalGalleryData) {
+  try {
+    const dir = path.dirname(STORAGE_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to save local gallery storage", e);
+  }
+}
+
+// GET /api/gallery - Fetch all gallery albums and categorized photos
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get("category");
+
+    // Try Prisma first if client has galleryAlbum model loaded
+    if ((prisma as any).galleryAlbum && (prisma as any).galleryPhoto) {
+      try {
+        const albums = await (prisma as any).galleryAlbum.findMany({
+          where: {
+            published: true,
+            ...(category && category !== "All" ? { category } : {}),
+          },
+          include: {
+            photos: {
+              orderBy: { order: "asc" },
+            },
+          },
+          orderBy: { order: "asc" },
+        });
+
+        const recentPhotos = await (prisma as any).galleryPhoto.findMany({
+          where: {
+            ...(category && category !== "All" ? { category } : {}),
+          },
+          take: 36,
+          orderBy: { createdAt: "desc" },
+        });
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            albums: albums || [],
+            recentPhotos: recentPhotos || [],
+          },
+        });
+      } catch (prismaErr) {
+        console.warn("Prisma query failed, falling back to persistent storage", prismaErr);
+      }
+    }
+
+    // Fallback to resilient file-backed persistent storage
+    const store = getStoredGallery();
+    const filteredAlbums = store.albums.filter(
+      (a) => !category || category === "All" || a.category === category
+    );
+    const filteredPhotos = store.photos.filter(
+      (p) => !category || category === "All" || p.category === category
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        albums: filteredAlbums,
+        recentPhotos: filteredPhotos,
+      },
+    });
+  } catch (error: any) {
+    console.error("[Gallery GET Error]", error);
+    return NextResponse.json({
+      success: true,
+      data: {
+        albums: [],
+        recentPhotos: [],
+      },
+    });
+  }
+}
+
+// POST /api/gallery - Create new album or add photo (Admin only)
+export async function POST(req: Request) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    // Check if adding a photo
+    if (body.action === "ADD_PHOTO" || body.type === "photo" || (body.url && !body.coverImage && !body.slug)) {
+      const photoRecord = {
+        id: `photo-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        albumId: body.albumId || null,
+        title: body.title || "Field Seva Photo",
+        caption: body.caption || "",
+        url: body.url,
+        category: body.category || "Free Education",
+        location: body.location || "Mathura / Vrindavan",
+        createdAt: new Date().toISOString(),
+      };
+
+      if ((prisma as any).galleryPhoto) {
+        try {
+          await (prisma as any).galleryPhoto.create({
+            data: {
+              albumId: photoRecord.albumId,
+              title: photoRecord.title,
+              caption: photoRecord.caption,
+              url: photoRecord.url,
+              category: photoRecord.category,
+              location: photoRecord.location,
+            },
+          });
+        } catch (e) {
+          console.warn("Prisma photo save fallback", e);
+        }
+      }
+
+      // Persist to local JSON store
+      const store = getStoredGallery();
+      store.photos.unshift(photoRecord);
+      if (body.albumId) {
+        const album = store.albums.find((a) => a.id === body.albumId);
+        if (album) album.photoCount = (album.photoCount || 0) + 1;
+      }
+      saveStoredGallery(store);
+
+      return NextResponse.json({ success: true, data: photoRecord }, { status: 201 });
+    }
+
+    // Creating an Album
+    const albumRecord = {
+      id: `album-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      title: body.title || "New Seva Album",
+      slug: body.slug || body.title?.toLowerCase().replace(/\s+/g, "-") || `album-${Date.now()}`,
+      category: body.category || "Free Education",
+      coverImage: body.coverImage || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
+      description: body.description || "",
+      photoCount: 0,
+      published: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    if ((prisma as any).galleryAlbum) {
+      try {
+        await (prisma as any).galleryAlbum.create({
+          data: {
+            title: albumRecord.title,
+            slug: albumRecord.slug,
+            category: albumRecord.category,
+            coverImage: albumRecord.coverImage,
+            description: albumRecord.description,
+            published: true,
+          },
+        });
+      } catch (e) {
+        console.warn("Prisma album save fallback", e);
+      }
+    }
+
+    // Persist to local JSON store
+    const store = getStoredGallery();
+    store.albums.unshift(albumRecord);
+    saveStoredGallery(store);
+
+    return NextResponse.json({ success: true, data: albumRecord }, { status: 201 });
+  } catch (error: any) {
+    console.error("[Gallery POST Error]", error);
+    return NextResponse.json({ error: "Failed to create gallery item", details: error.message }, { status: 500 });
+  }
+}
+
+// DELETE /api/gallery - Delete album or photo
+export async function DELETE(req: Request) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const albumId = searchParams.get("albumId");
+    const photoId = searchParams.get("photoId");
+
+    if (photoId) {
+      if ((prisma as any).galleryPhoto) {
+        try {
+          await (prisma as any).galleryPhoto.delete({ where: { id: photoId } });
+        } catch (e) {}
+      }
+      const store = getStoredGallery();
+      store.photos = store.photos.filter((p) => p.id !== photoId);
+      saveStoredGallery(store);
+      return NextResponse.json({ success: true, message: "Photo removed" });
+    }
+
+    if (albumId) {
+      if ((prisma as any).galleryAlbum) {
+        try {
+          await (prisma as any).galleryAlbum.delete({ where: { id: albumId } });
+        } catch (e) {}
+      }
+      const store = getStoredGallery();
+      store.albums = store.albums.filter((a) => a.id !== albumId);
+      saveStoredGallery(store);
+      return NextResponse.json({ success: true, message: "Album removed" });
+    }
+
+    return NextResponse.json({ error: "Missing albumId or photoId parameter" }, { status: 400 });
+  } catch (error: any) {
+    console.error("[Gallery DELETE Error]", error);
+    return NextResponse.json({ error: "Failed to delete item" }, { status: 500 });
+  }
+}

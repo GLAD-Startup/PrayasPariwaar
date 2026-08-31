@@ -33,7 +33,6 @@ import {
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const siteStats = await prisma.siteStat.findMany({ orderBy: { order: "asc" } });
   const recentEvents = await prisma.post.findMany({
     where: { published: true },
     include: { images: { orderBy: { order: "asc" } } },
@@ -217,42 +216,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ========================================================================= */}
-      {/* 2. COMMUNITY AUDIT LEDGER (18 Years of Verified Seva)                     */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
-        <ScrollReveal>
-          <div className="border border-prayas-rule bg-white rounded-2xl p-5 sm:p-8 2xl:p-10 shadow-card">
-            <div className="border-b border-prayas-rule pb-3 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <span className="text-[11px] 2xl:text-xs font-bold uppercase tracking-wider text-prayas-neem">
-                  18-Year Verified Institutional Ledger (Est. 2006)
-                </span>
-                <h2 className="font-serif text-lg sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink">
-                  Verified Grassroots Impact in Mathura & Vrindavan
-                </h2>
-              </div>
-              <span className="text-xs font-mono text-prayas-muted">Mathura District, UP</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 2xl:gap-8">
-              {siteStats.map((stat: any, idx: number) => (
-                <div
-                  key={stat.id}
-                  className={`space-y-1 ${idx === siteStats.length - 1 && siteStats.length % 2 !== 0 ? "col-span-2 sm:col-span-1" : ""}`}
-                >
-                  <p className="font-serif text-2xl sm:text-3xl 2xl:text-4xl font-bold text-prayas-ink">
-                    {stat.value}{stat.label.includes("Year") ? "" : "+"}
-                  </p>
-                  <p className="text-xs 2xl:text-sm font-medium text-prayas-muted leading-snug">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
 
       {/* ========================================================================= */}
       {/* 3. ABOUT PRAYAS PARIWAAR — 18-YEAR LEGACY                                 */}
@@ -786,7 +749,7 @@ export default async function HomePage() {
                 href="/volunteer"
                 className="w-full sm:w-auto text-center px-6 py-3.5 2xl:px-8 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-semibold border border-prayas-rule bg-white text-prayas-ink hover:bg-prayas-subtle transition-colors shadow-sm"
               >
-                Volunteer as a Weekend Teacher
+                Join as a Volunteer
               </Link>
               <Link
                 href="/partner/corporate"

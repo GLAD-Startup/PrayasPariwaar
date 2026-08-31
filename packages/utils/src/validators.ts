@@ -29,16 +29,20 @@ export const BloodGroupDisplayMap: Record<string, string> = {
 export const UrgencyLevelValues = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export const BloodRequestStatusValues = ["PENDING", "APPROVED", "FULFILLED", "CANCELLED"] as const;
 export const EquipmentStatusValues = ["AVAILABLE", "LEASED", "MAINTENANCE"] as const;
-export const UserRoleValues = ["ADMIN", "VOLUNTEER", "DONOR"] as const;
-export const DonationStatusValues = ["PENDING", "SUCCESS", "FAILED"] as const;
+export const UserRoleValues = ["ADMIN", "EDITOR", "VOLUNTEER", "DONOR", "USER"] as const;
+export const DonationStatusValues = ["PENDING", "SUCCESS", "FAILED", "REFUNDED"] as const;
+export const DonationFrequencyValues = ["ONE_TIME", "MONTHLY", "YEARLY"] as const;
 
 export const ProjectCategoryValues = [
   "EDUCATION",
   "AWARENESS",
   "HEALTH",
   "PLANTATION",
+  "JEEV_JAL",
+  "VOCATIONAL",
   "OTHER",
 ] as const;
+
 export const ProjectStatusValues = ["UPCOMING", "ACTIVE", "COMPLETED"] as const;
 
 // Helper to format Zod error to readable string
@@ -65,7 +69,7 @@ export const SignupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(4, "Password must be at least 4 characters"),
   phone: z.string().optional().or(z.literal("")),
-  role: z.enum(UserRoleValues).default("DONOR"),
+  role: z.enum(UserRoleValues).default("USER"),
   bloodGroup: z.enum(BloodGroupValues).optional(),
 });
 export type SignupInput = z.infer<typeof SignupSchema>;
@@ -98,6 +102,15 @@ export const UpdateBloodRequestStatusSchema = z.object({
 });
 export type UpdateBloodRequestStatusInput = z.infer<typeof UpdateBloodRequestStatusSchema>;
 
+export const BloodDonorResponseSchema = z.object({
+  bloodRequestId: z.string().min(1, "Blood Request ID is required"),
+  donorId: z.string().min(1, "Donor ID is required"),
+  status: z.enum(["ACCEPTED", "ON_THE_WAY", "COMPLETED", "DECLINED"]).default("ACCEPTED"),
+  distanceKm: z.number().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+export type BloodDonorResponseInput = z.infer<typeof BloodDonorResponseSchema>;
+
 // ============================================================================
 // Medical Equipment Request Schema
 // ============================================================================
@@ -105,24 +118,33 @@ export type UpdateBloodRequestStatusInput = z.infer<typeof UpdateBloodRequestSta
 export const EquipmentRequestSchema = z.object({
   equipmentId: z.string().min(1, "Equipment ID is required"),
   requesterName: z.string().min(2, "Requester name is required"),
+  patientName: z.string().optional().nullable(),
   contactPhone: z.string().min(7, "Valid contact number is required"),
   purpose: z.string().min(2, "Please describe the patient condition or purpose"),
   requestedDays: z.coerce.number().int().min(1, "Minimum 1 day").max(365, "Maximum 365 days"),
   deliveryAddress: z.string().min(3, "Delivery address is required"),
+  city: z.string().optional().nullable(),
+  doctorPrescriptionUrl: z.string().optional().nullable(),
 });
 export type EquipmentRequestInput = z.infer<typeof EquipmentRequestSchema>;
 
 // ============================================================================
-// Volunteer Application Schema
+// Volunteer Application Schema (with Multi-Select Areas)
 // ============================================================================
 
 export const VolunteerSchema = z.object({
   name: z.string().min(2, "Full name is required"),
   email: z.string().email("Valid email address is required"),
   phone: z.string().min(7, "Valid contact phone number is required"),
-  skills: z.string().min(1, "Please specify your skills (e.g. Teaching, Logistics, Medical)"),
-  availability: z.string().min(1, "Please specify your availability"),
-  areaOfInterest: z.string().min(1, "Please specify your area of interest"),
+  dob: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  pincode: z.string().optional().nullable(),
+  areasOfInterest: z.array(z.string()).min(1, "Please select at least one area of interest").default([]),
+  skills: z.string().optional().nullable(),
+  availability: z.string().optional().nullable(),
   previousExperience: z.string().optional().nullable(),
 });
 export type VolunteerInput = z.infer<typeof VolunteerSchema>;
@@ -134,10 +156,13 @@ export type VolunteerInput = z.infer<typeof VolunteerSchema>;
 export const CreateDonationOrderSchema = z.object({
   amount: z.coerce.number().min(1, "Minimum donation amount is ₹1"),
   currency: z.string().default("INR"),
+  frequency: z.enum(DonationFrequencyValues).default("ONE_TIME"),
+  paymentMethod: z.string().optional().nullable(),
   donorName: z.string().min(2, "Donor name is required"),
   donorEmail: z.string().email("Valid email is required for 80G tax receipt"),
   donorPhone: z.string().min(7, "Valid phone is required"),
   projectOrCause: z.string().default("General Fund & Emergency Relief"),
+  isAnonymous: z.boolean().default(false),
 });
 export type CreateDonationOrderInput = z.infer<typeof CreateDonationOrderSchema>;
 
@@ -193,3 +218,29 @@ export const ProjectSchema = z.object({
   status: z.enum(ProjectStatusValues).default("ACTIVE"),
 });
 export type ProjectInput = z.infer<typeof ProjectSchema>;
+
+// ============================================================================
+// Photo Gallery Schemas
+// ============================================================================
+
+export const GalleryAlbumSchema = z.object({
+  title: z.string().min(2, "Album title is required"),
+  slug: z.string().min(1, "Slug is required"),
+  category: z.string().min(1, "Category is required"),
+  coverImage: z.string().min(1, "Cover image URL is required"),
+  description: z.string().optional().nullable(),
+  eventDate: z.string().optional().nullable(),
+  published: z.boolean().default(true),
+});
+export type GalleryAlbumInput = z.infer<typeof GalleryAlbumSchema>;
+
+export const GalleryPhotoSchema = z.object({
+  albumId: z.string().optional().nullable(),
+  title: z.string().optional().nullable(),
+  caption: z.string().optional().nullable(),
+  url: z.string().min(1, "Photo URL is required"),
+  category: z.string().min(1, "Category is required"),
+  eventDate: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+});
+export type GalleryPhotoInput = z.infer<typeof GalleryPhotoSchema>;

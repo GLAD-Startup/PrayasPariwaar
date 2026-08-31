@@ -13,9 +13,11 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { saveAuthSession } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
+import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileLoginScreen() {
   const router = useRouter();
@@ -56,7 +58,6 @@ export default function MobileLoginScreen() {
         response.data.refreshToken,
         response.data.user
       );
-      // Register device push token with user ID
       registerForPushNotificationsAsync(response.data.user?.id);
       router.replace("/(tabs)/home");
     }
@@ -70,7 +71,7 @@ export default function MobileLoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -79,76 +80,156 @@ export default function MobileLoginScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoIcon}>🌿</Text>
-            </View>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to Prayas Pariwaar Volunteer & Donor Portal
-            </Text>
+          {/* Top Bar / Back Button */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.canGoBack() ? router.back() : router.replace("/(auth)/onboarding")}
+            >
+              <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+            </TouchableOpacity>
           </View>
 
-          {/* Form Card */}
-          <View style={styles.card}>
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
+          {/* Avatar / Brand Icon */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarCircle}>
+              <View style={styles.avatarInner}>
+                <MaterialCommunityIcons name="account-circle" size={48} color={Colors.primary} />
               </View>
-            ) : null}
+              <View style={styles.leafBadge}>
+                <Text style={styles.leafIcon}>🌿</Text>
+              </View>
+            </View>
+          </View>
 
-            {/* Email Field */}
+          {/* Heading */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>Login to continue your journey</Text>
+          </View>
+
+          {/* Error Message */}
+          {error ? (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color={Colors.error} style={{ marginRight: 6 }} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {/* Form */}
+          <View style={styles.formContainer}>
+            {/* Email Address */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. donor@prayaspariwaar.com"
-                placeholderTextColor="#94A3B8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
             </View>
 
-            {/* Password Field */}
+            {/* Password */}
             <View style={styles.inputGroup}>
-              <View style={styles.passwordHeader}>
-                <Text style={styles.label}>Password *</Text>
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={styles.showPassText}>
-                    {showPassword ? "Hide" : "Show"}
-                  </Text>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, { paddingRight: 44 }]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.textMuted}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconBtn}
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
             </View>
 
-            {/* Sign In Button */}
+            {/* Forgot Password Link */}
+            <View style={styles.forgotPassRow}>
+              <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
+                <Text style={styles.forgotPassText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Login Button */}
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
               onPress={handleLogin}
               disabled={loading}
+              activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonText}>Sign In to Account →</Text>
+                <Text style={styles.loginBtnText}>Login</Text>
               )}
             </TouchableOpacity>
 
-            {/* Quick Demo Logins for Fast Testing */}
-            <View style={styles.demoSection}>
-              <Text style={styles.demoLabel}>Quick Test Logins:</Text>
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or continue with</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Social Buttons */}
+            <View style={styles.socialRow}>
+              {/* Google */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => handleQuickFill("donor@prayaspariwaar.com", "donor123")}
+              >
+                <View style={[styles.socialCircle, styles.googleCircle]}>
+                  <FontAwesome name="google" size={22} color="#EA4335" />
+                </View>
+                <Text style={styles.socialLabel}>Google</Text>
+              </TouchableOpacity>
+
+              {/* Facebook */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => handleQuickFill("volunteer@prayaspariwaar.com", "volunteer123")}
+              >
+                <View style={[styles.socialCircle, styles.facebookCircle]}>
+                  <FontAwesome name="facebook" size={22} color="#1877F2" />
+                </View>
+                <Text style={styles.socialLabel}>Facebook</Text>
+              </TouchableOpacity>
+
+              {/* Apple */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => handleQuickFill("admin@prayaspariwaar.com", "admin123")}
+              >
+                <View style={[styles.socialCircle, styles.appleCircle]}>
+                  <FontAwesome name="apple" size={24} color="#000000" />
+                </View>
+                <Text style={styles.socialLabel}>Apple</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Demo Credentials for Testing */}
+            <View style={styles.demoBox}>
+              <Text style={styles.demoTitle}>TEST ACCOUNTS</Text>
               <View style={styles.demoPills}>
                 <TouchableOpacity
                   style={styles.demoPill}
@@ -170,25 +251,19 @@ export default function MobileLoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+          </View>
 
-            {/* Register Link */}
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => router.push("/(auth)/signup")}
-            >
-              <Text style={styles.linkText}>
-                New donor or volunteer?{" "}
-                <Text style={styles.linkBold}>Create Free Account</Text>
+          {/* Footer - Sign Up */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Don't have an account?{" "}
+              <Text
+                style={styles.footerLink}
+                onPress={() => router.push("/(auth)/signup")}
+              >
+                Sign Up
               </Text>
-            </TouchableOpacity>
-
-            {/* Guest Skip */}
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={() => router.replace("/(tabs)/home")}
-            >
-              <Text style={styles.skipText}>Continue as Guest →</Text>
-            </TouchableOpacity>
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -199,138 +274,223 @@ export default function MobileLoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  topBar: {
+    height: 48,
     justifyContent: "center",
-    padding: 24,
+    marginTop: 4,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primarySoft,
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: Colors.primaryBorder,
+    position: "relative",
+  },
+  avatarInner: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  leafBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: Colors.primaryBorder,
+  },
+  leafIcon: {
+    fontSize: 12,
   },
   header: {
     alignItems: "center",
-    marginBottom: 28,
-  },
-  logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: "#2E5339",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    shadowColor: "#2E5339",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  logoIcon: {
-    fontSize: 26,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
-    color: "#0F172A",
+    color: Colors.textGreenDark,
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: "#64748B",
-    marginTop: 4,
-    textAlign: "center",
-    paddingHorizontal: 20,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    fontWeight: "500",
   },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
+  formContainer: {
+    width: "100%",
+  },
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.errorBg,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    borderColor: Colors.errorBorder,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
   },
   inputGroup: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    color: "#334155",
-    marginBottom: 6,
+    color: Colors.textPrimary,
+    marginBottom: 8,
   },
-  passwordHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  showPassText: {
-    fontSize: 11,
-    color: "#2E5339",
-    fontWeight: "700",
+  inputWrapper: {
+    position: "relative",
+    justifyContent: "center",
   },
   input: {
-    height: 48,
-    backgroundColor: "#F8FAFC",
+    height: 50,
+    backgroundColor: Colors.inputBg,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 12,
+    borderColor: Colors.border,
+    borderRadius: 14,
     paddingHorizontal: 16,
     fontSize: 14,
-    color: "#0F172A",
+    color: Colors.textPrimary,
   },
-  button: {
-    height: 50,
-    backgroundColor: "#2E5339",
+  eyeIconBtn: {
+    position: "absolute",
+    right: 14,
+    height: 48,
+    justifyContent: "center",
+  },
+  forgotPassRow: {
+    alignItems: "flex-end",
+    marginTop: 2,
+    marginBottom: 20,
+  },
+  forgotPassText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.primary,
+  },
+  loginBtn: {
+    height: 52,
+    backgroundColor: Colors.primary,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
-    shadowColor: "#2E5339",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Shadows.primaryBtn,
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  loginBtnDisabled: {
+    opacity: 0.65,
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
+  loginBtnText: {
+    color: Colors.white,
+    fontSize: 16,
     fontWeight: "800",
+    letterSpacing: 0.3,
   },
-  errorBox: {
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FCA5A5",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 16,
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 22,
   },
-  errorText: {
-    color: "#B91C1C",
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    paddingHorizontal: 12,
     fontSize: 12,
+    color: Colors.textMuted,
     fontWeight: "600",
   },
-  demoSection: {
-    marginTop: 18,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+  socialRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 24,
+    marginBottom: 20,
+  },
+  socialCard: {
     alignItems: "center",
   },
-  demoLabel: {
+  socialCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+    ...Shadows.soft,
+  },
+  googleCircle: {
+    borderColor: "#FEE2E2",
+  },
+  facebookCircle: {
+    borderColor: "#DBEAFE",
+  },
+  appleCircle: {
+    borderColor: "#E2E8F0",
+  },
+  socialLabel: {
     fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "700",
+    color: Colors.textSecondary,
+    fontWeight: "600",
+  },
+  demoBox: {
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.primaryBorder,
+    marginBottom: 16,
+  },
+  demoTitle: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: Colors.primary,
+    letterSpacing: 0.8,
     marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   demoPills: {
     flexDirection: "row",
@@ -338,36 +498,29 @@ const styles = StyleSheet.create({
   },
   demoPill: {
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Colors.primaryBorder,
   },
   demoPillText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#475569",
+    color: Colors.primary,
   },
-  linkButton: {
-    marginTop: 18,
+  footer: {
+    marginTop: "auto",
+    paddingTop: 10,
     alignItems: "center",
   },
-  linkText: {
+  footerText: {
     fontSize: 13,
-    color: "#64748B",
+    color: Colors.textSecondary,
+    fontWeight: "500",
   },
-  linkBold: {
-    color: "#2E5339",
+  footerLink: {
+    color: Colors.primary,
     fontWeight: "800",
-  },
-  skipButton: {
-    marginTop: 12,
-    alignItems: "center",
-  },
-  skipText: {
-    fontSize: 12,
-    color: "#94A3B8",
-    fontWeight: "600",
   },
 });

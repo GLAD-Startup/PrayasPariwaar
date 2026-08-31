@@ -124,3 +124,17 @@ export const api = {
   delete: <T = any>(endpoint: string, options?: FetchOptions) =>
     apiRequest<T>(endpoint, { ...options, method: "DELETE" }),
 };
+
+export function resolveImageUrl(url: any, fallback?: any): any {
+  if (!url) return fallback || require("../assets/onboarding/education.jpg");
+  if (typeof url !== "string") return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return { uri: url };
+  }
+  if (url.startsWith("/")) {
+    const baseUrl = (process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api").replace(/\/api$/, "");
+    return { uri: `${baseUrl}${url}` };
+  }
+  return fallback || require("../assets/onboarding/education.jpg");
+}
+

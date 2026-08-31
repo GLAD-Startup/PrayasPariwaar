@@ -219,7 +219,7 @@ export default function Navbar() {
                       </div>
                     </Link>
                     <Link
-                      href="/projects/gallery"
+                      href="/gallery"
                       className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-prayas-ink border-t border-prayas-rule font-semibold text-prayas-neem"
                     >
                       <Images className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
@@ -344,8 +344,8 @@ export default function Navbar() {
                     >
                       <Users className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
                       <div>
-                        <strong className="block font-bold">Volunteer as a Teacher</strong>
-                        <span className="text-[11px] text-prayas-muted">Weekend classes for children</span>
+                        <strong className="block font-bold">Volunteer With Us</strong>
+                        <span className="text-[11px] text-prayas-muted">Join our 5 Seva Streams</span>
                       </div>
                     </Link>
                     <Link
@@ -475,7 +475,7 @@ export default function Navbar() {
 
               <div className="py-2 space-y-1">
                 <span className="px-3 text-[11px] font-bold text-prayas-muted uppercase tracking-wider block">Get Involved</span>
-                <Link href="/volunteer" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">Volunteer as a Teacher / Mentor</Link>
+                <Link href="/volunteer" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">Volunteer With Us (5 Seva Streams)</Link>
                 <Link href="/partner/individual" className="block px-3 py-1.5 rounded hover:bg-prayas-stone text-xs text-prayas-muted pl-6">↳ Individual Student Patronage</Link>
                 <Link href="/partner/corporate" className="block px-3 py-1.5 rounded hover:bg-prayas-stone text-xs text-prayas-muted pl-6">↳ Corporate CSR Alliances</Link>
               </div>
@@ -484,6 +484,7 @@ export default function Navbar() {
                 <Link href="/about" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">About Us (18-Year Legacy)</Link>
                 <Link href="/about/awards" className="block px-3 py-1.5 rounded hover:bg-prayas-stone text-xs text-prayas-muted pl-6">↳ Awards & Empanelment</Link>
                 <Link href="/media" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">Media & Press Reports</Link>
+                <Link href="/gallery" className="block px-3 py-1.5 rounded hover:bg-prayas-stone font-semibold text-emerald-800">📷 Field Photo Gallery</Link>
                 <Link href="/blog" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">Field Dispatches & Events</Link>
                 <Link href="/contact" className="block px-3 py-1.5 rounded hover:bg-prayas-stone">Contact Seva Karyalaya</Link>
               </div>

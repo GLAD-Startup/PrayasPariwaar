@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 export async function POST(req: Request) {
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
 
     const uploadedUrls: { url: string; filename: string; size: number }[] = [];
     const uploadDir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(uploadDir, { recursive: true });
 
     for (const file of filesToProcess) {
       if (!allowedMimeTypes.includes(file.type)) {

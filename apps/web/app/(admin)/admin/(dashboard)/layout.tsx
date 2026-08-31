@@ -23,6 +23,7 @@ import {
   Clock,
   PanelLeftClose,
   PanelLeftOpen,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -84,6 +85,14 @@ export default function AdminLayout({
           badge: "80G",
           badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
           color: "text-rose-600",
+        },
+        {
+          href: "/admin/gallery",
+          label: "Photo Gallery & Albums",
+          icon: ImageIcon,
+          badge: "New",
+          badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
+          color: "text-emerald-700",
         },
         {
           href: "/admin/projects",

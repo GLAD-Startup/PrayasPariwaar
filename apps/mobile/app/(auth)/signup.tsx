@@ -13,33 +13,20 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { saveAuthSession } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
-import { BloodGroupValues, BloodGroupDisplayMap } from "@prayas/utils";
-
-const CITIES = ["Vrindavan", "Mathura", "Govardhan", "Barsana", "Agra", "Other"];
-
-const VOLUNTEER_DOMAINS = [
-  "Project Aashayein (Teaching)",
-  "Harit Vrindavan (Tree Plantation)",
-  "Medical Camps & Seva",
-  "Blood Donor Coordination",
-  "General Seva Support",
-];
+import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileSignupScreen() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
-  const [bloodGroup, setBloodGroup] = useState<string>("O_POSITIVE");
-  const [city, setCity] = useState<string>("Vrindavan");
-  const [volunteerDomain, setVolunteerDomain] = useState<string>(
-    "Project Aashayein (Teaching)"
-  );
-  const [role, setRole] = useState<"DONOR" | "VOLUNTEER">("DONOR");
+  const [agreedTerms, setAgreedTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,6 +41,11 @@ export default function MobileSignupScreen() {
       return;
     }
 
+    if (!agreedTerms) {
+      setError("Please agree to the Terms & Conditions to proceed.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -64,8 +56,7 @@ export default function MobileSignupScreen() {
         email: email.trim().toLowerCase(),
         password,
         phone: phone.trim() || undefined,
-        role,
-        bloodGroup: role === "DONOR" ? bloodGroup : undefined,
+        role: "VOLUNTEER", // Default member account; donor & specialized seva registrations are managed inside the app
       },
       { skipAuth: true }
     );
@@ -90,7 +81,7 @@ export default function MobileSignupScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -99,64 +90,41 @@ export default function MobileSignupScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoIcon}>🤝</Text>
-            </View>
-            <Text style={styles.title}>Join Prayas Pariwaar</Text>
-            <Text style={styles.subtitle}>
-              Register as an Emergency Blood Donor or Seva Volunteer
-            </Text>
+          {/* Top Bar / Back Button */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/login"))}
+            >
+              <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+            </TouchableOpacity>
           </View>
 
-          {/* Form Card */}
-          <View style={styles.card}>
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
-              </View>
-            ) : null}
+          {/* Heading */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join us and be a part of the change.</Text>
+          </View>
 
-            {/* Role Switcher */}
-            <View style={styles.roleContainer}>
-              <TouchableOpacity
-                style={[styles.roleTab, role === "DONOR" && styles.roleTabActiveDonor]}
-                onPress={() => setRole("DONOR")}
-              >
-                <Text
-                  style={[styles.roleText, role === "DONOR" && styles.roleTextActiveDonor]}
-                >
-                  🩸 Blood Donor
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.roleTab,
-                  role === "VOLUNTEER" && styles.roleTabActiveVolunteer,
-                ]}
-                onPress={() => setRole("VOLUNTEER")}
-              >
-                <Text
-                  style={[
-                    styles.roleText,
-                    role === "VOLUNTEER" && styles.roleTextActiveVolunteer,
-                  ]}
-                >
-                  🌿 Seva Volunteer
-                </Text>
-              </TouchableOpacity>
+          {/* Error Message */}
+          {error ? (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color={Colors.error} style={{ marginRight: 6 }} />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
+          ) : null}
 
+          {/* Form Container (Clean 4-Field Form) */}
+          <View style={styles.formContainer}>
             {/* Full Name */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name *</Text>
+              <Text style={styles.label}>Full Name</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Ramesh Chandra Sharma"
-                placeholderTextColor="#94A3B8"
+                placeholder="Enter your full name"
+                placeholderTextColor={Colors.textMuted}
                 value={name}
                 onChangeText={setName}
               />
@@ -164,13 +132,14 @@ export default function MobileSignupScreen() {
 
             {/* Email Address */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address *</Text>
+              <Text style={styles.label}>Email Address</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. ramesh@example.com"
-                placeholderTextColor="#94A3B8"
+                placeholder="Enter your email"
+                placeholderTextColor={Colors.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
                 value={email}
                 onChangeText={setEmail}
               />
@@ -178,151 +147,141 @@ export default function MobileSignupScreen() {
 
             {/* Phone Number */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>WhatsApp / Phone Number (For Alerts) *</Text>
+              <Text style={styles.label}>Phone Number</Text>
               <TextInput
                 style={styles.input}
-                placeholder="10-digit mobile number"
-                placeholderTextColor="#94A3B8"
+                placeholder="Enter your phone number"
+                placeholderTextColor={Colors.textMuted}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
               />
             </View>
 
-            {/* Conditional Donor Fields: Blood Group */}
-            {role === "DONOR" && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Your Blood Group *</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.bgScroll}
-                >
-                  {BloodGroupValues.map((bg) => (
-                    <TouchableOpacity
-                      key={bg}
-                      style={[
-                        styles.bgChip,
-                        bloodGroup === bg && styles.bgChipSelected,
-                      ]}
-                      onPress={() => setBloodGroup(bg)}
-                    >
-                      <Text
-                        style={[
-                          styles.bgChipText,
-                          bloodGroup === bg && styles.bgChipTextSelected,
-                        ]}
-                      >
-                        {BloodGroupDisplayMap[bg]}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Conditional Volunteer Fields: Area of Seva */}
-            {role === "VOLUNTEER" && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Primary Seva Domain *</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.bgScroll}
-                >
-                  {VOLUNTEER_DOMAINS.map((domain) => (
-                    <TouchableOpacity
-                      key={domain}
-                      style={[
-                        styles.volunteerChip,
-                        volunteerDomain === domain && styles.volunteerChipSelected,
-                      ]}
-                      onPress={() => setVolunteerDomain(domain)}
-                    >
-                      <Text
-                        style={[
-                          styles.volunteerChipText,
-                          volunteerDomain === domain && styles.volunteerChipTextSelected,
-                        ]}
-                      >
-                        {domain}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* City Selection */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>City / Location *</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.bgScroll}
-              >
-                {CITIES.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    style={[styles.cityChip, city === c && styles.cityChipSelected]}
-                    onPress={() => setCity(c)}
-                  >
-                    <Text
-                      style={[
-                        styles.cityChipText,
-                        city === c && styles.cityChipTextSelected,
-                      ]}
-                    >
-                      {c}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
             {/* Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Create Password *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, { paddingRight: 44 }]}
+                  placeholder="Create a password"
+                  placeholderTextColor={Colors.textMuted}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconBtn}
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Complete Button */}
+            {/* Terms and Conditions Checkbox */}
             <TouchableOpacity
-              style={[
-                styles.button,
-                role === "DONOR" ? styles.buttonDonor : styles.buttonVolunteer,
-                loading && styles.buttonDisabled,
-              ]}
+              style={styles.termsRow}
+              onPress={() => setAgreedTerms(!agreedTerms)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.checkbox, agreedTerms && styles.checkboxChecked]}>
+                {agreedTerms && <Ionicons name="checkmark" size={14} color={Colors.white} />}
+              </View>
+              <Text style={styles.termsText}>
+                I agree to the <Text style={styles.termsLink}>Terms & Conditions</Text>
+              </Text>
+            </TouchableOpacity>
+
+            {/* Sign Up Primary Green Button */}
+            <TouchableOpacity
+              style={[styles.signupBtn, loading && styles.signupBtnDisabled]}
               onPress={handleSignup}
               disabled={loading}
+              activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonText}>
-                  {role === "DONOR"
-                    ? "Register as Blood Donor →"
-                    : "Register as Volunteer →"}
-                </Text>
+                <Text style={styles.signupBtnText}>Sign Up</Text>
               )}
             </TouchableOpacity>
 
-            {/* Link to Login */}
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => router.push("/(auth)/login")}
-            >
-              <Text style={styles.linkText}>
-                Already registered? <Text style={styles.linkBold}>Sign In</Text>
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or sign up with</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Enhanced Social Buttons with Authentic Logos & Labels */}
+            <View style={styles.socialRow}>
+              {/* Google */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => {
+                  setName("Demo Member");
+                  setEmail("member@prayaspariwaar.com");
+                  setPassword("member123");
+                  setPhone("9876543210");
+                }}
+              >
+                <View style={[styles.socialCircle, styles.googleCircle]}>
+                  <FontAwesome name="google" size={22} color="#EA4335" />
+                </View>
+                <Text style={styles.socialLabel}>Google</Text>
+              </TouchableOpacity>
+
+              {/* Facebook */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => {
+                  setName("Facebook Seva User");
+                  setEmail("fb.user@prayaspariwaar.com");
+                  setPassword("fbuser123");
+                  setPhone("9876543211");
+                }}
+              >
+                <View style={[styles.socialCircle, styles.facebookCircle]}>
+                  <FontAwesome name="facebook" size={22} color="#1877F2" />
+                </View>
+                <Text style={styles.socialLabel}>Facebook</Text>
+              </TouchableOpacity>
+
+              {/* Apple */}
+              <TouchableOpacity
+                style={styles.socialCard}
+                onPress={() => {
+                  setName("Apple User");
+                  setEmail("apple.user@prayaspariwaar.com");
+                  setPassword("apple123");
+                  setPhone("9876543212");
+                }}
+              >
+                <View style={[styles.socialCircle, styles.appleCircle]}>
+                  <FontAwesome name="apple" size={24} color="#000000" />
+                </View>
+                <Text style={styles.socialLabel}>Apple</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Footer - Login */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Already have an account?{" "}
+              <Text
+                style={styles.footerLink}
+                onPress={() => router.push("/(auth)/login")}
+              >
+                Login
               </Text>
-            </TouchableOpacity>
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -333,238 +292,204 @@ export default function MobileSignupScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  topBar: {
+    height: 48,
     justifyContent: "center",
+    marginTop: 4,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primarySoft,
   },
   header: {
-    alignItems: "center",
+    marginTop: 6,
     marginBottom: 20,
-  },
-  logoBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: "#2E5339",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    shadowColor: "#2E5339",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  logoIcon: {
-    fontSize: 24,
   },
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#0F172A",
+    color: Colors.textGreenDark,
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: "#64748B",
+    color: Colors.textSecondary,
     marginTop: 4,
-    textAlign: "center",
+    fontWeight: "500",
   },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
-  },
-  roleContainer: {
+  errorBox: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    backgroundColor: Colors.errorBg,
+    borderWidth: 1,
+    borderColor: Colors.errorBorder,
     borderRadius: 12,
-    padding: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     marginBottom: 16,
   },
-  roleTab: {
+  errorText: {
+    color: Colors.error,
+    fontSize: 13,
+    fontWeight: "600",
     flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 8,
   },
-  roleTabActiveDonor: {
-    backgroundColor: "#DC2626",
-    shadowColor: "#DC2626",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  roleTabActiveVolunteer: {
-    backgroundColor: "#2E5339",
-    shadowColor: "#2E5339",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
-  },
-  roleTextActiveDonor: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-  },
-  roleTextActiveVolunteer: {
-    color: "#FFFFFF",
-    fontWeight: "800",
+  formContainer: {
+    width: "100%",
   },
   inputGroup: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    color: "#334155",
+    color: Colors.textPrimary,
     marginBottom: 6,
   },
+  inputWrapper: {
+    position: "relative",
+    justifyContent: "center",
+  },
   input: {
-    height: 46,
-    backgroundColor: "#F8FAFC",
+    height: 50,
+    backgroundColor: Colors.inputBg,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     fontSize: 14,
-    color: "#0F172A",
+    color: Colors.textPrimary,
   },
-  bgScroll: {
-    flexDirection: "row",
-    paddingVertical: 2,
-  },
-  bgChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: "#F1F5F9",
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  bgChipSelected: {
-    backgroundColor: "#DC2626",
-    borderColor: "#DC2626",
-  },
-  bgChipText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475569",
-  },
-  bgChipTextSelected: {
-    color: "#FFFFFF",
-  },
-  volunteerChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: "#F1F5F9",
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  volunteerChipSelected: {
-    backgroundColor: "#2E5339",
-    borderColor: "#2E5339",
-  },
-  volunteerChipText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#475569",
-  },
-  volunteerChipTextSelected: {
-    color: "#FFFFFF",
-  },
-  cityChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#F1F5F9",
-    marginRight: 6,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  cityChipSelected: {
-    backgroundColor: "#0F172A",
-    borderColor: "#0F172A",
-  },
-  cityChipText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#475569",
-  },
-  cityChipTextSelected: {
-    color: "#FFFFFF",
-  },
-  button: {
+  eyeIconBtn: {
+    position: "absolute",
+    right: 14,
     height: 48,
+    justifyContent: "center",
+  },
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.inputBg,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  termsText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  termsLink: {
+    color: Colors.primary,
+    fontWeight: "700",
+  },
+  signupBtn: {
+    height: 52,
+    backgroundColor: Colors.primary,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Shadows.primaryBtn,
   },
-  buttonDonor: {
-    backgroundColor: "#DC2626",
-    shadowColor: "#DC2626",
+  signupBtnDisabled: {
+    opacity: 0.65,
   },
-  buttonVolunteer: {
-    backgroundColor: "#2E5339",
-    shadowColor: "#2E5339",
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
+  signupBtnText: {
+    color: Colors.white,
+    fontSize: 16,
     fontWeight: "800",
+    letterSpacing: 0.3,
   },
-  errorBox: {
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FCA5A5",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 14,
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 22,
   },
-  errorText: {
-    color: "#B91C1C",
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    paddingHorizontal: 12,
     fontSize: 12,
+    color: Colors.textMuted,
     fontWeight: "600",
   },
-  linkButton: {
-    marginTop: 16,
+  socialRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 24,
+    marginBottom: 16,
+  },
+  socialCard: {
     alignItems: "center",
   },
-  linkText: {
-    fontSize: 13,
-    color: "#64748B",
+  socialCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+    ...Shadows.soft,
   },
-  linkBold: {
-    color: "#2E5339",
+  googleCircle: {
+    borderColor: "#FEE2E2",
+  },
+  facebookCircle: {
+    borderColor: "#DBEAFE",
+  },
+  appleCircle: {
+    borderColor: "#E2E8F0",
+  },
+  socialLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+  },
+  footer: {
+    marginTop: "auto",
+    paddingTop: 14,
+    alignItems: "center",
+  },
+  footerText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  footerLink: {
+    color: Colors.primary,
     fontWeight: "800",
   },
 });

@@ -16,27 +16,68 @@ import {
   ShieldCheck,
   Send,
   Loader2,
+  Check,
 } from "lucide-react";
+
+const INTEREST_AREAS = [
+  "Education",
+  "Health",
+  "Environment",
+  "Blood Donation",
+  "Events",
+  "Teaching",
+  "Admin Support",
+  "Digital Marketing",
+  "Other",
+];
+
+const STATES = [
+  "Uttar Pradesh",
+  "Delhi NCR",
+  "Haryana",
+  "Rajasthan",
+  "Madhya Pradesh",
+  "Punjab",
+  "Maharashtra",
+  "Other",
+];
 
 export default function VolunteerPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    skills: "Teaching / Mentorship",
-    availability: "WEEKENDS",
-    areaOfInterest: "Child Education & Evening Tutoring",
-    previousExperience: "",
-    // Blood Donor Cross-Registration
-    isBloodDonor: false,
-    bloodGroup: "O_POSITIVE",
+    dob: "",
+    gender: "Male",
+    address: "",
     city: "Vrindavan",
+    state: "Uttar Pradesh",
+    pincode: "",
+    areasOfInterest: ["Education", "Teaching"] as string[],
+    skills: "",
+    availability: "WEEKENDS",
+    previousExperience: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [alreadyRegisteredMessage, setAlreadyRegisteredMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const toggleInterest = (area: string) => {
+    if (form.areasOfInterest.includes(area)) {
+      if (form.areasOfInterest.length === 1) return;
+      setForm({
+        ...form,
+        areasOfInterest: form.areasOfInterest.filter((item) => item !== area),
+      });
+    } else {
+      setForm({
+        ...form,
+        areasOfInterest: [...form.areasOfInterest, area],
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,30 +97,19 @@ export default function VolunteerPage() {
 
       if (res.status === 409 || data.alreadyRegistered) {
         setAlreadyRegisteredMessage(
-          data.error || "You are already registered with Prayas Pariwaar! Our coordination desk has your contact details on record."
+          data.error || "You are already registered! Our coordination desk has your contact details on record."
         );
       } else if (res.ok && data.success) {
-        setSuccessMessage(data.message || "Thank you for joining Prayas Pariwaar!");
+        setSuccessMessage(data.message || "Thank you for joining our volunteer taskforce!");
       } else {
         setError(data.error || "Failed to submit volunteer application. Please check all fields.");
       }
     } catch (err) {
-      setError("Network error. Please call our office directly at +91 94122 79000.");
+      setError("Network error. Please call our office directly at +91 96765 43210.");
     } finally {
       setSubmitting(false);
     }
   };
-
-  const bloodGroups = [
-    { value: "A_POSITIVE", label: "A+" },
-    { value: "A_NEGATIVE", label: "A-" },
-    { value: "B_POSITIVE", label: "B+" },
-    { value: "B_NEGATIVE", label: "B-" },
-    { value: "AB_POSITIVE", label: "AB+" },
-    { value: "AB_NEGATIVE", label: "AB-" },
-    { value: "O_POSITIVE", label: "O+" },
-    { value: "O_NEGATIVE", label: "O-" },
-  ];
 
   return (
     <div className="space-y-8 sm:space-y-12 pb-20 max-w-4xl 2xl:max-w-5xl 3xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-10">
@@ -87,349 +117,285 @@ export default function VolunteerPage() {
       <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-bold text-prayas-neem">
           <Users className="w-3.5 h-3.5" />
-          <span>Nishkam Seva • Community Volunteer Program</span>
+          <span>Nishkam Seva • Volunteer Taskforce</span>
         </div>
-        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-prayas-ink leading-tight">
-          Volunteer With Prayas Pariwaar in Vrindavan
+        <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink leading-tight">
+          Volunteer With Us in Vrindavan & Mathura
         </h1>
-        <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted leading-relaxed max-w-2xl 2xl:max-w-3xl">
-          Whether you are a student, teacher, doctor, professional, or local resident, your contribution of a few hours each week can transform lives across Mathura district.
+        <p className="text-sm sm:text-base text-prayas-muted leading-relaxed max-w-2xl">
+          Whether you are a student, teacher, doctor, professional, or devotee, your contribution of a few hours each week can transform lives across our 5 Seva Streams.
         </p>
       </div>
 
-      {/* Program Roles Overview Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="border border-prayas-rule bg-white rounded-xl p-5 shadow-card space-y-2">
-          <div className="w-9 h-9 rounded-lg bg-green-50 text-prayas-neem flex items-center justify-center">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <h3 className="font-serif text-sm font-bold text-prayas-ink">
-            Weekend Teaching & Mentoring
-          </h3>
-          <p className="text-xs text-prayas-muted leading-relaxed">
-            Teach basic mathematics, English, and sciences to underprivileged village children in our 6 evening centers.
-          </p>
-        </div>
-
-        <div className="border border-prayas-rule bg-white rounded-xl p-5 shadow-card space-y-2">
-          <div className="w-9 h-9 rounded-lg bg-red-50 text-prayas-crimson flex items-center justify-center">
-            <Droplet className="w-5 h-5 fill-current" />
-          </div>
-          <h3 className="font-serif text-sm font-bold text-prayas-ink">
-            Emergency Blood Donation
-          </h3>
-          <p className="text-xs text-prayas-muted leading-relaxed">
-            Register as a voluntary donor to be on-call for critical surgical and accident cases in Mathura hospitals.
-          </p>
-        </div>
-
-        <div className="border border-prayas-rule bg-white rounded-xl p-5 shadow-card space-y-2">
-          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center">
-            <Trees className="w-5 h-5" />
-          </div>
-          <h3 className="font-serif text-sm font-bold text-prayas-ink">
-            Plantation & Ecology Drives
-          </h3>
-          <p className="text-xs text-prayas-muted leading-relaxed">
-            Participate in seasonal Sunday tree planting drives and tree-guard maintenance along Parikrama Marg.
-          </p>
-        </div>
-      </div>
-
-      {/* Application Form */}
-      <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
-        <div className="border-b border-prayas-rule pb-3">
-          <h2 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink">
-            Volunteer Registration Form
+      {/* Main Registration Card */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-10 shadow-card space-y-6">
+        <div className="border-b border-prayas-rule pb-4">
+          <h2 className="font-serif text-xl font-bold text-prayas-ink">
+            Volunteer Application Form
           </h2>
-          <p className="text-xs text-prayas-muted mt-1">
-            Choose your seva domain and optionally register as an emergency voluntary blood donor in one simple step.
+          <p className="text-xs text-prayas-muted">
+            Please fill in your details and select the areas where you would love to serve.
           </p>
         </div>
 
-        {/* ALREADY REGISTERED NOTICE */}
-        {alreadyRegisteredMessage && (
-          <div className="p-5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 space-y-2 shadow-sm animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-amber-700 shrink-0" />
-              <h3 className="font-serif text-base font-bold text-amber-950">
-                You Are Already Registered!
-              </h3>
-            </div>
-            <p className="text-xs leading-relaxed text-amber-900">
-              {alreadyRegisteredMessage}
-            </p>
-            <div className="pt-2 flex items-center gap-3 text-xs">
-              <a
-                href="tel:+919412279000"
-                className="font-bold text-amber-900 underline flex items-center gap-1"
-              >
-                <PhoneCall className="w-3.5 h-3.5" />
-                Call Helpline: +91 94122 79000
-              </a>
-              <Link href="/" className="text-amber-800 hover:underline">
-                Return to Homepage →
-              </Link>
+        {/* Success Alert */}
+        {successMessage && (
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs sm:text-sm flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">{successMessage}</p>
+              <p className="text-emerald-800 text-xs mt-1">
+                Our coordination team will contact you within 48 hours to complete your orientation.
+              </p>
             </div>
           </div>
         )}
 
-        {/* NEW REGISTRATION SUCCESS */}
-        {successMessage && (
-          <div className="p-6 rounded-xl bg-green-50 border border-green-300 text-green-950 space-y-3 shadow-sm animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-6 h-6 text-prayas-neem shrink-0" />
-              <h3 className="font-serif text-lg font-bold text-emerald-950">
-                Volunteer Registration Received!
-              </h3>
+        {/* Error Alert */}
+        {error && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs sm:text-sm flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <p className="font-medium">{error}</p>
+          </div>
+        )}
+
+        {/* Already Registered Message */}
+        {alreadyRegisteredMessage && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm space-y-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="font-medium">{alreadyRegisteredMessage}</p>
             </div>
-            <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed">
-              {successMessage}
-            </p>
-            <p className="text-xs text-emerald-800">
-              Our general volunteer coordinator will reach out to you via WhatsApp / Phone to brief you on upcoming orientation sessions and field schedules.
-            </p>
-            <div className="pt-2">
+            <div className="pt-1 border-t border-amber-200/80 flex items-center justify-between">
+              <span className="text-xs text-amber-800">Need to register a family member or friend?</span>
               <button
                 type="button"
                 onClick={() => {
-                  setSuccessMessage(null);
+                  setAlreadyRegisteredMessage(null);
                   setForm({
                     name: "",
                     email: "",
                     phone: "",
+                    dob: "",
+                    gender: "Male",
+                    address: "",
+                    city: "Vrindavan",
+                    state: "Uttar Pradesh",
+                    pincode: "",
+                    areasOfInterest: ["Education", "Teaching"],
                     skills: "",
                     availability: "WEEKENDS",
-                    areaOfInterest: "Child Education & Evening Tutoring",
                     previousExperience: "",
-                    isBloodDonor: false,
-                    bloodGroup: "O_POSITIVE",
-                    city: "Vrindavan",
                   });
                 }}
-                className="px-4 py-2 rounded-lg bg-[#2E5339] text-white text-xs font-bold shadow hover:bg-[#23432b]"
-                style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-sm"
               >
-                Register Another Volunteer
+                Register Another Person (+)
               </button>
             </div>
           </div>
         )}
 
-        {/* ERROR NOTICE */}
-        {error && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-prayas-crimson shrink-0" />
-            <span className="flex-1 font-medium">{error}</span>
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-6 text-xs sm:text-sm">
+          {/* Section 1: Personal Information */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-prayas-ink text-sm uppercase tracking-wider text-emerald-800">
+              1. Personal Details
+            </h3>
 
-        {/* FORM FIELDS (Hidden when successfully registered) */}
-        {!successMessage && !alreadyRegisteredMessage && (
-          <form onSubmit={handleSubmit} className="space-y-6 text-xs">
-            {/* Name, Email, Phone */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="font-bold text-prayas-ink block">
-                  Full Name *
-                </label>
+                <label className="font-bold text-prayas-ink block">Full Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ramesh Chandra"
+                  placeholder="Enter your full name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-prayas-ink block">
-                  Email Address *
-                </label>
+                <label className="font-bold text-prayas-ink block">Email Address *</label>
                 <input
                   type="email"
                   required
-                  placeholder="e.g. ramesh@gmail.com"
+                  placeholder="Enter your email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="font-bold text-prayas-ink block">
-                  Contact Phone (WhatsApp) *
-                </label>
+                <label className="font-bold text-prayas-ink block">Phone Number *</label>
                 <input
                   type="tel"
                   required
-                  placeholder="+91 98765 43210"
+                  placeholder="10-digit mobile"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
                 />
               </div>
-            </div>
 
-            {/* Primary Seva Interest & Availability */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="font-bold text-prayas-ink block">
-                  Primary Area of Seva *
-                </label>
-                <select
-                  value={form.areaOfInterest}
-                  onChange={(e) => setForm({ ...form, areaOfInterest: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold"
-                >
-                  <option value="Child Education & Evening Tutoring">
-                    🎓 Project Aashayein (Evening Tutoring & Teaching)
-                  </option>
-                  <option value="Environmental & Native Tree Plantation">
-                    🌳 Vrindavan Harit Kranti (Afforestation & Tree Care)
-                  </option>
-                  <option value="Emergency Blood Donation & Hospital Dispatch">
-                    🩸 24/7 Blood Donation & Patient Hospital Support
-                  </option>
-                  <option value="Jan Swasthya Eye & Health Camps">
-                    🩺 Medical Camps & Equipment Lending Assistance
-                  </option>
-                  <option value="General Volunteer & Seva Coordination">
-                    🤝 General Event Organization & Community Outreach
-                  </option>
-                </select>
+                <label className="font-bold text-prayas-ink block">Date of Birth</label>
+                <input
+                  type="date"
+                  value={form.dob}
+                  onChange={(e) => setForm({ ...form, dob: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+                />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-prayas-ink block">
-                  Your Availability *
-                </label>
+                <label className="font-bold text-prayas-ink block">Gender</label>
                 <select
-                  value={form.availability}
-                  onChange={(e) => setForm({ ...form, availability: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-semibold"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 text-xs outline-none focus:ring-2 focus:ring-emerald-700"
                 >
-                  <option value="WEEKENDS">Weekends Only (Saturday / Sunday)</option>
-                  <option value="WEEKDAY_EVENINGS">Weekday Evenings (5:00 PM - 7:30 PM)</option>
-                  <option value="FULL_TIME">Full Time Volunteer</option>
-                  <option value="EMERGENCY_ON_CALL">Emergency On-Call (Blood & Medical Dispatch)</option>
-                  <option value="FLEXIBLE">Flexible / As per schedule</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
 
-            {/* Skills & Background */}
             <div className="space-y-1">
-              <label className="font-bold text-prayas-ink block">
-                Your Skills / Profession *
-              </label>
+              <label className="font-bold text-prayas-ink block">Address</label>
               <input
                 type="text"
-                required
-                placeholder="e.g. Mathematics Teacher, Doctor, College Student, IT Professional, Social Worker"
+                placeholder="Enter complete address"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink block">City</label>
+                <input
+                  type="text"
+                  placeholder="Enter city"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink block">State</label>
+                <select
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+                >
+                  {STATES.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-prayas-ink block">Pincode</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 281001"
+                  value={form.pincode}
+                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Multi-Select Areas of Interest */}
+          <div className="space-y-3 pt-4 border-t border-prayas-rule">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-prayas-ink text-sm uppercase tracking-wider text-emerald-800">
+                2. Areas of Interest (Select one or more) *
+              </h3>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {INTEREST_AREAS.map((area) => {
+                const isSelected = form.areasOfInterest.includes(area);
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => toggleInterest(area)}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      isSelected
+                        ? "bg-emerald-700 text-white border-emerald-700 shadow-sm"
+                        : "bg-white text-prayas-ink border-prayas-rule hover:bg-prayas-stone"
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3.5 h-3.5" />}
+                    <span>{area}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 3: Availability & Skills */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-prayas-rule">
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink block">Your Availability *</label>
+              <select
+                value={form.availability}
+                onChange={(e) => setForm({ ...form, availability: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 text-xs outline-none focus:ring-2 focus:ring-emerald-700"
+              >
+                <option value="WEEKENDS">Weekends (Saturday / Sunday)</option>
+                <option value="WEEKDAY_EVENINGS">Weekday Evenings</option>
+                <option value="FULL_TIME">Full Time Seva</option>
+                <option value="FLEXIBLE">Flexible / On-Call</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-prayas-ink block">Skills / Background</label>
+              <input
+                type="text"
+                placeholder="e.g. Teaching, Doctor, IT, Social Work"
                 value={form.skills}
                 onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem font-medium"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700"
               />
             </div>
+          </div>
 
-            {/* CROSS-REGISTRATION: ALSO REGISTER AS BLOOD DONOR? */}
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50/50 space-y-3">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isBloodDonor}
-                  onChange={(e) => setForm({ ...form, isBloodDonor: e.target.checked })}
-                  className="rounded text-prayas-crimson focus:ring-prayas-crimson w-4 h-4 mt-0.5"
-                />
-                <div>
-                  <span className="font-bold text-xs text-red-950 block">
-                    🩸 Would you also like to register as an Emergency Voluntary Blood Donor?
-                  </span>
-                  <span className="text-[11px] text-red-800 block mt-0.5">
-                    Help save lives during acute surgical emergencies and accident trauma across Mathura district.
-                  </span>
-                </div>
-              </label>
-
-              {/* Conditional Blood Donor Fields */}
-              {form.isBloodDonor && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-red-200/60 animate-in fade-in">
-                  <div className="space-y-1">
-                    <label className="font-bold text-red-950 block">
-                      Your Blood Group *
-                    </label>
-                    <select
-                      value={form.bloodGroup}
-                      onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-red-200 bg-white text-red-950 font-bold focus:outline-none focus:ring-2 focus:ring-prayas-crimson"
-                    >
-                      {bloodGroups.map((bg) => (
-                        <option key={bg.value} value={bg.value}>
-                          {bg.label} Blood Group
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-bold text-red-950 block">
-                      Current City / Village in Mathura *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Vrindavan, Mathura, Govardhan, Barsana"
-                      value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-red-200 bg-white text-red-950 font-medium focus:outline-none focus:ring-2 focus:ring-prayas-crimson"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Previous Experience */}
-            <div className="space-y-1">
-              <label className="font-bold text-prayas-ink block">
-                Previous Volunteer Experience or Notes (Optional)
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Tell us about any previous community work or what motivates you to join Prayas Pariwaar..."
-                value={form.previousExperience}
-                onChange={(e) => setForm({ ...form, previousExperience: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-prayas-rule">
-              <span className="text-[11px] text-prayas-muted flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-prayas-neem" />
-                100% voluntary, honorary seva.
-              </span>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-[#2E5339] text-white hover:bg-[#23432b] shadow-md flex items-center justify-center gap-2 disabled:opacity-50 transition-all text-xs sm:text-sm"
-                style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-              >
-                {submitting ? (
+          {/* Submit CTA */}
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full sm:w-auto px-8 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
+                  <span>Submitting Application...</span>
+                </>
+              ) : (
+                <>
                   <Send className="w-4 h-4" />
-                )}
-                <span>
-                  {form.isBloodDonor
-                    ? "Register as Volunteer & Blood Donor →"
-                    : "Submit Volunteer Registration →"}
-                </span>
-              </button>
-            </div>
-          </form>
-        )}
+                  <span>Submit Application</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

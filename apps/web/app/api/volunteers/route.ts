@@ -3,10 +3,49 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { VolunteerSchema, formatZodError } from "@prayas/utils";
 
-// GET /api/volunteers - List volunteers (Admin only)
+// GET /api/volunteers - List volunteers or check individual application status
 export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const checkEmail = searchParams.get("email") || searchParams.get("checkEmail");
+    const checkPhone = searchParams.get("phone") || searchParams.get("checkPhone");
+    const isMe = searchParams.get("me") === "true";
+
     const authUser = await getAuthUser(req);
+
+    // 1. Specific applicant status lookup (User/Self-service)
+    if (checkEmail || checkPhone || isMe) {
+      const emailQuery = checkEmail?.toLowerCase().trim() || (isMe && authUser?.email ? authUser.email.toLowerCase().trim() : undefined);
+      const phoneQuery = checkPhone?.trim().replace(/[\s-]/g, "");
+      const searchPhone = phoneQuery && phoneQuery.length >= 10 ? phoneQuery.slice(-10) : phoneQuery;
+
+      const volunteer = await prisma.volunteer.findFirst({
+        where: {
+          OR: [
+            ...(emailQuery ? [{ email: emailQuery }] : []),
+            ...(searchPhone ? [{ phone: { contains: searchPhone } }] : []),
+            ...(authUser ? [{ userId: authUser.userId }] : []),
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (volunteer) {
+        return NextResponse.json({
+          success: true,
+          registered: true,
+          data: volunteer,
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        registered: false,
+        data: null,
+      });
+    }
+
+    // 2. Full roster list (Admin/Editor only)
     if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -30,7 +69,7 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/volunteers - Submit volunteer registration with duplicate check & blood donor support
+// POST /api/volunteers - Submit volunteer registration with duplicate check & multi-select areas
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -48,9 +87,15 @@ export async function POST(req: Request) {
       name,
       email,
       phone,
+      dob,
+      gender,
+      address,
+      city,
+      state,
+      pincode,
+      areasOfInterest,
       skills,
       availability,
-      areaOfInterest,
       previousExperience,
     } = validated.data;
 
@@ -73,7 +118,7 @@ export async function POST(req: Request) {
         {
           success: false,
           alreadyRegistered: true,
-          error: `You are already registered with Prayas Pariwaar under ${existing.email} (Status: ${existing.status}). Our coordination desk has your contact information on record. Please call +91 94122 79000 if you wish to update your seva preferences.`,
+          error: `You are already registered under ${existing.email} (Status: ${existing.status}). Our coordination desk has your contact information on record. Please call +91 94122 79000 if you wish to update your seva preferences.`,
           data: existing,
         },
         { status: 409 }
@@ -82,34 +127,25 @@ export async function POST(req: Request) {
 
     const authUser = await getAuthUser(req);
 
-    // Format Area of Interest with Blood Donor Tag if specified
-    const isBloodDonor = Boolean(body.isBloodDonor || body.bloodGroup);
-    let finalArea = areaOfInterest;
-    if (isBloodDonor) {
-      const bloodGroupLabel = body.bloodGroup ? ` (${body.bloodGroup.replace("_", "+").replace("POSITIVE", "+").replace("NEGATIVE", "-")})` : "";
-      if (!finalArea.toLowerCase().includes("blood")) {
-        finalArea = `${finalArea} + Emergency Blood Donor${bloodGroupLabel}`;
-      } else {
-        finalArea = `Emergency Blood Donor${bloodGroupLabel} • ${finalArea}`;
-      }
-    }
-
-    let finalSkills = skills;
-    if (body.bloodGroup) {
-      finalSkills = `Blood Group: ${body.bloodGroup} | ${skills}`;
-    }
-    if (body.city) {
-      finalSkills = `${finalSkills} | City: ${body.city}`;
-    }
+    // Ensure areasOfInterest has array
+    const finalAreas: string[] = Array.isArray(areasOfInterest) && areasOfInterest.length > 0
+      ? areasOfInterest
+      : body.areaOfInterest ? [body.areaOfInterest] : ["Education"];
 
     const volunteer = await prisma.volunteer.create({
       data: {
         name,
         email: normalizedEmail,
         phone: phone.trim(),
-        skills: finalSkills,
-        availability,
-        areaOfInterest: finalArea,
+        dob: dob ? new Date(dob) : null,
+        gender: gender || null,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        pincode: pincode || null,
+        areasOfInterest: finalAreas,
+        skills: skills || null,
+        availability: availability || null,
         previousExperience: previousExperience || null,
         userId: authUser?.userId || null,
         status: "PENDING",
@@ -119,9 +155,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: isBloodDonor
-          ? "Thank you! You are successfully registered as a Prayas Volunteer and added to the Emergency Blood Donor Registry. Our coordination desk will reach out soon."
-          : "Thank you for joining Prayas Pariwaar! Our volunteer coordinator will reach out to you shortly.",
+        message: "Thank you for joining our volunteer taskforce! Our volunteer coordinator will reach out to you shortly.",
         data: volunteer,
       },
       { status: 201 }

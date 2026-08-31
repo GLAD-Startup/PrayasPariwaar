@@ -13,10 +13,10 @@ generator client {
 
 enum Role {
   ADMIN
-  EDITOR      // can create/edit posts & projects but not manage users
+  EDITOR // can create/edit posts & projects but not manage users
   VOLUNTEER
   DONOR
-  USER        // plain registered app user (no special access)
+  USER // plain registered app user (no special access)
 }
 
 enum BloodGroup {
@@ -72,13 +72,20 @@ enum DonationStatus {
   REFUNDED
 }
 
-// "OUR WORK" on the site is grouped into Education / Awareness, each with
-// sub-projects (Aashayein, Aadhar, Health, Blood Donation, Daan Vardaan, Plantation)
+enum DonationFrequency {
+  ONE_TIME
+  MONTHLY
+  YEARLY
+}
+
+// 5 Pillars of Seva & Project Categories
 enum ProjectCategory {
   EDUCATION
   AWARENESS
   HEALTH
   PLANTATION
+  JEEV_JAL
+  VOCATIONAL
   OTHER
 }
 
@@ -130,26 +137,28 @@ enum NotificationType {
 // ==========================================================================
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String      @id @default(cuid())
+  email        String      @unique
   passwordHash String
   name         String
   phone        String?
   avatarUrl    String?
-  bio          String?  @db.Text
-  role         Role     @default(USER)
+  bio          String?     @db.Text
+  role         Role        @default(USER)
   bloodGroup   BloodGroup?
   city         String?
-  isActive     Boolean  @default(true)
+  isActive     Boolean     @default(true)
 
-  pushTokens        PushToken[]
-  volunteerProfile  Volunteer?
-  bloodRequests     BloodRequest[]
-  equipmentRequests EquipmentRequest[]
-  donations         Donation[]
-  posts             Post[]
-  projects          Project[]
-  notifications     Notification[]      @relation("NotificationCreatedBy")
+  pushTokens          PushToken[]
+  volunteerProfile    Volunteer?
+  bloodRequests       BloodRequest[]
+  bloodDonorResponses BloodDonorResponse[]
+  equipmentRequests   EquipmentRequest[]
+  donations           Donation[]
+  posts               Post[]
+  projects            Project[]
+  notifications       Notification[]       @relation("NotificationCreatedBy")
+  userNotifications   UserNotification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,20 +184,36 @@ model PushToken {
 // Log of notifications sent from admin (broadcast or targeted), so the
 // admin dashboard can show notification history.
 model Notification {
-  id               String            @id @default(cuid())
+  id               String           @id @default(cuid())
   title            String
-  body             String            @db.Text
-  type             NotificationType  @default(GENERAL)
-  targetBloodGroup BloodGroup?       // e.g. notify only O_NEGATIVE users
+  body             String           @db.Text
+  type             NotificationType @default(GENERAL)
+  targetBloodGroup BloodGroup? // e.g. notify only O_NEGATIVE users
   targetCity       String?
   relatedPostId    String?
-  relatedPost      Post?             @relation(fields: [relatedPostId], references: [id], onDelete: SetNull)
-  recipientCount   Int               @default(0)
+  relatedPost      Post?            @relation(fields: [relatedPostId], references: [id], onDelete: SetNull)
+  recipientCount   Int              @default(0)
   createdById      String?
-  createdBy        User?             @relation("NotificationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt        DateTime          @default(now())
+  createdBy        User?            @relation("NotificationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime         @default(now())
 
   @@map("notifications")
+}
+
+// Individual User In-App Notifications & Unread Status Tracking
+model UserNotification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(GENERAL)
+  isRead    Boolean          @default(false)
+  linkUrl   String?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@map("user_notifications")
 }
 
 // ==========================================================================
@@ -197,16 +222,16 @@ model Notification {
 // ==========================================================================
 
 model Post {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String   @unique
-  type        PostType @default(NEWS)
-  excerpt     String?  @db.Text
-  content     String   @db.Text
+  slug        String    @unique
+  type        PostType  @default(NEWS)
+  excerpt     String?   @db.Text
+  content     String    @db.Text
   coverImage  String?
-  eventDate   DateTime?   // when the event happened (for EVENT posts)
+  eventDate   DateTime? // when the event happened (for EVENT posts)
   location    String?
-  published   Boolean  @default(true)
+  published   Boolean   @default(true)
   publishedAt DateTime?
 
   authorId String?
@@ -227,12 +252,12 @@ model Post {
 }
 
 model PostImage {
-  id       String  @id @default(cuid())
-  postId   String
-  post     Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  url      String
-  caption  String?
-  order    Int     @default(0)
+  id      String  @id @default(cuid())
+  postId  String
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url     String
+  caption String?
+  order   Int     @default(0)
 
   @@index([postId])
   @@map("post_images")
@@ -280,13 +305,53 @@ model ProjectImage {
   @@map("project_images")
 }
 
+// ==========================================================================
+// PHOTO GALLERY & ALBUMS (Categorized Seva Galleries & On-Ground Photos)
+// ==========================================================================
+
+model GalleryAlbum {
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  category    String // Free Education | Blood Donation | Plantation | Jeev Jal Seva | Vocational Training
+  coverImage  String
+  eventDate   DateTime?
+  description String?        @db.Text
+  photos      GalleryPhoto[]
+  published   Boolean        @default(true)
+  order       Int            @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("gallery_albums")
+}
+
+model GalleryPhoto {
+  id        String        @id @default(cuid())
+  albumId   String?
+  album     GalleryAlbum? @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  title     String?
+  caption   String?
+  url       String
+  category  String // Free Education | Blood Donation | Plantation | Jeev Jal Seva | Vocational Training
+  eventDate DateTime?
+  location  String?
+  order     Int           @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([category])
+  @@map("gallery_photos")
+}
+
 // Flexible CMS pages for static content: Mission & Vision, About Us,
 // Awards & Empanelment overview text, etc. Slug drives the route.
 model Page {
-  id      String @id @default(cuid())
-  slug    String @unique // "mission-vision" | "about-us" | "awards-empanelment" ...
-  title   String
-  content String @db.Text
+  id         String  @id @default(cuid())
+  slug       String  @unique // "mission-vision" | "about-us" | "awards-empanelment" ...
+  title      String
+  content    String  @db.Text
   coverImage String?
 
   metaTitle       String?
@@ -332,7 +397,7 @@ model MediaCoverage {
   id            String    @id @default(cuid())
   title         String
   type          MediaType
-  source        String?   // e.g. "Dainik Jagran", "News18"
+  source        String? // e.g. "Dainik Jagran", "News18"
   url           String?
   imageUrl      String?
   publishedDate DateTime?
@@ -346,11 +411,11 @@ model MediaCoverage {
 
 // Homepage counters: "Projects Completed / Children Helped / Volunteers / Awards Won"
 model SiteStat {
-  id    String @id @default(cuid())
-  label String @unique
-  value Int    @default(0)
+  id    String  @id @default(cuid())
+  label String  @unique
+  value Int     @default(0)
   icon  String?
-  order Int    @default(0)
+  order Int     @default(0)
 
   updatedAt DateTime @updatedAt
 
@@ -359,14 +424,14 @@ model SiteStat {
 
 // "GET INVOLVED" -> Individual partnership / Corporate partnership inquiry forms
 model PartnershipInquiry {
-  id               String             @id @default(cuid())
+  id               String            @id @default(cuid())
   type             PartnershipType
   name             String
   email            String
   phone            String
   organizationName String?
-  message          String?            @db.Text
-  status           PartnershipStatus  @default(PENDING)
+  message          String?           @db.Text
+  status           PartnershipStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -409,12 +474,32 @@ model BloodRequest {
   requesterId String?
   requester   User?   @relation(fields: [requesterId], references: [id], onDelete: SetNull)
 
+  donorResponses BloodDonorResponse[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([bloodGroup, status])
   @@index([city])
   @@map("blood_requests")
+}
+
+// Real-time matched voluntary donors responding to a BloodRequest
+model BloodDonorResponse {
+  id             String       @id @default(cuid())
+  bloodRequestId String
+  bloodRequest   BloodRequest @relation(fields: [bloodRequestId], references: [id], onDelete: Cascade)
+  donorId        String
+  donor          User         @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  status         String       @default("ACCEPTED") // ACCEPTED | ON_THE_WAY | COMPLETED | DECLINED
+  distanceKm     Float?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([bloodRequestId, donorId])
+  @@map("blood_donor_responses")
 }
 
 model MedicalEquipment {
@@ -436,18 +521,25 @@ model MedicalEquipment {
 }
 
 model EquipmentRequest {
-  id              String           @id @default(cuid())
-  equipmentId     String
-  equipment       MedicalEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  id          String           @id @default(cuid())
+  equipmentId String
+  equipment   MedicalEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 
-  requesterId     String?
-  requester       User?            @relation(fields: [requesterId], references: [id], onDelete: SetNull)
-  requesterName   String
-  contactPhone    String
-  purpose         String           @db.Text
-  requestedDays   Int              @default(7)
-  deliveryAddress String           @db.Text
-  status          RequestStatus    @default(PENDING)
+  requesterId           String?
+  requester             User?         @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  requesterName         String
+  patientName           String?
+  contactPhone          String
+  purpose               String        @db.Text
+  requestedDays         Int           @default(7)
+  deliveryAddress       String        @db.Text
+  city                  String?
+  issueDate             DateTime?
+  returnDueDate         DateTime?
+  actualReturnDate      DateTime?
+  doctorPrescriptionUrl String?
+  securityDeposit       Float         @default(0)
+  status                RequestStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -463,9 +555,15 @@ model Volunteer {
   name               String
   email              String
   phone              String
-  skills             String          @db.Text
-  availability       String
-  areaOfInterest     String
+  dob                DateTime?
+  gender             String? // Male | Female | Other
+  address            String?         @db.Text
+  city               String?
+  state              String?
+  pincode            String?
+  areasOfInterest    String[] // Multi-select: ["Education", "Health", "Plantation", "Teaching", etc.]
+  skills             String?         @db.Text
+  availability       String?
   previousExperience String?         @db.Text
   status             VolunteerStatus @default(PENDING)
 
@@ -476,18 +574,24 @@ model Volunteer {
 }
 
 model Donation {
-  id                String         @id @default(cuid())
-  donorId           String?
-  donor             User?          @relation(fields: [donorId], references: [id], onDelete: SetNull)
-  donorName         String
-  donorEmail        String
-  donorPhone        String?
-  amount            Float
-  currency          String         @default("INR")
+  id            String            @id @default(cuid())
+  donorId       String?
+  donor         User?             @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  donorName     String
+  donorEmail    String
+  donorPhone    String?
+  amount        Float
+  currency      String            @default("INR")
+  frequency     DonationFrequency @default(ONE_TIME)
+  paymentMethod String? // UPI | Cards | NetBanking | Wallets
 
-  projectId         String?
-  project           Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  projectOrCause    String         @default("General Fund")
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectOrCause String   @default("General Fund")
+
+  receiptNumber     String? @unique // e.g. "SDT-2024-884"
+  certificate80GUrl String?
+  isAnonymous       Boolean @default(false)
 
   razorpayOrderId   String         @unique
   razorpayPaymentId String?        @unique
