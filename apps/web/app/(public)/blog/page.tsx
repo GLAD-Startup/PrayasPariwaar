@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PostType } from "@prisma/client";
-import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, Image as ImageIcon } from "lucide-react";
+import EventsSidebar from "@/components/EventsSidebar";
 
 export const revalidate = 60;
 
@@ -37,16 +38,17 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   ];
 
   return (
-    <div className="space-y-12 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+    <div className="space-y-10 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
+      {/* Header */}
       <div className="border-b border-prayas-rule pb-8 space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs font-bold text-prayas-neem">
           <span>Journal & Activity Log</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-prayas-ink">
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink">
           Field Dispatches & Grassroots Reports
         </h1>
-        <p className="text-sm text-prayas-muted max-w-2xl leading-relaxed">
-          First-hand reporting and photo records from our volunteer activities across Vrindavan, Mathura, and surrounding rural communities.
+        <p className="text-sm sm:text-base text-prayas-muted max-w-3xl leading-relaxed">
+          First-hand reporting, event write-ups, and photo documentation from our volunteer activities across Vrindavan, Mathura, and surrounding rural communities.
         </p>
       </div>
 
@@ -60,11 +62,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
             <Link
               key={t.value}
               href={href}
-              className={`px-3.5 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 isActive
-                  ? "bg-prayas-neem text-white font-semibold shadow-subtle"
+                  ? "bg-[#2E5339] text-white shadow-sm"
                   : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
               }`}
+              style={isActive ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
             >
               {t.label}
             </Link>
@@ -72,66 +75,97 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         })}
       </div>
 
-      {/* Dispatches Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post) => (
-          <article
-            key={post.id}
-            className="border border-prayas-rule bg-white rounded overflow-hidden shadow-card flex flex-col justify-between"
-          >
-            {post.coverImage && (
-              <div className="aspect-[16/10] bg-prayas-stone overflow-hidden border-b border-prayas-rule">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-              </div>
-            )}
-
-            <div className="p-6 space-y-3 flex-grow flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-prayas-muted">
-                  <span className="px-2 py-0.5 rounded bg-prayas-stone border border-prayas-rule font-bold text-prayas-ink text-[10px] uppercase">
-                    {post.type}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(post.eventDate || post.createdAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-
-                <h2 className="font-serif text-lg font-bold text-prayas-ink hover:text-prayas-neem transition-colors leading-snug">
-                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                </h2>
-
-                <p className="text-xs text-prayas-muted leading-relaxed line-clamp-3">
-                  {post.excerpt || post.content.substring(0, 140) + "..."}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-prayas-rule flex items-center justify-between text-xs">
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="font-semibold text-prayas-neem hover:underline"
-                >
-                  Read full dispatch
-                </Link>
-                {post.location && (
-                  <span className="text-[11px] text-prayas-muted truncate max-w-[140px]">
-                    📍 {post.location}
-                  </span>
-                )}
-              </div>
+      {/* Main Grid: Left Posts Feed (8 cols) + Right Events Sidebar (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left: Posts Feed */}
+        <div className="lg:col-span-8 space-y-8">
+          {posts.length === 0 ? (
+            <div className="p-12 text-center text-prayas-muted bg-white border border-prayas-rule rounded-2xl">
+              No dispatches found in this category.
             </div>
-          </article>
-        ))}
+          ) : (
+            posts.map((post) => (
+              <article
+                key={post.id}
+                className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all flex flex-col md:flex-row group"
+              >
+                {post.coverImage && (
+                  <div className="md:w-5/12 aspect-[16/10] md:aspect-auto bg-prayas-stone overflow-hidden border-b md:border-b-0 md:border-r border-prayas-rule relative shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={post.coverImage}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-bold uppercase backdrop-blur-sm">
+                      {post.type}
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-6 md:p-7 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-prayas-muted">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-prayas-neem" />
+                        {post.eventDate
+                          ? new Date(post.eventDate).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : new Date(post.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                      </span>
+
+                      {post.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-prayas-muted" />
+                          {post.location}
+                        </span>
+                      )}
+
+                      {post.images && post.images.length > 0 && (
+                        <span className="text-prayas-neem font-semibold">
+                          📷 {post.images.length} photos
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-prayas-ink group-hover:text-prayas-neem transition-colors leading-snug">
+                      <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-prayas-muted leading-relaxed line-clamp-3 font-light">
+                      {post.excerpt || post.content.substring(0, 150) + "..."}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-prayas-rule flex items-center justify-between">
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#B45309] hover:underline"
+                    >
+                      <span>Read Full Report</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {/* Right: Events & Recent Activity Sidebar (Matching Screenshot) */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-24">
+            <EventsSidebar />
+          </div>
+        </div>
       </div>
     </div>
   );

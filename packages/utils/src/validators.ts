@@ -32,21 +32,39 @@ export const EquipmentStatusValues = ["AVAILABLE", "LEASED", "MAINTENANCE"] as c
 export const UserRoleValues = ["ADMIN", "VOLUNTEER", "DONOR"] as const;
 export const DonationStatusValues = ["PENDING", "SUCCESS", "FAILED"] as const;
 
+export const ProjectCategoryValues = [
+  "EDUCATION",
+  "AWARENESS",
+  "HEALTH",
+  "PLANTATION",
+  "OTHER",
+] as const;
+export const ProjectStatusValues = ["UPCOMING", "ACTIVE", "COMPLETED"] as const;
+
+// Helper to format Zod error to readable string
+export function formatZodError(error: z.ZodError): string {
+  const fieldErrors = error.flatten().fieldErrors;
+  const messages = Object.entries(fieldErrors)
+    .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+    .filter(Boolean);
+  return messages.length > 0 ? messages.join(" • ") : "Invalid input data";
+}
+
 // ============================================================================
 // Auth Schemas
 // ============================================================================
 
 export const LoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
 });
 export type LoginInput = z.infer<typeof LoginSchema>;
 
 export const SignupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().regex(/^[0-9+ -]{10,15}$/, "Please enter a valid phone number").optional().or(z.literal("")),
+  password: z.string().min(4, "Password must be at least 4 characters"),
+  phone: z.string().optional().or(z.literal("")),
   role: z.enum(UserRoleValues).default("DONOR"),
   bloodGroup: z.enum(BloodGroupValues).optional(),
 });
@@ -63,15 +81,15 @@ export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
 
 export const BloodRequestSchema = z.object({
   patientName: z.string().min(2, "Patient name is required (at least 2 chars)"),
-  hospitalName: z.string().min(3, "Hospital name and ward/room is required"),
+  hospitalName: z.string().min(2, "Hospital name is required"),
   city: z.string().min(2, "City / Location is required"),
   bloodGroup: z.enum(BloodGroupValues, {
     errorMap: () => ({ message: "Please select a valid blood group" }),
   }),
-  unitsNeeded: z.coerce.number().int().min(1, "At least 1 unit is required").max(20, "Maximum 20 units per request"),
+  unitsNeeded: z.coerce.number().int().min(1, "At least 1 unit is required").max(50, "Maximum 50 units per request"),
   urgency: z.enum(UrgencyLevelValues).default("HIGH"),
-  contactPhone: z.string().min(10, "A valid 10-digit contact number is required"),
-  notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
+  contactPhone: z.string().min(7, "A valid contact number is required"),
+  notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional().nullable(),
 });
 export type BloodRequestInput = z.infer<typeof BloodRequestSchema>;
 
@@ -87,10 +105,10 @@ export type UpdateBloodRequestStatusInput = z.infer<typeof UpdateBloodRequestSta
 export const EquipmentRequestSchema = z.object({
   equipmentId: z.string().min(1, "Equipment ID is required"),
   requesterName: z.string().min(2, "Requester name is required"),
-  contactPhone: z.string().min(10, "Valid contact number is required"),
-  purpose: z.string().min(5, "Please describe the patient condition/purpose"),
-  requestedDays: z.coerce.number().int().min(1, "Minimum 1 day").max(90, "Maximum 90 days at a time"),
-  deliveryAddress: z.string().min(5, "Delivery address is required"),
+  contactPhone: z.string().min(7, "Valid contact number is required"),
+  purpose: z.string().min(2, "Please describe the patient condition or purpose"),
+  requestedDays: z.coerce.number().int().min(1, "Minimum 1 day").max(365, "Maximum 365 days"),
+  deliveryAddress: z.string().min(3, "Delivery address is required"),
 });
 export type EquipmentRequestInput = z.infer<typeof EquipmentRequestSchema>;
 
@@ -101,11 +119,11 @@ export type EquipmentRequestInput = z.infer<typeof EquipmentRequestSchema>;
 export const VolunteerSchema = z.object({
   name: z.string().min(2, "Full name is required"),
   email: z.string().email("Valid email address is required"),
-  phone: z.string().min(10, "Valid contact phone number is required"),
-  skills: z.string().min(3, "Please specify your skills (e.g., Medical, Logistics, Teaching, IT)"),
-  availability: z.string().min(3, "Availability details (e.g., Weekends, 4 hrs/week, Emergency on-call)"),
-  areaOfInterest: z.string().min(3, "Area of interest (e.g., Blood Drive, Equipment Bank, Disaster Relief)"),
-  previousExperience: z.string().optional(),
+  phone: z.string().min(7, "Valid contact phone number is required"),
+  skills: z.string().min(1, "Please specify your skills (e.g. Teaching, Logistics, Medical)"),
+  availability: z.string().min(1, "Please specify your availability"),
+  areaOfInterest: z.string().min(1, "Please specify your area of interest"),
+  previousExperience: z.string().optional().nullable(),
 });
 export type VolunteerInput = z.infer<typeof VolunteerSchema>;
 
@@ -114,11 +132,11 @@ export type VolunteerInput = z.infer<typeof VolunteerSchema>;
 // ============================================================================
 
 export const CreateDonationOrderSchema = z.object({
-  amount: z.coerce.number().min(50, "Minimum donation amount is ₹50"),
+  amount: z.coerce.number().min(1, "Minimum donation amount is ₹1"),
   currency: z.string().default("INR"),
   donorName: z.string().min(2, "Donor name is required"),
   donorEmail: z.string().email("Valid email is required for 80G tax receipt"),
-  donorPhone: z.string().min(10, "Valid phone is required"),
+  donorPhone: z.string().min(7, "Valid phone is required"),
   projectOrCause: z.string().default("General Fund & Emergency Relief"),
 });
 export type CreateDonationOrderInput = z.infer<typeof CreateDonationOrderSchema>;
@@ -141,16 +159,37 @@ export const RegisterPushTokenSchema = z.object({
 });
 export type RegisterPushTokenInput = z.infer<typeof RegisterPushTokenSchema>;
 
-// ============================================================================
-// Post / Article Schema
-// ============================================================================
+export const PostTypeValues = ["EVENT", "NEWS", "ACHIEVEMENT", "ANNOUNCEMENT"] as const;
 
 export const PostSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  slug: z.string().min(3, "Slug is required"),
-  content: z.string().min(20, "Content must be at least 20 characters"),
-  excerpt: z.string().max(300).optional(),
-  coverImage: z.string().url().optional().or(z.literal("")),
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  slug: z.string().min(1, "Slug is required"),
+  content: z.string().min(5, "Content must be at least 5 characters"),
+  excerpt: z.string().max(500).optional().nullable(),
+  type: z.enum(PostTypeValues).default("EVENT"),
+  eventDate: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  coverImage: z.string().optional().nullable().or(z.literal("")),
+  metaTitle: z.string().optional().nullable(),
+  metaDescription: z.string().optional().nullable(),
   published: z.boolean().default(true),
+  imageUrls: z.array(z.string()).optional(),
 });
 export type PostInput = z.infer<typeof PostSchema>;
+
+// ============================================================================
+// Project Schema
+// ============================================================================
+
+export const ProjectSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  slug: z.string().min(1, "Slug is required"),
+  category: z.enum(ProjectCategoryValues).default("EDUCATION"),
+  description: z.string().min(5, "Description must be at least 5 characters"),
+  goalAmount: z.coerce.number().min(0).default(0),
+  coverImage: z.string().optional().nullable().or(z.literal("")),
+  metaTitle: z.string().optional().nullable(),
+  metaDescription: z.string().optional().nullable(),
+  status: z.enum(ProjectStatusValues).default("ACTIVE"),
+});
+export type ProjectInput = z.infer<typeof ProjectSchema>;

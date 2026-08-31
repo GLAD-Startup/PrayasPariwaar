@@ -42,13 +42,16 @@ export default function BloodDonationPage() {
   // Donor Registration State
   const [donorForm, setDonorForm] = useState({
     name: "",
+    email: "",
     phone: "",
     city: "Vrindavan",
     bloodGroup: "O_POSITIVE",
     lastDonationMonths: 6,
   });
   const [submittingDonor, setSubmittingDonor] = useState(false);
-  const [donorSuccess, setDonorSuccess] = useState(false);
+  const [donorSuccess, setDonorSuccess] = useState<string | null>(null);
+  const [donorAlreadyRegistered, setDonorAlreadyRegistered] = useState<string | null>(null);
+  const [donorError, setDonorError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActiveRequests();
@@ -58,15 +61,15 @@ export default function BloodDonationPage() {
     setLoadingRequests(true);
     try {
       const url = filterGroup === "ALL"
-        ? "/api/blood-requests?status=PENDING&limit=20"
-        : `/api/blood-requests?status=PENDING&bloodGroup=${filterGroup}&limit=20`;
+        ? "/api/blood-requests?status=PENDING"
+        : `/api/blood-requests?status=PENDING&bloodGroup=${filterGroup}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setRequests(data.data);
       }
     } catch (e) {
-      console.error("Failed to load blood requests", e);
+      console.error(e);
     } finally {
       setLoadingRequests(false);
     }
@@ -114,11 +117,47 @@ export default function BloodDonationPage() {
   const handleDonorRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingDonor(true);
-    // Simulate / log registration
-    setTimeout(() => {
+    setDonorError(null);
+    setDonorSuccess(null);
+    setDonorAlreadyRegistered(null);
+
+    try {
+      const emailValue = donorForm.email || `donor.${donorForm.phone.replace(/[^0-9]/g, "")}@prayaspariwaar.local`;
+
+      const payload = {
+        name: donorForm.name,
+        email: emailValue,
+        phone: donorForm.phone,
+        skills: `Voluntary Blood Donor (${donorForm.bloodGroup})`,
+        availability: "EMERGENCY_ON_CALL",
+        areaOfInterest: `Emergency Blood Donor (${donorForm.bloodGroup})`,
+        isBloodDonor: true,
+        bloodGroup: donorForm.bloodGroup,
+        city: donorForm.city,
+      };
+
+      const res = await fetch("/api/volunteers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 409 || data.alreadyRegistered) {
+        setDonorAlreadyRegistered(
+          data.error || "You are already registered in the Prayas Voluntary Blood Donor Registry! Thank you for your continued commitment."
+        );
+      } else if (res.ok && data.success) {
+        setDonorSuccess(data.message || "Thank you for joining the Voluntary Blood Donor Registry!");
+      } else {
+        setDonorError(data.error || "Failed to register donor. Please check phone number or call our helpline.");
+      }
+    } catch (err) {
+      setDonorError("Network error. Please call our 24/7 helpline at +91 94122 79000.");
+    } finally {
       setSubmittingDonor(false);
-      setDonorSuccess(true);
-    }, 800);
+    }
   };
 
   const bloodGroups = [
@@ -167,18 +206,19 @@ export default function BloodDonationPage() {
           </div>
           <a
             href="tel:+919412279000"
-            className="w-full sm:w-auto px-4 py-2 text-center rounded bg-prayas-crimson text-white text-xs font-bold hover:bg-[#991B1B] transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 text-center rounded-lg bg-[#B91C1C] text-white text-xs font-bold hover:bg-[#991B1B] transition-all shadow-sm"
+            style={{ backgroundColor: "#B91C1C", color: "#ffffff" }}
           >
             Call: +91 94122 79000
           </a>
         </div>
       </div>
 
-      {/* 2. Navigation Tabs */}
-      <div className="flex border-b border-prayas-rule text-sm">
+      {/* 2. Navigation Tabs (Horizontally Scrollable on Mobile) */}
+      <div className="flex border-b border-prayas-rule text-xs sm:text-sm overflow-x-auto whitespace-nowrap">
         <button
           onClick={() => setActiveTab("BOARD")}
-          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 px-3 sm:px-4 font-semibold transition-colors border-b-2 shrink-0 ${
             activeTab === "BOARD"
               ? "border-prayas-crimson text-prayas-crimson"
               : "border-transparent text-prayas-muted hover:text-prayas-ink"
@@ -188,7 +228,7 @@ export default function BloodDonationPage() {
         </button>
         <button
           onClick={() => setActiveTab("REQUEST")}
-          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 px-3 sm:px-4 font-semibold transition-colors border-b-2 shrink-0 ${
             activeTab === "REQUEST"
               ? "border-prayas-crimson text-prayas-crimson"
               : "border-transparent text-prayas-muted hover:text-prayas-ink"
@@ -198,7 +238,7 @@ export default function BloodDonationPage() {
         </button>
         <button
           onClick={() => setActiveTab("DONOR_REGISTER")}
-          className={`pb-3 px-4 font-semibold transition-colors border-b-2 ${
+          className={`pb-3 px-3 sm:px-4 font-semibold transition-colors border-b-2 shrink-0 ${
             activeTab === "DONOR_REGISTER"
               ? "border-prayas-crimson text-prayas-crimson"
               : "border-transparent text-prayas-muted hover:text-prayas-ink"
@@ -491,17 +531,69 @@ export default function BloodDonationPage() {
             </p>
           </div>
 
-          {donorSuccess ? (
-            <div className="p-6 rounded border border-green-200 bg-green-50 text-xs text-green-900 space-y-2 text-center">
-              <CheckCircle2 className="w-8 h-8 text-prayas-neem mx-auto" />
-              <h3 className="font-serif text-base font-bold">Registration Received</h3>
-              <p className="max-w-md mx-auto">
-                Thank you for pledging to donate blood. Your details have been recorded in our voluntary registry. You will only be contacted in genuine emergency hospital cases in Mathura district.
+          {donorAlreadyRegistered && (
+            <div className="p-5 rounded-xl border border-amber-300 bg-amber-50 text-xs text-amber-950 space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-amber-700 shrink-0" />
+                <h3 className="font-serif text-base font-bold text-amber-950">
+                  Already Registered as a Voluntary Donor
+                </h3>
+              </div>
+              <p className="leading-relaxed text-amber-900">
+                {donorAlreadyRegistered}
               </p>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setDonorAlreadyRegistered(null)}
+                  className="px-3 py-1.5 rounded-lg bg-amber-800 text-white text-xs font-semibold hover:bg-amber-900"
+                >
+                  Register Another Donor
+                </button>
+              </div>
             </div>
-          ) : (
+          )}
+
+          {donorSuccess && (
+            <div className="p-6 rounded-xl border border-green-300 bg-green-50 text-xs text-green-900 space-y-2 text-center">
+              <CheckCircle2 className="w-8 h-8 text-prayas-neem mx-auto" />
+              <h3 className="font-serif text-base font-bold text-emerald-950">Registration Received</h3>
+              <p className="max-w-md mx-auto leading-relaxed text-emerald-900">
+                {donorSuccess}
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDonorSuccess(null);
+                    setDonorForm({
+                      name: "",
+                      email: "",
+                      phone: "",
+                      city: "Vrindavan",
+                      bloodGroup: "O_POSITIVE",
+                      lastDonationMonths: 6,
+                    });
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#2E5339] text-white text-xs font-bold shadow hover:bg-[#23432b]"
+                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                >
+                  Register Another Donor
+                </button>
+              </div>
+            </div>
+          )}
+
+          {donorError && (
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-prayas-crimson shrink-0" />
+              <span className="flex-1 font-medium">{donorError}</span>
+            </div>
+          )}
+
+          {!donorSuccess && !donorAlreadyRegistered && (
             <form onSubmit={handleDonorRegister} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <label className="font-bold text-prayas-ink">Your Full Name *</label>
                   <input
@@ -510,7 +602,18 @@ export default function BloodDonationPage() {
                     placeholder="e.g. Amit Sharma"
                     value={donorForm.name}
                     onChange={(e) => setDonorForm({ ...donorForm, name: e.target.value })}
-                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-prayas-ink">Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. amit@gmail.com"
+                    value={donorForm.email}
+                    onChange={(e) => setDonorForm({ ...donorForm, email: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
                   />
                 </div>
 
@@ -522,7 +625,7 @@ export default function BloodDonationPage() {
                     placeholder="e.g. +91 98971 23456"
                     value={donorForm.phone}
                     onChange={(e) => setDonorForm({ ...donorForm, phone: e.target.value })}
-                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
                   />
                 </div>
               </div>
@@ -533,7 +636,7 @@ export default function BloodDonationPage() {
                   <select
                     value={donorForm.bloodGroup}
                     onChange={(e) => setDonorForm({ ...donorForm, bloodGroup: e.target.value })}
-                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-bold"
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-bold text-prayas-crimson"
                   >
                     <option value="A_POSITIVE">A+ (A Positive)</option>
                     <option value="A_NEGATIVE">A- (A Negative)</option>
@@ -547,11 +650,11 @@ export default function BloodDonationPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-prayas-ink">City / Residential Area *</label>
+                  <label className="font-bold text-prayas-ink">City / Residential Area in Mathura *</label>
                   <select
                     value={donorForm.city}
                     onChange={(e) => setDonorForm({ ...donorForm, city: e.target.value })}
-                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-medium"
                   >
                     <option value="Vrindavan">Vrindavan</option>
                     <option value="Mathura">Mathura</option>
@@ -566,9 +669,10 @@ export default function BloodDonationPage() {
                 <button
                   type="submit"
                   disabled={submittingDonor}
-                  className="px-6 py-3 rounded text-sm font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle"
+                  className="px-6 py-3 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
+                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                 >
-                  {submittingDonor ? "Pledging Seva..." : "Submit Voluntary Donor Registration"}
+                  {submittingDonor ? "Pledging Seva..." : "Submit Voluntary Donor Registration →"}
                 </button>
               </div>
             </form>

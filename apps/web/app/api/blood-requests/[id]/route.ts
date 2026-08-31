@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || authUser.role !== "ADMIN") {
+    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
       return NextResponse.json({ error: "Unauthorized. Admin privileges required." }, { status: 403 });
     }
 
@@ -30,5 +30,27 @@ export async function PATCH(
   } catch (error: any) {
     console.error("[BloodRequest PATCH Error]", error);
     return NextResponse.json({ error: "Failed to update blood request" }, { status: 500 });
+  }
+}
+
+// DELETE /api/blood-requests/[id] - Delete request
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser || authUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    await prisma.bloodRequest.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ success: true, message: "Blood request deleted successfully" });
+  } catch (error: any) {
+    console.error("[BloodRequest DELETE Error]", error);
+    return NextResponse.json({ error: "Failed to delete blood request" }, { status: 500 });
   }
 }

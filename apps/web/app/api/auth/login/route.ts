@@ -61,12 +61,8 @@ export async function POST(req: Request) {
       refreshToken,
     });
 
-    // Set secure HTTP-only cookies for web clients
-    response.cookies.set("prayas_access_token", accessToken, {
-      ...AUTH_COOKIE_OPTIONS,
-      maxAge: 15 * 60, // 15 mins
-    });
-
+    // Set secure HTTP-only cookies for web clients (7 days)
+    response.cookies.set("prayas_access_token", accessToken, AUTH_COOKIE_OPTIONS);
     response.cookies.set("prayas_refresh_token", refreshToken, REFRESH_COOKIE_OPTIONS);
 
     return response;

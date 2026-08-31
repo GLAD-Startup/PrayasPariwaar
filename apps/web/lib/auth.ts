@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { type NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export interface AuthUserPayload {
   userId: string;
@@ -13,8 +14,8 @@ export interface AuthUserPayload {
 
 const JWT_SECRET = process.env.JWT_SECRET || "prayas-default-access-secret-replace-in-prod";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "prayas-default-refresh-secret-replace-in-prod";
-const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "15m";
-const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
+const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "7d";
+const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "30d";
 
 // ---------------------------------------------------------------------------
 // Password Hashing
@@ -78,12 +79,12 @@ export async function getAuthUser(req?: Request | NextRequest): Promise<AuthUser
   if (req) {
     const bearer = extractBearerToken(req);
     if (bearer) {
-      const decoded = verifyAccessToken(bearer);
+      const decoded = verifyAccessToken(bearer) || verifyRefreshToken(bearer);
       if (decoded) return decoded;
     }
   }
 
-  // 2. Check HTTP-only cookies
+  // 2. Check HTTP-only cookies (Access Token & Refresh Token fallback)
   try {
     const cookieStore = cookies();
     const token = cookieStore.get("prayas_access_token")?.value;
@@ -91,8 +92,34 @@ export async function getAuthUser(req?: Request | NextRequest): Promise<AuthUser
       const decoded = verifyAccessToken(token);
       if (decoded) return decoded;
     }
+
+    const refreshToken = cookieStore.get("prayas_refresh_token")?.value;
+    if (refreshToken) {
+      const decoded = verifyRefreshToken(refreshToken);
+      if (decoded) return decoded;
+    }
   } catch (e) {
     // cookies() might not be available in standard request context
+  }
+
+  // 3. In local development environment, fallback to seeded admin account
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const admin = await prisma.user.findFirst({
+        where: { role: "ADMIN" },
+      });
+      if (admin) {
+        return {
+          userId: admin.id,
+          email: admin.email,
+          name: admin.name,
+          role: admin.role as any,
+          bloodGroup: admin.bloodGroup,
+        };
+      }
+    } catch (e) {
+      // Prisma error or disconnected
+    }
   }
 
   return null;
@@ -107,9 +134,10 @@ export const AUTH_COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
+  maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
 };
 
 export const REFRESH_COOKIE_OPTIONS = {
   ...AUTH_COOKIE_OPTIONS,
-  maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+  maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
 };

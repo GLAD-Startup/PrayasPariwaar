@@ -136,7 +136,8 @@ export default function MedicalEquipmentPage() {
           </div>
           <a
             href="tel:+919897123456"
-            className="w-full sm:w-auto px-4 py-2 text-center rounded bg-prayas-neem text-white text-xs font-bold hover:bg-[#23432b] transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 text-center rounded-lg bg-[#2E5339] text-white text-xs font-bold hover:bg-[#23432b] transition-all shadow-sm"
+            style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
           >
             Call Desk: +91 98971 23456
           </a>
@@ -144,10 +145,10 @@ export default function MedicalEquipmentPage() {
       </div>
 
       {/* 2. THREE-STEP SEQUENTIAL PROGRESS INDICATOR */}
-      <div className="border border-prayas-rule bg-white rounded p-4 shadow-subtle">
-        <div className="grid grid-cols-3 gap-2 text-xs">
+      <div className="border border-prayas-rule bg-white rounded-xl p-4 shadow-subtle">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
           <div
-            className={`p-3 rounded border flex items-center gap-2.5 transition-colors ${
+            className={`p-3 rounded-lg border flex items-center gap-2.5 transition-colors ${
               activeStep === 1
                 ? "bg-prayas-stone border-prayas-neem font-bold text-prayas-ink"
                 : activeStep > 1
@@ -155,14 +156,14 @@ export default function MedicalEquipmentPage() {
                 : "border-prayas-rule text-prayas-muted"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold shrink-0">
               1
             </span>
-            <span className="truncate">Select Equipment</span>
+            <span className="truncate">1. Select Equipment</span>
           </div>
 
           <div
-            className={`p-3 rounded border flex items-center gap-2.5 transition-colors ${
+            className={`p-3 rounded-lg border flex items-center gap-2.5 transition-colors ${
               activeStep === 2
                 ? "bg-prayas-stone border-prayas-neem font-bold text-prayas-ink"
                 : activeStep > 2
@@ -170,23 +171,23 @@ export default function MedicalEquipmentPage() {
                 : "border-prayas-rule text-prayas-muted"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold shrink-0">
               2
             </span>
-            <span className="truncate">Patient & Address Details</span>
+            <span className="truncate">2. Patient & Delivery Details</span>
           </div>
 
           <div
-            className={`p-3 rounded border flex items-center gap-2.5 transition-colors ${
+            className={`p-3 rounded-lg border flex items-center gap-2.5 transition-colors ${
               activeStep === 3
                 ? "bg-prayas-stone border-prayas-neem font-bold text-prayas-ink"
                 : "border-prayas-rule text-prayas-muted"
             }`}
           >
-            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-prayas-neem text-white text-[11px] flex items-center justify-center font-bold shrink-0">
               3
             </span>
-            <span className="truncate">Volunteer Dispatch</span>
+            <span className="truncate">3. Volunteer Dispatch</span>
           </div>
         </div>
       </div>

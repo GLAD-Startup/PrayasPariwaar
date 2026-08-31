@@ -50,23 +50,19 @@ export default function Navbar() {
   return (
     <>
       {/* Top Ledger Strip: Education Mission & Blood Desk */}
-      <div className="bg-prayas-stone border-b border-prayas-rule text-xs text-prayas-muted py-2 px-4 sm:px-6 select-none">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="bg-prayas-stone border-b border-prayas-rule text-xs text-prayas-muted py-2 px-3 sm:px-6 select-none w-full">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Primary Education Mission */}
-          <div className="flex items-center gap-2.5">
-            <span className="inline-block w-2 h-2 rounded-full bg-prayas-neem animate-pulse" aria-hidden="true" />
-            <Link href="/projects/aashayein-education" className="font-semibold text-prayas-ink hover:text-prayas-neem transition-colors flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-prayas-neem" />
-              <span>Project Aashayein: Sponsor a Rural Student for ₹500/month</span>
+          <div className="flex items-center gap-2 text-center sm:text-left justify-center sm:justify-start">
+            <span className="inline-block w-2 h-2 rounded-full bg-prayas-neem animate-pulse shrink-0" aria-hidden="true" />
+            <Link href="/projects/aashayein-education" className="font-semibold text-prayas-ink hover:text-prayas-neem transition-colors flex items-center gap-1.5 text-[11px] sm:text-xs">
+              <GraduationCap className="w-3.5 h-3.5 text-prayas-neem shrink-0" />
+              <span>Project Aashayein: Sponsor a Rural Student for ₹500/mo</span>
             </Link>
-            <span className="text-prayas-rule hidden md:inline">•</span>
-            <span className="text-prayas-muted hidden md:inline">
-              18 Years of Educational Seva (Est. 2006)
-            </span>
           </div>
 
           {/* Right: Tax Exemption & Secondary Emergency Blood Helpline */}
-          <div className="flex items-center gap-4 text-[11px] sm:text-xs">
+          <div className="flex items-center gap-3 text-[11px] sm:text-xs justify-center sm:justify-end">
             <span className="text-prayas-neem font-semibold hidden sm:inline">
               ✓ 80G Tax-Exempt Certified
             </span>
@@ -75,7 +71,7 @@ export default function Navbar() {
               href="tel:+919412279000"
               className="flex items-center gap-1 font-medium text-prayas-crimson hover:underline"
             >
-              <Droplet className="w-3 h-3 fill-current" />
+              <Droplet className="w-3 h-3 fill-current shrink-0" />
               <span>24/7 Blood Desk: +91 94122 79000</span>
             </a>
             <span className="text-prayas-rule">|</span>
@@ -94,19 +90,13 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-20 gap-3">
             {/* Brand Logo: Prayas Pariwaar */}
-            <Link href="/" className="flex items-center gap-3 group shrink-0">
-              <div className="w-10 h-10 rounded border border-prayas-rule bg-prayas-stone flex items-center justify-center text-prayas-neem shadow-sm group-hover:border-prayas-neem transition-colors">
-                <span className="font-serif font-bold text-xl leading-none">प्र</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-slate-900 leading-tight whitespace-nowrap">
-                  PRAYAS PARIWAAR
-                </span>
-                <span className="text-[10px] sm:text-[11px] text-slate-600 font-medium flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-prayas-neem shrink-0" />
-                  Child Education & Seva • Vrindavan
-                </span>
-              </div>
+            <Link href="/" className="flex items-center gap-2 group shrink-0 py-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/prayas-logo.png"
+                alt="Prayas Pariwaar - A Trial to Move Ahead"
+                className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -423,7 +413,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/donate?project=aashayein-education"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-lg bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md whitespace-nowrap"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold rounded-lg bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md whitespace-nowrap"
                 style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
               >
                 <GraduationCap className="w-3.5 h-3.5 text-white" />
@@ -433,7 +423,7 @@ export default function Navbar() {
               {/* Hamburger Button for Mobile */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded border border-prayas-rule bg-white text-slate-800 hover:bg-prayas-stone transition-colors"
+                className="lg:hidden p-2 rounded-lg border border-prayas-rule bg-white text-slate-800 hover:bg-prayas-stone transition-colors shadow-sm"
                 aria-label="Toggle Navigation Menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

@@ -195,7 +195,7 @@ export default function DonatePage() {
                     1. Select Student Sponsorship Tier (INR ₹) *
                   </label>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {SPONSORSHIP_TIERS.map((tier) => (
                       <button
                         key={tier.amount}
@@ -204,9 +204,9 @@ export default function DonatePage() {
                           setAmount(tier.amount);
                           setIsCustom(false);
                         }}
-                        className={`p-3 rounded text-left border transition-colors ${
+                        className={`p-3 rounded-lg text-left border transition-all ${
                           !isCustom && amount === tier.amount
-                            ? "bg-green-50 border-prayas-neem shadow-subtle ring-1 ring-prayas-neem"
+                            ? "bg-green-50 border-prayas-neem shadow-subtle ring-2 ring-prayas-neem"
                             : "bg-prayas-stone border-prayas-rule hover:bg-prayas-subtle"
                         }`}
                       >
@@ -239,7 +239,7 @@ export default function DonatePage() {
                         placeholder="e.g. 15000"
                         value={customAmount}
                         onChange={(e) => setCustomAmount(e.target.value)}
-                        className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink font-bold text-base"
+                        className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink font-bold text-base"
                       />
                     </div>
                   )}
@@ -253,46 +253,49 @@ export default function DonatePage() {
                   <select
                     value={cause}
                     onChange={(e) => setCause(e.target.value)}
-                    className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink font-medium"
+                    className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink font-medium"
                   >
                     <option value="Project Aashayein: Rural Child Education & Schooling">Project Aashayein: Rural Child Education & Schooling</option>
                     <option value="Project Aadhar: Career & Digital Skills for Youth">Project Aadhar: Career & Digital Skills for Youth</option>
                     <option value="Vrindavan Harit Kranti: Native Tree Plantation">Vrindavan Harit Kranti: Native Tree Plantation</option>
-                    <option value="Jan Swasthya Raksha: Free Health & Eye Care Camps">Jan Swasthya Raksha: Free Health & Eye Care Camps</option>
-                    <option value="Medical Equipment Bank (Oxygen & Beds)">Medical Equipment Bank (Oxygen & Beds)</option>
-                    <option value="Emergency Blood Donor Coordination">Emergency Blood Donor Coordination</option>
-                    <option value="General Grassroots Seva Fund">General Grassroots Seva Fund</option>
+                    <option value="Jan Swasthya Raksha: Eye & Health Camps">Jan Swasthya Raksha: Eye & Health Camps</option>
+                    <option value="General Seva Fund & Emergency Blood Desk">General Seva Fund & Emergency Blood Desk</option>
                   </select>
                 </div>
 
-                {/* 3. Donor Details for 80G Tax Receipt */}
-                <div className="space-y-3 border-t border-prayas-rule pt-4">
-                  <label className="font-bold text-prayas-ink text-sm block">
-                    3. Donor Details for Official 80G Tax Receipt
-                  </label>
+                {/* 3. Donor Identity for 80G Tax Exemption */}
+                <div className="space-y-4 border-t border-prayas-rule pt-4">
+                  <div>
+                    <label className="font-bold text-prayas-ink text-sm block">
+                      3. Donor Details (Required for 80G Tax Certificate)
+                    </label>
+                    <p className="text-[11px] text-prayas-muted">
+                      Your official receipt will be generated and dispatched automatically.
+                    </p>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-prayas-ink">Full Name *</label>
+                      <label className="font-bold text-prayas-ink">Full Legal Name *</label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Radhey Mohan Agarwal"
+                        placeholder="e.g. Ramesh Chandra Sharma"
                         value={donorName}
                         onChange={(e) => setDonorName(e.target.value)}
-                        className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                        className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="font-bold text-prayas-ink">Email Address *</label>
+                      <label className="font-bold text-prayas-ink">Email Address (For Tax Receipt) *</label>
                       <input
                         type="email"
                         required
-                        placeholder="e.g. radhey@example.com"
+                        placeholder="e.g. ramesh@example.com"
                         value={donorEmail}
                         onChange={(e) => setDonorEmail(e.target.value)}
-                        className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                        className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
                       />
                     </div>
                   </div>
@@ -306,7 +309,7 @@ export default function DonatePage() {
                         placeholder="e.g. +91 98971 23456"
                         value={donorPhone}
                         onChange={(e) => setDonorPhone(e.target.value)}
-                        className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
+                        className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono"
                       />
                     </div>
 
@@ -318,7 +321,7 @@ export default function DonatePage() {
                         value={panNumber}
                         onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
                         maxLength={10}
-                        className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono uppercase"
+                        className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white font-mono uppercase"
                       />
                     </div>
                   </div>
@@ -330,7 +333,7 @@ export default function DonatePage() {
                       placeholder="e.g. 14, Mathura Road, Agra, UP"
                       value={donorAddress}
                       onChange={(e) => setDonorAddress(e.target.value)}
-                      className="w-full p-2.5 rounded border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
+                      className="w-full p-2.5 rounded-lg border border-prayas-rule bg-prayas-paper text-prayas-ink focus:bg-white"
                     />
                   </div>
                 </div>
@@ -339,7 +342,8 @@ export default function DonatePage() {
                   <button
                     type="submit"
                     disabled={loading || selectedAmount < 50}
-                    className="w-full py-3.5 rounded text-sm font-bold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors shadow-subtle disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-lg text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                   >
                     <Lock className="w-4 h-4" />
                     {loading

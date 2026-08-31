@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { sendExpoPushNotification } from "@/lib/expo-push";
-import { BloodRequestSchema, BloodGroupDisplayMap } from "@prayas/utils";
+import { BloodRequestSchema, BloodGroupDisplayMap, formatZodError } from "@prayas/utils";
 
 // GET /api/blood-requests - List blood donation requests
 export async function GET(req: Request) {
@@ -51,8 +51,9 @@ export async function POST(req: Request) {
     const validated = BloodRequestSchema.safeParse(body);
 
     if (!validated.success) {
+      const errorMessage = formatZodError(validated.error);
       return NextResponse.json(
-        { error: "Validation failed", details: validated.error.flatten().fieldErrors },
+        { error: errorMessage, details: validated.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -88,7 +89,6 @@ export async function POST(req: Request) {
     });
 
     // 2. Fetch all registered Expo push tokens
-    // Can notify all donors or filter donors with matching blood groups
     const pushTokenRecords = await prisma.pushToken.findMany({
       select: { expoPushToken: true },
       take: 500, // Batch limit

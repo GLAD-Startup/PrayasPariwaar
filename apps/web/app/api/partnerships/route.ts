@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { PartnershipType } from "@prisma/client";
+import { getAuthUser } from "@/lib/auth";
+
+export async function GET(req: Request) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const partnerships = await prisma.partnershipInquiry.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json({ success: true, data: partnerships });
+  } catch (error: any) {
+    console.error("[Partnership GET Error]", error);
+    return NextResponse.json({ error: "Failed to fetch inquiries" }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {

@@ -22,12 +22,14 @@ export default function PublicLayout({
             {/* Column 1: Institutional Statement */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded border border-[#3C4843] bg-[#242E2A] flex items-center justify-center text-[#BBF7D0]">
-                  <span className="font-serif font-bold text-sm">प्र</span>
+                <div className="p-1.5 rounded-lg bg-white/95 shadow-sm inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/prayas-logo.png"
+                    alt="Prayas Pariwaar - A Trial to Move Ahead"
+                    className="h-10 w-auto object-contain"
+                  />
                 </div>
-                <span className="font-serif text-lg font-bold text-white tracking-wide">
-                  PRAYAS PARIWAAR
-                </span>
               </div>
               <p className="text-sm text-[#A0ACA6] leading-relaxed">
                 An 18-year-old registered grassroots society in Vrindavan, dedicated to selfless community service (Nishkam Seva) across Mathura district in education, blood coordination, medical equipment lending, and environmental restoration.
