@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@prayas/utils": "*",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~52.0.37",
+    "expo-asset": "^11.0.5",
     "expo-constants": "~17.0.7",
     "expo-dev-client": "~5.0.19",
     "expo-device": "~7.0.3",
@@ -22,6 +24,7 @@
     "expo-notifications": "~0.29.13",
     "expo-router": "~4.0.17",
     "expo-secure-store": "~14.0.1",
+    "expo-splash-screen": "^57.0.8",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",

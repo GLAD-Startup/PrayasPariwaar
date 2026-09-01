@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { getStoredUser, saveAuthSession, clearAuthSession, getAccessToken, getRefreshToken } from "../../lib/secureStore";
-import { api, uploadFile } from "../../lib/api";
+import { api, uploadFile, getApiBaseUrl } from "../../lib/api";
 import { pickImageFromGallery, captureImageWithCamera } from "../../lib/imagePickerHelper";
 import {
   sendLocalNotification,
@@ -27,6 +27,7 @@ import {
   saveNotificationPreferences,
   NotificationPreferences,
 } from "../../lib/notifications";
+import ActionDialog from "../../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 
@@ -56,6 +57,23 @@ export default function ProfileScreen() {
   const [customUrlInput, setCustomUrlInput] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [signOutDialogVisible, setSignOutDialogVisible] = useState(false);
+  const [removePhotoDialogVisible, setRemovePhotoDialogVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [profileDialogState, setProfileDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   // Notification Preferences State
   const [notifModalVisible, setNotifModalVisible] = useState(false);
@@ -115,17 +133,22 @@ export default function ProfileScreen() {
     const res = await pickImageFromGallery();
     if (res.error) {
       if (res.nativeUnavailable) {
-        Alert.alert(
-          "Gallery Option",
-          "You can select from our verified Seva avatar presets or enter an image URL.",
-          [
-            { text: "Choose Preset", onPress: () => setPhotoSheetVisible(true) },
-            { text: "Enter URL", onPress: () => setUrlModalVisible(true) },
-            { text: "Cancel", style: "cancel" },
-          ]
-        );
+        setProfileDialogState({
+          visible: true,
+          title: "Select Profile Picture",
+          description: "Choose from our verified Seva avatar presets or enter a custom web image URL.",
+          type: "primary",
+          icon: "image-outline",
+          badge: "AVATAR OPTIONS",
+        });
       } else {
-        Alert.alert("Notice", res.error);
+        setProfileDialogState({
+          visible: true,
+          title: "Gallery Notice",
+          description: res.error,
+          type: "warning",
+          icon: "alert-circle-outline",
+        });
       }
       return;
     }
@@ -139,17 +162,22 @@ export default function ProfileScreen() {
     const res = await captureImageWithCamera();
     if (res.error) {
       if (res.nativeUnavailable) {
-        Alert.alert(
-          "Camera Option",
-          "You can select from our verified Seva avatar presets or enter an image URL.",
-          [
-            { text: "Choose Preset", onPress: () => setPhotoSheetVisible(true) },
-            { text: "Enter URL", onPress: () => setUrlModalVisible(true) },
-            { text: "Cancel", style: "cancel" },
-          ]
-        );
+        setProfileDialogState({
+          visible: true,
+          title: "Select Profile Picture",
+          description: "Choose from our verified Seva avatar presets or enter a custom web image URL.",
+          type: "primary",
+          icon: "camera-outline",
+          badge: "AVATAR OPTIONS",
+        });
       } else {
-        Alert.alert("Notice", res.error);
+        setProfileDialogState({
+          visible: true,
+          title: "Camera Notice",
+          description: res.error,
+          type: "warning",
+          icon: "alert-circle-outline",
+        });
       }
       return;
     }
@@ -160,34 +188,26 @@ export default function ProfileScreen() {
 
   const processAndSaveAvatar = async (localUri: string) => {
     setUploadingPhoto(true);
-    setAvatarUri(localUri);
-
     try {
       let finalAvatarUrl = localUri;
-
-      // Upload file to server if it's a local file URI
-      if (localUri.startsWith("file:") || localUri.startsWith("content:") || localUri.startsWith("blob:")) {
+      if (!localUri.startsWith("http")) {
         const uploadRes = await uploadFile(localUri, `avatar-${Date.now()}.jpg`, "image/jpeg");
         if (uploadRes.url) {
-          const baseUrl = (process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api").replace(/\/api$/, "");
+          const baseUrl = getApiBaseUrl().replace(/\/api$/, "");
           finalAvatarUrl = uploadRes.url.startsWith("http") ? uploadRes.url : `${baseUrl}${uploadRes.url}`;
-          setAvatarUri(finalAvatarUrl);
         }
       }
 
-      // Persist to backend user profile
+      setAvatarUri(finalAvatarUrl);
+
       await api.patch("/auth/profile", {
         avatarUrl: finalAvatarUrl,
         userId: user?.id,
         email: user?.email || email,
       });
 
-      // Update local storage
       const updatedUser = {
         ...(user || {}),
-        name,
-        email,
-        phone,
         avatarUrl: finalAvatarUrl,
         avatar: finalAvatarUrl,
       };
@@ -204,10 +224,23 @@ export default function ProfileScreen() {
         "Your profile picture has been successfully uploaded and saved."
       );
 
-      Alert.alert("Profile Photo Updated", "Your new profile picture has been saved successfully! 📸");
+      setProfileDialogState({
+        visible: true,
+        title: "Profile Photo Saved",
+        description: "Your new profile picture has been saved successfully! 📸",
+        type: "success",
+        icon: "checkmark-circle-outline",
+        badge: "UPDATED",
+      });
     } catch (e: any) {
       console.warn("Avatar upload notice:", e);
-      Alert.alert("Notice", "Profile photo updated locally.");
+      setProfileDialogState({
+        visible: true,
+        title: "Photo Saved Locally",
+        description: "Your profile photo has been updated on this device.",
+        type: "info",
+        icon: "checkmark-circle-outline",
+      });
     } finally {
       setUploadingPhoto(false);
     }
@@ -220,7 +253,13 @@ export default function ProfileScreen() {
 
   const handleSaveCustomUrl = async () => {
     if (!customUrlInput.trim()) {
-      Alert.alert("Invalid URL", "Please enter a valid image web URL.");
+      setProfileDialogState({
+        visible: true,
+        title: "Invalid URL",
+        description: "Please enter a valid image web URL.",
+        type: "warning",
+        icon: "link-outline",
+      });
       return;
     }
     setUrlModalVisible(false);
@@ -229,41 +268,43 @@ export default function ProfileScreen() {
     await processAndSaveAvatar(url);
   };
 
-  const handleRemovePhoto = async () => {
+  const handleRemovePhoto = () => {
     setPhotoSheetVisible(false);
-    Alert.alert("Remove Profile Photo", "Are you sure you want to remove your profile photo?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          setAvatarUri(null);
-          try {
-            await api.patch("/auth/profile", {
-              avatarUrl: "",
-              userId: user?.id,
-              email: user?.email || email,
-            });
-            const updatedUser = {
-              ...(user || {}),
-              avatarUrl: "",
-              avatar: "",
-            };
-            setUser(updatedUser);
-            const access = await getAccessToken();
-            const refresh = await getRefreshToken();
-            if (access && refresh) {
-              await saveAuthSession(access, refresh, updatedUser);
-            }
-          } catch (e) {}
-        },
-      },
-    ]);
+    setRemovePhotoDialogVisible(true);
+  };
+
+  const confirmRemovePhoto = async () => {
+    setRemovePhotoDialogVisible(false);
+    setAvatarUri(null);
+    try {
+      await api.patch("/auth/profile", {
+        avatarUrl: "",
+        userId: user?.id,
+        email: user?.email || email,
+      });
+      const updatedUser = {
+        ...(user || {}),
+        avatarUrl: "",
+        avatar: "",
+      };
+      setUser(updatedUser);
+      const access = await getAccessToken();
+      const refresh = await getRefreshToken();
+      if (access && refresh) {
+        await saveAuthSession(access, refresh, updatedUser);
+      }
+    } catch (e) {}
   };
 
   const handleSaveProfile = async () => {
     if (!name.trim()) {
-      Alert.alert("Invalid Name", "Please enter a valid full name.");
+      setProfileDialogState({
+        visible: true,
+        title: "Invalid Name",
+        description: "Please enter a valid full name.",
+        type: "warning",
+        icon: "person-outline",
+      });
       return;
     }
 
@@ -299,26 +340,32 @@ export default function ProfileScreen() {
       );
 
       setEditModalVisible(false);
-      Alert.alert("Profile Saved", "Your profile details have been updated.");
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to update profile.");
+      setProfileDialogState({
+        visible: true,
+        title: "Update Failed",
+        description: e.message || "Failed to update profile.",
+        type: "danger",
+        icon: "close-circle-outline",
+      });
     } finally {
       setSavingProfile(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out from Prayas app?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await clearAuthSession();
-          router.replace("/(auth)/login");
-        },
-      },
-    ]);
+    setSignOutDialogVisible(true);
+  };
+
+  const confirmSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      await clearAuthSession();
+      setSignOutDialogVisible(false);
+      router.replace("/(auth)/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const MENU_ITEMS = [
@@ -862,6 +909,46 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Sign Out Confirmation ActionDialog */}
+      <ActionDialog
+        visible={signOutDialogVisible}
+        onClose={() => setSignOutDialogVisible(false)}
+        onConfirm={confirmSignOut}
+        title="Sign Out"
+        description="Are you sure you want to sign out from Prayas app on this device?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+        type="danger"
+        icon="log-out-outline"
+        loading={isLoggingOut}
+      />
+
+      {/* Remove Photo ActionDialog */}
+      <ActionDialog
+        visible={removePhotoDialogVisible}
+        onClose={() => setRemovePhotoDialogVisible(false)}
+        onConfirm={confirmRemovePhoto}
+        title="Remove Profile Photo"
+        description="Are you sure you want to remove your profile photo and revert to initial avatar?"
+        confirmText="Remove"
+        cancelText="Keep Photo"
+        type="danger"
+        icon="trash-outline"
+      />
+
+      {/* General Profile Info / Feedback ActionDialog */}
+      <ActionDialog
+        visible={profileDialogState.visible}
+        onClose={() => setProfileDialogState({ ...profileDialogState, visible: false })}
+        title={profileDialogState.title}
+        description={profileDialogState.description}
+        type={profileDialogState.type}
+        icon={profileDialogState.icon}
+        badge={profileDialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </View>
   );
 }

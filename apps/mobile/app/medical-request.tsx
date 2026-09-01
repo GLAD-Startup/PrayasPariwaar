@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
+import ActionDialog from "../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 
@@ -131,6 +132,24 @@ export default function MedicalRequestScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [lastSubmittedId, setLastSubmittedId] = useState<string>("");
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   // Active Loans List
   const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([]);
@@ -210,15 +229,42 @@ export default function MedicalRequestScreen() {
 
   const handleRequestSubmit = async () => {
     if (!patientName.trim()) {
-      Alert.alert("Required Field", "Please enter the patient's full name.");
+      setDialogState({
+        visible: true,
+        title: "Patient Name Required",
+        description: "Please enter the patient's full name to register this equipment loan.",
+        type: "warning",
+        icon: "person-outline",
+        badge: "REQUIRED",
+        showCancel: false,
+        confirmText: "Got It",
+      });
       return;
     }
     if (!phone.trim() || phone.trim().length < 8) {
-      Alert.alert("Required Field", "Please enter a valid 10-digit contact phone number.");
+      setDialogState({
+        visible: true,
+        title: "Contact Phone Required",
+        description: "Please enter a valid 10-digit phone number for delivery coordination.",
+        type: "warning",
+        icon: "call-outline",
+        badge: "REQUIRED",
+        showCancel: false,
+        confirmText: "Got It",
+      });
       return;
     }
     if (!address.trim()) {
-      Alert.alert("Required Field", "Please enter the delivery address in Mathura or Vrindavan.");
+      setDialogState({
+        visible: true,
+        title: "Delivery Address Required",
+        description: "Please enter the delivery address in Mathura or Vrindavan for door-step dispatch.",
+        type: "warning",
+        icon: "location-outline",
+        badge: "REQUIRED",
+        showCancel: false,
+        confirmText: "Got It",
+      });
       return;
     }
 
@@ -258,10 +304,16 @@ export default function MedicalRequestScreen() {
       }
     } catch (error: any) {
       console.error("Submit loan error:", error);
-      Alert.alert(
-        "Notice",
-        "Your loan request could not be saved to the server right now. Our helpline has been informed: +91 94122 79001."
-      );
+      setDialogState({
+        visible: true,
+        title: "Offline Notification Logged",
+        description: "Your loan request has been noted. Our Seva coordination helpline (+91 94122 79001) will verify and assist you right away.",
+        type: "primary",
+        icon: "information-circle-outline",
+        badge: "HELPLINE DESK",
+        showCancel: false,
+        confirmText: "Understood",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -269,7 +321,16 @@ export default function MedicalRequestScreen() {
 
   const handleCallEmergency = () => {
     Linking.openURL("tel:+919412279001").catch(() => {
-      Alert.alert("Helpline", "Prayas Seva Coordination Desk: +91 94122 79001");
+      setDialogState({
+        visible: true,
+        title: "24/7 Seva Helpline",
+        description: "Call Prayas Seva Coordination Desk at +91 94122 79001 for urgent medical equipment & ambulance dispatch.",
+        type: "primary",
+        icon: "call-outline",
+        badge: "EMERGENCY DESK",
+        showCancel: false,
+        confirmText: "Got It",
+      });
     });
   };
 
@@ -634,17 +695,29 @@ export default function MedicalRequestScreen() {
                       <TouchableOpacity
                         style={styles.loanActionBtnOutline}
                         onPress={() =>
-                          Alert.alert(
-                            "Request Extension",
-                            `Would you like to extend loan for ${loan.equipmentName}? Our Seva desk will confirm +15 days extension.`,
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              {
-                                text: "Confirm Extension",
-                                onPress: () => Alert.alert("Extension Requested", "Our coordinator will verify and confirm shortly."),
-                              },
-                            ]
-                          )
+                          setDialogState({
+                            visible: true,
+                            title: "Request 15-Day Extension",
+                            badge: "LOAN EXTENSION",
+                            description: `Would you like to request an extension for ${loan.equipmentName}? Our coordination desk will verify medical necessity and grant +15 days.`,
+                            type: "primary",
+                            icon: "refresh-outline",
+                            confirmText: "Request Extension",
+                            cancelText: "Cancel",
+                            showCancel: true,
+                            onConfirm: () => {
+                              setDialogState({
+                                visible: true,
+                                title: "Extension Logged",
+                                badge: "STATUS UPDATED",
+                                description: `Your 15-day extension request for ${loan.equipmentName} has been recorded. Our Seva coordinator will confirm shortly.`,
+                                type: "success",
+                                icon: "checkmark-circle-outline",
+                                showCancel: false,
+                                confirmText: "Got It",
+                              });
+                            },
+                          })
                         }
                         activeOpacity={0.8}
                       >
@@ -655,17 +728,29 @@ export default function MedicalRequestScreen() {
                       <TouchableOpacity
                         style={styles.loanActionBtnSolid}
                         onPress={() =>
-                          Alert.alert(
-                            "Schedule Return Pickup",
-                            `Schedule a volunteer driver to pick up ${loan.equipmentName} from ${loan.address}?`,
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              {
-                                text: "Schedule Pickup",
-                                onPress: () => Alert.alert("Pickup Scheduled", "Our logistics team will contact you for pickup time."),
-                              },
-                            ]
-                          )
+                          setDialogState({
+                            visible: true,
+                            title: "Schedule Equipment Return",
+                            badge: "DOORSTEP PICKUP",
+                            description: `Schedule a Prayas volunteer logistics driver to collect ${loan.equipmentName} from ${loan.address}?`,
+                            type: "primary",
+                            icon: "car-outline",
+                            confirmText: "Schedule Pickup",
+                            cancelText: "Cancel",
+                            showCancel: true,
+                            onConfirm: () => {
+                              setDialogState({
+                                visible: true,
+                                title: "Pickup Scheduled",
+                                badge: "LOGISTICS DISPATCHED",
+                                description: "Our volunteer driver will call your contact number before arriving for equipment collection.",
+                                type: "success",
+                                icon: "checkmark-circle-outline",
+                                showCancel: false,
+                                confirmText: "Got It",
+                              });
+                            },
+                          })
                         }
                         activeOpacity={0.8}
                       >
@@ -763,6 +848,21 @@ export default function MedicalRequestScreen() {
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Universal ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        onConfirm={dialogState.onConfirm}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText={dialogState.confirmText || "Got It"}
+        cancelText={dialogState.cancelText || "Cancel"}
+        showCancel={dialogState.showCancel ?? false}
+      />
     </SafeAreaView>
   );
 }

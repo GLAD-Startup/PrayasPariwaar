@@ -13,13 +13,17 @@ import {
   Modal,
   Alert,
   Linking,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api, resolveImageUrl } from "../../lib/api";
+import { getCachedData, setCachedData } from "../../lib/cache";
+import { prefetchRemoteImages } from "../../lib/assetPreloader";
 import SidebarDrawer from "../../components/SidebarDrawer";
+import ActionDialog from "../../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 const HERO_CARD_WIDTH = width - 32;
@@ -163,11 +167,14 @@ export default function MobileHomeScreen() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [eventModalVisible, setEventModalVisible] = useState(false);
+  const [helplineModalVisible, setHelplineModalVisible] = useState(false);
   const heroListRef = useRef<FlatList>(null);
 
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES);
   const [latestUpdates, setLatestUpdates] = useState<any[]>(LATEST_UPDATES);
   const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
+  const [isReady, setIsReady] = useState(false);
+  const pageFadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadHomeData();
@@ -175,11 +182,15 @@ export default function MobileHomeScreen() {
 
   const loadHomeData = async () => {
     try {
-      // 1. Fetch live Projects
-      const projectsRes = await api.get<any>("/projects");
-      if (projectsRes.data?.success && Array.isArray(projectsRes.data.data) && projectsRes.data.data.length > 0) {
-        const liveProjects = projectsRes.data.data;
-        const slides: HeroSlide[] = liveProjects.slice(0, 4).map((p: any) => ({
+      // 1. Instant 0ms cache read from disk on startup
+      const [cachedProjects, cachedPosts, cachedGallery] = await Promise.all([
+        getCachedData<any[]>("prayas_projects"),
+        getCachedData<any[]>("prayas_blog_posts"),
+        getCachedData<any[]>("prayas_gallery"),
+      ]);
+
+      if (cachedProjects && Array.isArray(cachedProjects) && cachedProjects.length > 0) {
+        const slides: HeroSlide[] = cachedProjects.slice(0, 4).map((p: any) => ({
           id: p.id,
           image: resolveImageUrl(p.coverImage, require("../../assets/images/hero-education-vrindavan.jpg")),
           titlePrefix: `${p.title}\n`,
@@ -191,36 +202,114 @@ export default function MobileHomeScreen() {
         setHeroSlides(slides);
       }
 
-      // 2. Fetch live Posts / Dispatches
-      const postsRes = await api.get<any>("/posts");
-      if (postsRes.data?.success && Array.isArray(postsRes.data.data) && postsRes.data.data.length > 0) {
-        const livePosts = postsRes.data.data;
-        const updates = livePosts.slice(0, 6).map((post: any) => ({
+      if (cachedPosts && Array.isArray(cachedPosts) && cachedPosts.length > 0) {
+        const updates = cachedPosts.slice(0, 6).map((post: any) => ({
           id: post.id || post.slug,
           tag: post.category || "Dispatch",
-          tagBg: post.category === "EDUCATION" ? "#16A34A" : post.category === "HEALTH" ? "#DC2626" : "#15803D",
+          tagBg: Colors.primary,
           title: post.title,
-          date: post.createdAt
-            ? new Date(post.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-            : "Ongoing",
-          image: resolveImageUrl(
-            post.images?.[0]?.url || post.coverImage,
-            require("../../assets/images/hero-education-vrindavan.jpg")
-          ),
+          date: new Date(post.createdAt || Date.now()).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          image: resolveImageUrl(post.coverImage, require("../../assets/images/banyan-study-vrindavan.jpg")),
         }));
         setLatestUpdates(updates);
       }
 
-      // 3. Fetch live Gallery
-      const galleryRes = await api.get<any>("/gallery");
-      if (galleryRes.data?.success && galleryRes.data.data) {
-        const photos = galleryRes.data.data.recentPhotos || [];
-        if (photos.length > 0) {
-          setGalleryPhotos(photos);
+      if (cachedGallery && Array.isArray(cachedGallery) && cachedGallery.length > 0) {
+        setGalleryPhotos(cachedGallery.slice(0, 6));
+      }
+
+      // 2. Fetch live updates in parallel
+      const [projectsResult, postsResult, galleryResult] = await Promise.allSettled([
+        api.get<any>("/projects"),
+        api.get<any>("/posts"),
+        api.get<any>("/gallery"),
+      ]);
+
+      const remoteImageUrlsToPrefetch: string[] = [];
+      let nextHeroSlides: HeroSlide[] | null = null;
+      let nextUpdates: any[] | null = null;
+      let nextGallery: any[] | null = null;
+
+      // 1. Process Projects
+      if (projectsResult.status === "fulfilled" && projectsResult.value.data?.success && Array.isArray(projectsResult.value.data.data)) {
+        const liveProjects = projectsResult.value.data.data;
+        if (liveProjects.length > 0) {
+          await setCachedData("prayas_projects", liveProjects);
+          nextHeroSlides = liveProjects.slice(0, 4).map((p: any) => {
+            const resolvedImg = resolveImageUrl(p.coverImage, require("../../assets/images/hero-education-vrindavan.jpg"));
+            if (typeof resolvedImg === "object" && resolvedImg.uri) {
+              remoteImageUrlsToPrefetch.push(resolvedImg.uri);
+            }
+            return {
+              id: p.id,
+              image: resolvedImg,
+              titlePrefix: `${p.title}\n`,
+              titleHighlight: p.category ? p.category.replace("_", " ") : "Seva Initiative",
+              subtitle: p.description ? `${p.description.substring(0, 75)}...` : "Serving humanity in Vrindavan & Mathura.",
+              buttonText: "Know More",
+              route: `/seva/${p.slug || p.id}`,
+            };
+          });
         }
       }
+
+      // 2. Process Posts / Dispatches
+      if (postsResult.status === "fulfilled" && postsResult.value.data?.success && Array.isArray(postsResult.value.data.data)) {
+        const livePosts = postsResult.value.data.data;
+        if (livePosts.length > 0) {
+          await setCachedData("prayas_blog_posts", livePosts);
+          nextUpdates = livePosts.slice(0, 6).map((post: any) => {
+            const resolvedImg = resolveImageUrl(post.coverImage, require("../../assets/images/banyan-study-vrindavan.jpg"));
+            if (typeof resolvedImg === "object" && resolvedImg.uri) {
+              remoteImageUrlsToPrefetch.push(resolvedImg.uri);
+            }
+            return {
+              id: post.id || post.slug,
+              tag: post.category || "Dispatch",
+              tagBg: Colors.primary,
+              title: post.title,
+              date: new Date(post.createdAt).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              }),
+              image: resolvedImg,
+            };
+          });
+        }
+      }
+
+      // 3. Process Gallery
+      if (galleryResult.status === "fulfilled" && galleryResult.value.data?.success && Array.isArray(galleryResult.value.data.data)) {
+        const photos = galleryResult.value.data.data.slice(0, 6);
+        if (photos.length > 0) {
+          await setCachedData("prayas_gallery", photos);
+          nextGallery = photos;
+          photos.forEach((p: any) => {
+            if (p.url && p.url.startsWith("http")) {
+              remoteImageUrlsToPrefetch.push(p.url);
+            }
+          });
+        }
+      }
+
+      // Prefetch all extracted remote URLs in parallel so they don't pop-in
+      if (remoteImageUrlsToPrefetch.length > 0) {
+        await prefetchRemoteImages(remoteImageUrlsToPrefetch);
+      }
+
+      // Atomically commit all state changes together
+      if (nextHeroSlides) setHeroSlides(nextHeroSlides);
+      if (nextUpdates) setLatestUpdates(nextUpdates);
+      if (nextGallery) setGalleryPhotos(nextGallery);
     } catch (e) {
       console.warn("Failed to load home data from API:", e);
+    } finally {
+      setIsReady(true);
     }
   };
 
@@ -232,7 +321,7 @@ export default function MobileHomeScreen() {
 
   const handleCallEmergency = () => {
     Linking.openURL("tel:+919412279001").catch(() => {
-      Alert.alert("Helpline", "Please call Prayas Seva Desk at +91 94122 79001");
+      setHelplineModalVisible(true);
     });
   };
 
@@ -663,6 +752,24 @@ export default function MobileHomeScreen() {
         </Modal>
       </ScrollView>
 
+      {/* Helpline ActionDialog */}
+      <ActionDialog
+        visible={helplineModalVisible}
+        onClose={() => setHelplineModalVisible(false)}
+        title="24/7 Seva Helpline Desk"
+        badge="EMERGENCY SUPPORT"
+        description="Connect with Prayas Seva Coordination Desk for immediate emergency blood, ambulance, or medical oxygen support in Vrindavan & Mathura."
+        icon="call-outline"
+        type="primary"
+        confirmText="Call +91 94122 79001"
+        onConfirm={() => {
+          setHelplineModalVisible(false);
+          Linking.openURL("tel:+919412279001");
+        }}
+        cancelText="Close"
+        showCancel={true}
+      />
+
       {/* Navigation Sidebar Drawer */}
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </SafeAreaView>
@@ -683,27 +790,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerIconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   headerBrandCenter: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   headerLogoImg: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 8,
   },
   headerTextCol: {

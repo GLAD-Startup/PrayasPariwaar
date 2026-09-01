@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
+import ActionDialog from "../../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 
@@ -339,6 +340,8 @@ export default function SevaDetailScreen() {
 
   const [bookmarked, setBookmarked] = useState(false);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [bookmarkModalVisible, setBookmarkModalVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -361,7 +364,7 @@ export default function SevaDetailScreen() {
             style={styles.headerActionBtn}
             onPress={() => {
               setBookmarked(!bookmarked);
-              Alert.alert(bookmarked ? "Removed from Favorites" : "Added to Favorites", `You will receive updates for ${stream.title}.`);
+              setBookmarkModalVisible(true);
             }}
             activeOpacity={0.8}
           >
@@ -484,7 +487,7 @@ export default function SevaDetailScreen() {
         <View style={styles.bottomCTAsRow}>
           <TouchableOpacity
             style={styles.upcomingProgramsBtn}
-            onPress={() => Alert.alert("Programs Schedule", "Upcoming seva drives are organized every Sunday in Vrindavan.")}
+            onPress={() => setScheduleModalVisible(true)}
             activeOpacity={0.85}
           >
             <Ionicons name="calendar-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
@@ -540,6 +543,59 @@ export default function SevaDetailScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Weekly Seva Schedule Custom ActionDialog */}
+        <ActionDialog
+          visible={scheduleModalVisible}
+          onClose={() => setScheduleModalVisible(false)}
+          onConfirm={() => {
+            setScheduleModalVisible(false);
+            router.push("/volunteer-form");
+          }}
+          title="Programs Schedule"
+          badge="VRINDAVAN SEVA CALENDAR"
+          description={`Upcoming seva drives for ${stream.title} are organized on a regular schedule in Mathura & Vrindavan:`}
+          icon="calendar-outline"
+          type="info"
+          confirmText="Join Next Drive"
+          cancelText="Close"
+          showCancel={true}
+        >
+          <View style={styles.scheduleInfoBox}>
+            <View style={styles.scheduleInfoRow}>
+              <Ionicons name="time-outline" size={16} color="#166534" />
+              <Text style={styles.scheduleInfoLabel}>When:</Text>
+              <Text style={styles.scheduleInfoVal}>Every Sunday (8:00 AM – 11:30 AM)</Text>
+            </View>
+            <View style={styles.scheduleInfoRow}>
+              <Ionicons name="location-outline" size={16} color="#166534" />
+              <Text style={styles.scheduleInfoLabel}>Meeting:</Text>
+              <Text style={styles.scheduleInfoVal}>Prayas Kendra, Raman Reti, Vrindavan</Text>
+            </View>
+            <View style={[styles.scheduleInfoRow, { borderBottomWidth: 0 }]}>
+              <Ionicons name="people-outline" size={16} color="#166534" />
+              <Text style={styles.scheduleInfoLabel}>Volunteers:</Text>
+              <Text style={styles.scheduleInfoVal}>Open for youth, donors & devotees</Text>
+            </View>
+          </View>
+        </ActionDialog>
+
+        {/* Bookmark Status ActionDialog */}
+        <ActionDialog
+          visible={bookmarkModalVisible}
+          onClose={() => setBookmarkModalVisible(false)}
+          title={bookmarked ? "Added to Favorites" : "Removed from Favorites"}
+          badge="SEVA PREFERENCES"
+          description={
+            bookmarked
+              ? `You will receive priority updates, field stories, and urgent notifications for ${stream.title}.`
+              : `You have unsubscribed from specific notifications for ${stream.title}.`
+          }
+          icon={bookmarked ? "heart" : "heart-dislike-outline"}
+          type={bookmarked ? "success" : "warning"}
+          confirmText="Got It"
+          showCancel={false}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -895,5 +951,31 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "800",
+  },
+  scheduleInfoBox: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    borderRadius: 14,
+    padding: 12,
+  },
+  scheduleInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#DCFCE7",
+    gap: 8,
+  },
+  scheduleInfoLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#166534",
+  },
+  scheduleInfoVal: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1E293B",
   },
 });

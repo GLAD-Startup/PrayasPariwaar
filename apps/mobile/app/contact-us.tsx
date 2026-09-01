@@ -8,13 +8,14 @@ import {
   Dimensions,
   TextInput,
   StatusBar,
-  Alert,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
+import ActionDialog from "../components/ActionDialog";
 
 export default function ContactUsScreen() {
   const router = useRouter();
@@ -23,10 +24,31 @@ export default function ContactUsScreen() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   const handleSendMessage = () => {
     if (!name.trim() || !email.trim() || !message.trim()) {
-      Alert.alert("Incomplete Message", "Please fill in your name, email, and message.");
+      setDialogState({
+        visible: true,
+        title: "Incomplete Message",
+        description: "Please fill in your name, email address, and message to submit your inquiry.",
+        type: "warning",
+        icon: "alert-circle-outline",
+        badge: "REQUIRED FIELDS",
+      });
       return;
     }
     setIsSending(true);
@@ -35,7 +57,14 @@ export default function ContactUsScreen() {
       setName("");
       setEmail("");
       setMessage("");
-      Alert.alert("Message Sent!", "Thank you for reaching out. Our support team will get back to you shortly.");
+      setDialogState({
+        visible: true,
+        title: "Message Dispatched!",
+        description: "Thank you for reaching out to Prayas Pariwaar. Our volunteer coordination desk in Vrindavan will respond shortly.",
+        type: "success",
+        icon: "checkmark-circle-outline",
+        badge: "INQUIRY LOGGED",
+      });
     }, 800);
   };
 
@@ -181,10 +210,28 @@ export default function ContactUsScreen() {
           style={styles.sendBtn}
           onPress={handleSendMessage}
           activeOpacity={0.88}
+          disabled={isSending}
         >
-          <Text style={styles.sendBtnText}>{isSending ? "Sending..." : "Send Message"}</Text>
+          {isSending ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.sendBtnText}>Send Message</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modern Feedback ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </SafeAreaView>
   );
 }
@@ -202,17 +249,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   headerTitle: {
     fontSize: 20,

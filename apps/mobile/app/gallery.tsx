@@ -18,6 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api, resolveImageUrl } from "../lib/api";
+import { getCachedData, setCachedData } from "../lib/cache";
+import { prefetchRemoteImages } from "../lib/assetPreloader";
+import ActionDialog from "../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 const GRID_ITEM_SIZE = (width - 32 - 16) / 3;
@@ -198,6 +201,7 @@ export default function GalleryScreen() {
   const [albums, setAlbums] = useState<Album[]>(REAL_ALBUMS);
   const [photos, setPhotos] = useState<GalleryPhoto[]>(REAL_PHOTOS);
   const [activePhoto, setActivePhoto] = useState<GalleryPhoto | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -206,14 +210,11 @@ export default function GalleryScreen() {
 
   const loadGalleryData = async () => {
     try {
-      const url = selectedCategory === "all" ? "/gallery" : `/gallery?category=${encodeURIComponent(selectedCategory)}`;
-      const res = await api.get<any>(url);
-      if (res.data?.success && res.data.data) {
-        const dbAlbums = res.data.data.albums || [];
-        const dbPhotos = res.data.data.recentPhotos || [];
-
-        if (dbAlbums.length > 0) {
-          const mappedAlbums = dbAlbums.map((a: any) => ({
+      // 1. Instant 0ms read from disk cache
+      const cached = await getCachedData<{ albums: any[]; recentPhotos: any[] }>(`prayas_gallery_${selectedCategory}`);
+      if (cached && (cached.albums?.length > 0 || cached.recentPhotos?.length > 0)) {
+        if (cached.albums && cached.albums.length > 0) {
+          const mappedAlbums = cached.albums.map((a: any) => ({
             id: a.id,
             title: a.title,
             date: a.location || "Vrindavan & Mathura",
@@ -223,9 +224,8 @@ export default function GalleryScreen() {
           }));
           setAlbums(mappedAlbums);
         }
-
-        if (dbPhotos.length > 0) {
-          const mappedPhotos = dbPhotos.map((p: any) => ({
+        if (cached.recentPhotos && cached.recentPhotos.length > 0) {
+          const mappedPhotos = cached.recentPhotos.map((p: any) => ({
             id: p.id,
             title: p.title || p.caption || "Seva Photo",
             category: p.category || "Free Education",
@@ -235,6 +235,60 @@ export default function GalleryScreen() {
           }));
           setPhotos(mappedPhotos);
         }
+      }
+
+      // 2. Fetch live updates
+      const url = selectedCategory === "all" ? "/gallery" : `/gallery?category=${encodeURIComponent(selectedCategory)}`;
+      const res = await api.get<any>(url);
+      if (res.data?.success && res.data.data) {
+        const dbAlbums = res.data.data.albums || [];
+        const dbPhotos = res.data.data.recentPhotos || [];
+        const imageUrlsToPrefetch: string[] = [];
+
+        let mappedAlbums: Album[] | null = null;
+        let mappedPhotos: GalleryPhoto[] | null = null;
+
+        if (dbAlbums.length > 0) {
+          mappedAlbums = dbAlbums.map((a: any) => {
+            const resolvedImg = resolveImageUrl(a.coverImage, require("../assets/images/hero-education-vrindavan.jpg"));
+            if (typeof resolvedImg === "object" && resolvedImg.uri) {
+              imageUrlsToPrefetch.push(resolvedImg.uri);
+            }
+            return {
+              id: a.id,
+              title: a.title,
+              date: a.location || "Vrindavan & Mathura",
+              photoCount: a.photoCount || (a.photos ? a.photos.length : 12),
+              image: resolvedImg,
+              category: a.category || "Free Education",
+            };
+          });
+        }
+
+        if (dbPhotos.length > 0) {
+          mappedPhotos = dbPhotos.map((p: any) => {
+            const resolvedImg = resolveImageUrl(p.url, require("../assets/images/banyan-study-vrindavan.jpg"));
+            if (typeof resolvedImg === "object" && resolvedImg.uri) {
+              imageUrlsToPrefetch.push(resolvedImg.uri);
+            }
+            return {
+              id: p.id,
+              title: p.title || p.caption || "Seva Photo",
+              category: p.category || "Free Education",
+              location: p.location || "Vrindavan Seva",
+              date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "Recent",
+              image: resolvedImg,
+            };
+          });
+        }
+
+        if (imageUrlsToPrefetch.length > 0) {
+          await prefetchRemoteImages(imageUrlsToPrefetch);
+        }
+
+        await setCachedData(`prayas_gallery_${selectedCategory}`, res.data.data);
+        if (mappedAlbums) setAlbums(mappedAlbums);
+        if (mappedPhotos) setPhotos(mappedPhotos);
       }
     } catch (e) {
       console.warn("Gallery API offline, displaying authentic local assets", e);
@@ -366,7 +420,7 @@ export default function GalleryScreen() {
                 <TouchableOpacity
                   key={album.id}
                   style={styles.albumCard}
-                  onPress={() => Alert.alert(album.title, `Field album covering ${album.category} in Mathura & Vrindavan.`)}
+                  onPress={() => setSelectedAlbum(album)}
                   activeOpacity={0.88}
                 >
                   <View style={styles.albumImageWrapper}>
@@ -516,6 +570,26 @@ export default function GalleryScreen() {
           </Modal>
         )}
       </ScrollView>
+
+      {/* Album Detail ActionDialog */}
+      <ActionDialog
+        visible={!!selectedAlbum}
+        onClose={() => setSelectedAlbum(null)}
+        title={selectedAlbum?.title || "Field Album"}
+        badge={selectedAlbum?.category.toUpperCase() || "GALLERY"}
+        description={`Ground photographic documentation covering ${selectedAlbum?.category || "Seva"} in Mathura & Vrindavan (${selectedAlbum?.photoCount || 0} high-resolution field captures).`}
+        icon="images-outline"
+        type="primary"
+        confirmText="Filter This Category"
+        onConfirm={() => {
+          if (selectedAlbum?.category) {
+            setSelectedCategory(selectedAlbum.category);
+          }
+          setSelectedAlbum(null);
+        }}
+        cancelText="Close"
+        showCancel={true}
+      />
     </SafeAreaView>
   );
 }
@@ -534,18 +608,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   headerTitleCol: {
     flex: 1,

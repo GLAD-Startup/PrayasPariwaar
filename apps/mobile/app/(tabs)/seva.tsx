@@ -18,7 +18,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api, resolveImageUrl } from "../../lib/api";
+import { getCachedData, setCachedData } from "../../lib/cache";
+import { prefetchRemoteImages } from "../../lib/assetPreloader";
 import SidebarDrawer from "../../components/SidebarDrawer";
+import PageSkeletonLoader from "../../components/PageSkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -230,9 +233,10 @@ export default function SevaScreen() {
 
   const loadProjects = async () => {
     try {
-      const res = await api.get<any>("/projects");
-      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        const mapped = res.data.data.map((p: any) => ({
+      // 1. Instant 0ms read from disk cache
+      const cached = await getCachedData<any[]>("prayas_projects");
+      if (cached && Array.isArray(cached) && cached.length > 0) {
+        const mappedCached = cached.map((p: any) => ({
           id: p.id,
           title: p.title,
           slug: p.slug,
@@ -243,6 +247,36 @@ export default function SevaScreen() {
           goalAmount: Number(p.goalAmount) || 100000,
           raisedAmount: Number(p.raisedAmount) || 0,
         }));
+        setProjects(mappedCached);
+      }
+
+      // 2. Fetch live updates
+      const res = await api.get<any>("/projects");
+      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const imageUrls: string[] = [];
+        const mapped = res.data.data.map((p: any) => {
+          const resolvedImg = resolveImageUrl(p.coverImage, require("../../assets/images/hero-education-vrindavan.jpg"));
+          if (typeof resolvedImg === "object" && resolvedImg.uri) {
+            imageUrls.push(resolvedImg.uri);
+          }
+          return {
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            category: (p.category || "OTHER").toUpperCase(),
+            status: p.status || "ACTIVE",
+            description: p.description,
+            coverImage: resolvedImg,
+            goalAmount: Number(p.goalAmount) || 100000,
+            raisedAmount: Number(p.raisedAmount) || 0,
+          };
+        });
+
+        if (imageUrls.length > 0) {
+          await prefetchRemoteImages(imageUrls);
+        }
+
+        await setCachedData("prayas_projects", res.data.data);
         setProjects(mapped);
       }
     } catch (e) {
@@ -680,33 +714,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerMenuBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginRight: 12,
   },
   headerTitleCol: {
     flex: 1,
+    justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.3,
+    color: "#0F172A",
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#64748B",
-    fontWeight: "600",
-    marginTop: 1,
+    fontWeight: "500",
+    marginTop: 2,
   },
   headerRightActions: {
     flexDirection: "row",
@@ -714,19 +753,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerActionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
   },
   headerActionBtnVolunteer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#166534",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
     ...Shadows.soft,
@@ -738,7 +779,8 @@ const styles = StyleSheet.create({
   },
   modeSwitcherContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 10,
+    paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
@@ -746,15 +788,15 @@ const styles = StyleSheet.create({
   modeSwitcher: {
     flexDirection: "row",
     backgroundColor: "#F1F5F9",
-    borderRadius: 12,
-    padding: 3,
+    borderRadius: 14,
+    padding: 4,
   },
   modeTab: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 10,
   },
   modeTabActive: {

@@ -19,6 +19,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
 import { getStoredUser, getItem, setItem } from "../lib/secureStore";
+import ActionDialog from "../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -52,6 +53,20 @@ export default function BloodDonorRegistrationScreen() {
   const [bgPickerVisible, setBgPickerVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   useEffect(() => {
     checkExistingDonor();
@@ -97,26 +112,25 @@ export default function BloodDonorRegistrationScreen() {
               ?.replace("_POSITIVE", "+")
               ?.replace("_NEGATIVE", "-")
               ?.replace("_POS", "+")
-              ?.replace("_NEG", "-") || "O+",
+              ?.replace("_NEG", "-") || donorData.bloodGroup,
             city: donorData.city || "Mathura / Vrindavan",
             address: donorData.address,
             createdAt: donorData.createdAt,
           };
           setExistingDonor(donor);
-          setViewMode("STATUS");
           await setItem("prayas_my_blood_donor_record", JSON.stringify(donor));
+          setViewMode("STATUS");
         }
       }
     } catch (e) {
-      console.warn("Failed to check blood donor status:", e);
+      console.log("[Blood Donor Check Error]", e);
     } finally {
       setCheckingExisting(false);
     }
   };
 
-  const handleStartNewDonor = () => {
+  const handleStartNewRegistration = () => {
     setFullName("");
-    setBloodGroup("O+");
     setPhone("");
     setEmail("");
     setCity("Mathura / Vrindavan");
@@ -126,7 +140,14 @@ export default function BloodDonorRegistrationScreen() {
 
   const handleRegister = async () => {
     if (!fullName.trim() || !bloodGroup || !phone.trim()) {
-      Alert.alert("Incomplete Details", "Please enter your Name, Blood Group, and Phone Number.");
+      setDialogState({
+        visible: true,
+        title: "Incomplete Details",
+        description: "Please enter your Full Name, Blood Group, and Contact Phone Number to enroll as a donor.",
+        type: "warning",
+        icon: "water-outline",
+        badge: "REQUIRED",
+      });
       return;
     }
 
@@ -161,10 +182,14 @@ export default function BloodDonorRegistrationScreen() {
         setExistingDonor(donor);
         await setItem("prayas_my_blood_donor_record", JSON.stringify(donor));
         setViewMode("STATUS");
-        Alert.alert(
-          "Already Registered",
-          `${donor.name} is already registered as a voluntary ${donor.bloodGroup} donor in the Prayas Rapid Response Network.`
-        );
+        setDialogState({
+          visible: true,
+          title: "Donor Already Registered",
+          description: `${donor.name} is already registered as an active ${donor.bloodGroup} voluntary donor in the Prayas Rapid Response Network.`,
+          type: "success",
+          icon: "checkmark-circle-outline",
+          badge: "ACTIVE DONOR",
+        });
         return;
       }
 
@@ -178,15 +203,14 @@ export default function BloodDonorRegistrationScreen() {
           bloodGroup: donorData.bloodGroup
             ?.replace("_POSITIVE", "+")
             ?.replace("_NEGATIVE", "-") || bloodGroup,
-          city: donorData.city || city,
-          address: donorData.address || address,
-          createdAt: new Date().toISOString(),
+          city: donorData.city || "Mathura / Vrindavan",
+          address: donorData.address,
+          createdAt: donorData.createdAt,
         };
         setExistingDonor(donor);
         await setItem("prayas_my_blood_donor_record", JSON.stringify(donor));
         setSuccessModalVisible(true);
       } else {
-        // Fallback local save
         const donor: BloodDonorRecord = {
           id: `BD-${Date.now().toString().slice(-6)}`,
           name: fullName.trim(),
@@ -344,7 +368,7 @@ export default function BloodDonorRegistrationScreen() {
             </Text>
             <TouchableOpacity
               style={styles.registerAnotherBtn}
-              onPress={handleStartNewDonor}
+              onPress={handleStartNewRegistration}
               activeOpacity={0.88}
             >
               <Ionicons name="person-add" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -498,6 +522,19 @@ export default function BloodDonorRegistrationScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Universal ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </SafeAreaView>
   );
 }
@@ -520,16 +557,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
     backgroundColor: "#FFFFFF",
   },
   headerBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
     alignItems: "center",
     justifyContent: "center",
   },

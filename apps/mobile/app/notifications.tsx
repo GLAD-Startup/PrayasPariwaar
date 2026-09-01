@@ -19,6 +19,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
 import { getItem, setItem } from "../lib/secureStore";
+import ActionDialog from "../components/ActionDialog";
 import {
   getNotificationPreferences,
   saveNotificationPreferences,
@@ -106,6 +107,20 @@ export default function NotificationsScreen() {
 
   // Push Notification Settings state
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     pushEnabled: true,
     emergencyBloodAlerts: true,
@@ -194,7 +209,14 @@ export default function NotificationsScreen() {
     const allIds = notifications.map((n) => n.id);
     await setItem("prayas_read_notification_ids", JSON.stringify(allIds));
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    Alert.alert("All Caught Up", "All notifications have been marked as read.");
+    setDialogState({
+      visible: true,
+      title: "All Caught Up!",
+      description: "All broadcasts, alerts, and field updates have been marked as read.",
+      type: "success",
+      icon: "checkmark-done-circle-outline",
+      badge: "NOTIFICATIONS CLEARED",
+    });
   };
 
   const handleNotificationPress = async (notif: NotificationItem) => {
@@ -547,6 +569,19 @@ export default function NotificationsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Universal ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </SafeAreaView>
   );
 }

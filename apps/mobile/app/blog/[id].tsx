@@ -101,7 +101,7 @@ function parsePostData(raw: any): DetailedPost {
       ? new Date(raw.eventDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
       : null,
     location: raw.location || null,
-    author: raw.author?.name || "Prayas Pariwaar",
+    author: typeof raw.author === "string" ? raw.author : raw.author?.name || "Prayas Pariwaar",
     authorRole: "Editorial & Seva Desk",
     readTime,
     images: Array.isArray(raw.images)
@@ -335,11 +335,11 @@ export default function BlogDetailScreen() {
           <View style={styles.authorBar}>
             <View style={styles.authorAvatar}>
               <Text style={styles.authorAvatarText}>
-                {post.author.substring(0, 1).toUpperCase()}
+                {String(post.author || "P").charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={styles.authorDetails}>
-              <Text style={styles.authorName}>{post.author}</Text>
+              <Text style={styles.authorName}>{typeof post.author === "string" ? post.author : "Prayas Pariwaar"}</Text>
               <Text style={styles.authorRole}>{post.authorRole}</Text>
             </View>
           </View>

@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { getStoredUser, clearAuthSession } from "../lib/secureStore";
+import ActionDialog from "./ActionDialog";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = Math.min(width * 0.82, 320);
@@ -43,6 +44,8 @@ interface MenuItem {
 export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -89,9 +92,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const handleNavigate = (route?: string) => {
     onClose();
     if (route) {
-      setTimeout(() => {
-        router.push(route as any);
-      }, 150);
+      router.push(route as any);
     }
   };
 
@@ -112,20 +113,21 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out of your account?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await clearAuthSession();
-          setUser(null);
-          onClose();
-          router.replace("/(auth)/login" as any);
-        },
-      },
-    ]);
+  const handleLogout = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await clearAuthSession();
+      setUser(null);
+      setLogoutDialogOpen(false);
+      onClose();
+      router.replace("/(auth)/login" as any);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const SEVA_STREAMS_MENU: MenuItem[] = [
@@ -280,7 +282,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   };
 
   return (
-    <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
+    <>
+      <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         {/* Animated Dim Backdrop */}
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
@@ -478,6 +481,21 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
         </Animated.View>
       </View>
     </Modal>
+
+    {/* Sign Out Confirmation Dialog */}
+    <ActionDialog
+      visible={logoutDialogOpen}
+      onClose={() => setLogoutDialogOpen(false)}
+      onConfirm={confirmLogout}
+      title="Sign Out"
+      description="Are you sure you want to sign out from Prayas app?"
+      confirmText="Sign Out"
+      cancelText="Cancel"
+      type="danger"
+      icon="log-out-outline"
+      loading={isLoggingOut}
+    />
+    </>
   );
 }
 

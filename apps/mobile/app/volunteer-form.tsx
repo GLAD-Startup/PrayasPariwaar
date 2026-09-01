@@ -19,6 +19,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
 import { getStoredUser } from "../lib/secureStore";
+import ActionDialog from "../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 
@@ -82,6 +83,20 @@ export default function VolunteerFormScreen() {
   const [statePickerVisible, setStatePickerVisible] = useState(false);
   const [submittedModalVisible, setSubmittedModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   useEffect(() => {
     checkExistingApplication();
@@ -146,7 +161,14 @@ export default function VolunteerFormScreen() {
   const toggleInterest = (area: string) => {
     if (selectedInterests.includes(area)) {
       if (selectedInterests.length === 1) {
-        Alert.alert("Selection Required", "Please select at least one area of interest.");
+        setDialogState({
+          visible: true,
+          title: "Selection Required",
+          description: "Please select at least one seva domain you wish to contribute towards.",
+          type: "warning",
+          icon: "alert-circle-outline",
+          badge: "SEVA DOMAIN",
+        });
         return;
       }
       setSelectedInterests(selectedInterests.filter((item) => item !== area));
@@ -169,7 +191,14 @@ export default function VolunteerFormScreen() {
 
   const handleSubmit = async () => {
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      Alert.alert("Missing Fields", "Please enter Full Name, Email, and Contact Phone Number.");
+      setDialogState({
+        visible: true,
+        title: "Missing Fields",
+        description: "Please enter your Full Name, Email, and Contact Phone Number to proceed.",
+        type: "warning",
+        icon: "alert-circle-outline",
+        badge: "REQUIRED",
+      });
       return;
     }
 
@@ -209,17 +238,23 @@ export default function VolunteerFormScreen() {
         setExistingVolunteer(vol);
         setSubmittedModalVisible(true);
       } else {
-        Alert.alert(
-          "Submission Error",
-          res.data?.error || "Could not register volunteer application. Please verify your details."
-        );
+        setDialogState({
+          visible: true,
+          title: "Submission Error",
+          description: res.data?.error || "Could not register volunteer application. Please verify your details.",
+          type: "danger",
+          icon: "close-circle-outline",
+        });
       }
     } catch (e: any) {
       console.error("[Volunteer Submit Error]", e);
-      Alert.alert(
-        "Connection Error",
-        e?.message || "Failed to reach Prayas server. Please verify your internet connection and try again."
-      );
+      setDialogState({
+        visible: true,
+        title: "Connection Error",
+        description: e?.message || "Failed to reach Prayas server. Please verify your internet connection and try again.",
+        type: "danger",
+        icon: "cloud-offline-outline",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -629,6 +664,19 @@ export default function VolunteerFormScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Reusable ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </SafeAreaView>
   );
 }

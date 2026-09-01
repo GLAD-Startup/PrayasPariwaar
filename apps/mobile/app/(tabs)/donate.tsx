@@ -18,6 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api } from "../../lib/api";
+import SidebarDrawer from "../../components/SidebarDrawer";
+import ActionDialog from "../../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
 
@@ -73,6 +75,7 @@ const PRESET_AMOUNTS = [500, 1000, 2500, 5000];
 
 export default function DonateScreen() {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCause, setSelectedCause] = useState<string>("all");
   const [frequency, setFrequency] = useState<"one-time" | "monthly" | "yearly">("one-time");
   const [selectedAmount, setSelectedAmount] = useState<number | "other">(1000);
@@ -81,6 +84,22 @@ export default function DonateScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [myDonationsModalVisible, setMyDonationsModalVisible] = useState(false);
+  const [donateDialogState, setDonateDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   const getEffectiveAmount = () => {
     if (isOtherSelected) {
@@ -92,7 +111,14 @@ export default function DonateScreen() {
   const handleInitiatePayment = (methodName: string) => {
     const amount = getEffectiveAmount();
     if (amount <= 0) {
-      Alert.alert("Invalid Amount", "Please enter or select a valid donation amount.");
+      setDonateDialogState({
+        visible: true,
+        title: "Amount Required",
+        description: "Please enter or select a valid contribution amount.",
+        type: "warning",
+        icon: "heart-outline",
+        badge: "SEVA CONTRIBUTION",
+      });
       return;
     }
     setPaymentModalVisible(true);
@@ -117,11 +143,16 @@ export default function DonateScreen() {
       console.warn("Donation API recording fallback", e);
     } finally {
       setIsProcessing(false);
-      Alert.alert(
-        "💚 Thank You for Your Seva!",
-        `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. An 80G tax exemption receipt has been generated for your records.`,
-        [{ text: "View Receipt", onPress: () => setMyDonationsModalVisible(true) }]
-      );
+      setDonateDialogState({
+        visible: true,
+        title: "Thank You for Your Seva!",
+        badge: "80G TAX EXEMPTION RECEIPT",
+        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. An 80G tax certificate has been generated for your records.`,
+        type: "success",
+        icon: "checkmark-circle-outline",
+        confirmText: "View Receipts",
+        onConfirm: () => setMyDonationsModalVisible(true),
+      });
     }
   };
 
@@ -131,17 +162,26 @@ export default function DonateScreen() {
 
       {/* Top Header */}
       <View style={styles.header}>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          style={styles.headerMenuBtn}
+          onPress={() => setSidebarOpen(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="menu" size={24} color="#1E293B" />
+        </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Donate</Text>
+        <View style={styles.headerTitleCol}>
+          <Text style={styles.headerTitle}>Donate & Seva</Text>
+          <Text style={styles.headerSubtitle}>100% Tax Exempted (80G) • Direct Aid</Text>
+        </View>
 
         <TouchableOpacity
           style={styles.myDonationsBtn}
           onPress={() => setMyDonationsModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="hand-heart-outline" size={22} color="#166534" />
-          <Text style={styles.myDonationsText}>My Donations</Text>
+          <MaterialCommunityIcons name="hand-heart-outline" size={18} color="#166534" />
+          <Text style={styles.myDonationsText}>My Receipts</Text>
         </TouchableOpacity>
       </View>
 
@@ -150,10 +190,6 @@ export default function DonateScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Your support can change lives and build a better tomorrow.
-        </Text>
 
         {/* Hero Feature Banner Card */}
         <View style={styles.heroCard}>
@@ -192,7 +228,14 @@ export default function DonateScreen() {
           <TouchableOpacity
             onPress={() => {
               setSelectedCause("all");
-              Alert.alert("All Causes Selected", "Your donation will support all 5 seva pillars.");
+              setDonateDialogState({
+                visible: true,
+                title: "All Causes Selected",
+                badge: "UNRESTRICTED SEVA",
+                description: "Your donation will be allocated across all 5 core seva pillars according to immediate ground need.",
+                type: "success",
+                icon: "sparkles-outline",
+              });
             }}
           >
             <Text style={styles.viewAllText}>View All Causes ›</Text>
@@ -562,6 +605,23 @@ export default function DonateScreen() {
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Universal ActionDialog */}
+      <ActionDialog
+        visible={donateDialogState.visible}
+        onClose={() => setDonateDialogState({ ...donateDialogState, visible: false })}
+        onConfirm={donateDialogState.onConfirm}
+        title={donateDialogState.title}
+        description={donateDialogState.description}
+        type={donateDialogState.type}
+        icon={donateDialogState.icon}
+        badge={donateDialogState.badge}
+        confirmText={donateDialogState.confirmText || "Got It"}
+        showCancel={false}
+      />
+
+      {/* Navigation Sidebar Drawer */}
+      <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -579,31 +639,60 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
+  headerMenuBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginRight: 12,
+  },
+  headerTitleCol: {
+    flex: 1,
+    justifyContent: "center",
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.3,
+    color: "#0F172A",
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: "#166534",
+    fontWeight: "600",
+    marginTop: 2,
   },
   myDonationsBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 5,
   },
   myDonationsText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: "#166534",
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 30,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 36,
   },
   subtitle: {
     fontSize: 12,

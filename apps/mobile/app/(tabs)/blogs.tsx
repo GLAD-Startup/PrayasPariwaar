@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   StatusBar,
   RefreshControl,
   ActivityIndicator,
+  Animated,
+  Easing,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +20,9 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api, resolveImageUrl } from "../../lib/api";
 import { getCachedData, setCachedData } from "../../lib/cache";
+import { prefetchRemoteImages } from "../../lib/assetPreloader";
+import SidebarDrawer from "../../components/SidebarDrawer";
+import PageSkeletonLoader from "../../components/PageSkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -78,6 +83,13 @@ function formatPost(item: any): LiveBlogPost {
     year: "numeric",
   });
 
+  let authorName = "Prayas Pariwaar";
+  if (typeof item.author === "string" && item.author.trim().length > 0) {
+    authorName = item.author.trim();
+  } else if (item.author && typeof item.author === "object" && item.author.name) {
+    authorName = String(item.author.name).trim();
+  }
+
   return {
     id: item.id,
     slug: item.slug || item.id,
@@ -85,12 +97,12 @@ function formatPost(item: any): LiveBlogPost {
     categoryBg: catStyle.bg,
     categoryColor: catStyle.color,
     title: item.title || "Seva Initiative",
-    summary: item.excerpt || (item.content ? item.content.substring(0, 140) + "..." : ""),
+    summary: item.excerpt || (item.content ? String(item.content).substring(0, 140) + "..." : ""),
     content: item.content || "",
     date: dateStr,
     readTime,
     coverImage: item.coverImage || null,
-    author: item.author?.name || "Prayas Pariwaar",
+    author: authorName,
     type: item.type || "NEWS",
     eventDate: item.eventDate,
     location: item.location,
@@ -100,6 +112,7 @@ function formatPost(item: any): LiveBlogPost {
 
 export default function BlogsScreen() {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [posts, setPosts] = useState<LiveBlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -122,6 +135,26 @@ export default function BlogsScreen() {
       const res = await api.get<any>("/posts");
       if (res.data?.success && Array.isArray(res.data.data)) {
         const livePosts = res.data.data.map(formatPost);
+
+        // Extract and prefetch remote images so everything appears at once
+        const imageUrls: string[] = [];
+        livePosts.forEach((p: LiveBlogPost) => {
+          if (p.coverImage && typeof p.coverImage === "string" && p.coverImage.startsWith("http")) {
+            imageUrls.push(p.coverImage);
+          }
+          if (Array.isArray(p.images)) {
+            p.images.forEach((img) => {
+              if (img?.url && typeof img.url === "string" && img.url.startsWith("http")) {
+                imageUrls.push(img.url);
+              }
+            });
+          }
+        });
+
+        if (imageUrls.length > 0) {
+          await prefetchRemoteImages(imageUrls);
+        }
+
         setPosts(livePosts);
         await setCachedData("prayas_blog_posts", livePosts);
       }
@@ -136,6 +169,61 @@ export default function BlogsScreen() {
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
+
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const scaleValue = useRef(new Animated.Value(1)).current;
+  const spinLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  useEffect(() => {
+    if (refreshing) {
+      spinValue.setValue(0);
+      spinLoopRef.current = Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 750,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      spinLoopRef.current.start();
+    } else {
+      if (spinLoopRef.current) {
+        spinLoopRef.current.stop();
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 250,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }).start(() => spinValue.setValue(0));
+      }
+    }
+  }, [refreshing]);
+
+  const handleManualRefresh = () => {
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.88,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (!refreshing) {
+      setRefreshing(true);
+      loadPosts(true);
+    }
+  };
+
+  const spinInterpolation = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -179,35 +267,51 @@ export default function BlogsScreen() {
     });
   }, [posts, selectedFilter, searchQuery]);
 
+  if (loading && posts.length === 0) {
+    return <PageSkeletonLoader type="blogs" />;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Top Header */}
       <View style={styles.header}>
-        <View>
+        <TouchableOpacity
+          style={styles.headerMenuBtn}
+          onPress={() => setSidebarOpen(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="menu" size={24} color="#1E293B" />
+        </TouchableOpacity>
+
+        <View style={styles.headerTitleCol}>
           <View style={styles.headerBadgeRow}>
             <View style={styles.livePulseDot} />
-            <Text style={styles.headerBadgeText}>LIVE STORIES & FIELD UPDATES</Text>
+            <Text style={styles.headerBadgeText}>LIVE STORIES & DISPATCHES</Text>
           </View>
           <Text style={styles.headerTitle}>Stories & Blogs</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.refreshIconBtn}
-          onPress={() => {
-            setRefreshing(true);
-            loadPosts(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="refresh-outline"
-            size={20}
-            color={Colors.primary}
-            style={refreshing ? { transform: [{ rotate: "45deg" }] } : undefined}
-          />
-        </TouchableOpacity>
+        {/* Animated Refresh Button */}
+        <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+          <TouchableOpacity
+            style={[
+              styles.refreshIconBtn,
+              refreshing && styles.refreshIconBtnActive,
+            ]}
+            onPress={handleManualRefresh}
+            activeOpacity={0.75}
+          >
+            <Animated.View style={{ transform: [{ rotate: spinInterpolation }] }}>
+              <Ionicons
+                name="reload"
+                size={18}
+                color={refreshing ? "#16A34A" : "#334155"}
+              />
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
       {/* Search Input Bar */}
@@ -372,11 +476,11 @@ export default function BlogsScreen() {
                       <View style={styles.authorCol}>
                         <View style={styles.authorAvatar}>
                           <Text style={styles.authorAvatarText}>
-                            {post.author.substring(0, 1).toUpperCase()}
+                            {String(post.author || "P").charAt(0).toUpperCase()}
                           </Text>
                         </View>
                         <Text style={styles.authorName} numberOfLines={1}>
-                          {post.author}
+                          {typeof post.author === "string" ? post.author : "Prayas Pariwaar"}
                         </Text>
                       </View>
 
@@ -392,6 +496,9 @@ export default function BlogsScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* Navigation Sidebar Drawer */}
+      <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -407,14 +514,29 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
+  },
+  headerMenuBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginRight: 12,
+  },
+  headerTitleCol: {
+    flex: 1,
+    justifyContent: "center",
   },
   headerBadgeRow: {
     flexDirection: "row",
@@ -435,30 +557,37 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "800",
-    color: "#1E3A8A",
-    letterSpacing: -0.3,
+    color: "#0F172A",
+    letterSpacing: -0.4,
   },
   refreshIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#EFF6FF",
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
+    ...Shadows.soft,
+  },
+  refreshIconBtnActive: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#BBF7D0",
   },
 
   /* Search Bar */
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
     marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    marginTop: 12,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -474,18 +603,18 @@ const styles = StyleSheet.create({
   filterBar: {
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    paddingBottom: 8,
+    borderBottomColor: "#F1F5F9",
+    paddingBottom: 10,
   },
   filterScroll: {
     paddingHorizontal: 16,
     gap: 8,
   },
   filterChip: {
-    paddingHorizontal: 13,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },

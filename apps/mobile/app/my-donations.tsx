@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
+import ActionDialog from "../components/ActionDialog";
 
 interface DonationRecord {
   id: string;
@@ -86,10 +87,20 @@ const DONATIONS_LIST: DonationRecord[] = [
 export default function MyDonationsScreen() {
   const router = useRouter();
   const [filterType, setFilterType] = useState<"all" | "one-time" | "monthly" | "yearly">("all");
+  const [statementModalVisible, setStatementModalVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const filteredList = DONATIONS_LIST.filter(
     (d) => filterType === "all" || d.type === filterType
   );
+
+  const handleDownloadPdf = () => {
+    setIsDownloading(true);
+    setTimeout(() => {
+      setIsDownloading(false);
+      setStatementModalVisible(false);
+    }, 1200);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -107,7 +118,7 @@ export default function MyDonationsScreen() {
 
         <Text style={styles.headerTitle}>My Donations</Text>
 
-        <View style={{ width: 40 }} />
+        <View style={{ width: 42 }} />
       </View>
 
       <ScrollView
@@ -117,23 +128,18 @@ export default function MyDonationsScreen() {
       >
         {/* Frequency Filter Tabs */}
         <View style={styles.tabsRow}>
-          {(["all", "one-time", "monthly", "yearly"] as const).map((t) => {
-            const label =
-              t === "all" ? "All" : t === "one-time" ? "One Time" : t === "monthly" ? "Monthly" : "Yearly";
-            const isActive = filterType === t;
-            return (
-              <TouchableOpacity
-                key={t}
-                style={[styles.tabChip, isActive && styles.tabChipActive]}
-                onPress={() => setFilterType(t)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.tabChipText, isActive && styles.tabChipTextActive]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {(["all", "one-time", "monthly", "yearly"] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tabBtn, filterType === tab && styles.tabBtnActive]}
+              onPress={() => setFilterType(tab)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, filterType === tab && styles.tabTextActive]}>
+                {tab === "all" ? "All" : tab === "one-time" ? "One-Time" : tab === "monthly" ? "Monthly" : "Yearly"}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Donations List */}
@@ -167,13 +173,44 @@ export default function MyDonationsScreen() {
         {/* Download Statement Button */}
         <TouchableOpacity
           style={styles.downloadBtn}
-          onPress={() => Alert.alert("Download Statement", "Generating donation statement with 80G tax certificates PDF...")}
+          onPress={() => setStatementModalVisible(true)}
           activeOpacity={0.85}
         >
-          <Ionicons name="download-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
-          <Text style={styles.downloadBtnText}>Download Statement</Text>
+          <Ionicons name="document-text-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
+          <Text style={styles.downloadBtnText}>80G Tax Statement</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* 80G Tax Statement ActionDialog */}
+      <ActionDialog
+        visible={statementModalVisible}
+        onClose={() => setStatementModalVisible(false)}
+        onConfirm={handleDownloadPdf}
+        title="80G Tax Exemption Certificate"
+        badge="ANNUAL SEVA STATEMENT"
+        description="All contributions made to Prayas Sanstha Vrindavan are 100% tax-exempted under Section 80G of the Income Tax Act."
+        icon="document-text-outline"
+        type="success"
+        confirmText="Download PDF"
+        cancelText="Close"
+        showCancel={true}
+        loading={isDownloading}
+      >
+        <View style={styles.statementBox}>
+          <View style={styles.statementRow}>
+            <Text style={styles.statementLabel}>Financial Year:</Text>
+            <Text style={styles.statementVal}>FY 2024-25</Text>
+          </View>
+          <View style={styles.statementRow}>
+            <Text style={styles.statementLabel}>Total Contributions:</Text>
+            <Text style={styles.statementValHighlight}>₹1,500.00</Text>
+          </View>
+          <View style={[styles.statementRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.statementLabel}>Certificate Status:</Text>
+            <Text style={[styles.statementVal, { color: "#16A34A" }]}>✓ 80G Verified & Valid</Text>
+          </View>
+        </View>
+      </ActionDialog>
     </SafeAreaView>
   );
 }
@@ -197,21 +234,24 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.3,
+    color: "#0F172A",
+    letterSpacing: -0.4,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 34,
   },
   tabsRow: {
@@ -221,22 +261,22 @@ const styles = StyleSheet.create({
     padding: 3,
     marginBottom: 16,
   },
-  tabChip: {
+  tabBtn: {
     flex: 1,
     paddingVertical: 8,
     alignItems: "center",
     borderRadius: 10,
   },
-  tabChipActive: {
+  tabBtnActive: {
     backgroundColor: "#166534",
     ...Shadows.soft,
   },
-  tabChipText: {
+  tabText: {
     fontSize: 12,
     fontWeight: "700",
     color: "#64748B",
   },
-  tabChipTextActive: {
+  tabTextActive: {
     color: "#FFFFFF",
   },
   listContainer: {
@@ -309,6 +349,36 @@ const styles = StyleSheet.create({
   downloadBtnText: {
     fontSize: 13,
     fontWeight: "800",
+    color: "#166534",
+  },
+  statementBox: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    borderRadius: 14,
+    padding: 12,
+  },
+  statementRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: "#DCFCE7",
+  },
+  statementLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  statementVal: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  statementValHighlight: {
+    fontSize: 14,
+    fontWeight: "900",
     color: "#166534",
   },
 });

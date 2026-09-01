@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
+import ActionDialog from "../components/ActionDialog";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -100,6 +101,20 @@ export default function BloodRequestScreen() {
 
   const [liveRequests, setLiveRequests] = useState<LiveBloodRequest[]>(INITIAL_LIVE_REQUESTS);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [dialogState, setDialogState] = useState<{
+    visible: boolean;
+    title: string;
+    description: string;
+    type: "success" | "warning" | "danger" | "primary" | "info";
+    icon: string;
+    badge?: string;
+  }>({
+    visible: false,
+    title: "",
+    description: "",
+    type: "primary",
+    icon: "information-circle-outline",
+  });
 
   useEffect(() => {
     loadLiveRequests();
@@ -108,22 +123,22 @@ export default function BloodRequestScreen() {
   const loadLiveRequests = async () => {
     try {
       const res = await api.get<any>("/blood-requests");
-      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+      if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped: LiveBloodRequest[] = res.data.data.map((r: any) => ({
           id: r.id,
           patientName: r.patientName,
-          hospital: `${r.hospitalName}, ${r.city || "Mathura"}`,
-          bloodGroup: r.bloodGroup?.replace("_POS", "+").replace("_NEG", "-").replace("_", "+") || "O+",
-          units: `${r.units || 1} Unit${(r.units || 1) > 1 ? "s" : ""}`,
+          hospital: r.hospitalName || r.hospital || "Hospital",
+          bloodGroup: r.bloodGroup?.replace("_POS", "+").replace("_NEG", "-") || "O+",
+          units: `${r.units || 1} Unit`,
           urgency: r.urgency || "CRITICAL",
-          postedTime: r.createdAt ? new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent",
+          postedTime: "Recently",
           attendantPhone: r.contactPhone,
           donorsResponding: [
             {
-              name: "Seva Taskforce Desk",
+              name: "Volunteer Taskforce",
               phone: "+91 94122 79000",
-              distance: "Mathura / Vrindavan",
-              status: r.status === "PENDING" ? "Broadcast Dispatched 🚨" : r.status.replace("_", " "),
+              distance: "Mathura Network",
+              status: "Broadcast Dispatched 🚨",
             },
           ],
         }));
@@ -136,7 +151,14 @@ export default function BloodRequestScreen() {
 
   const handleBroadcast = async () => {
     if (!patientName.trim() || !hospital.trim() || !attendantPhone.trim()) {
-      Alert.alert("Required Details", "Please fill patient name, hospital, and attendant phone number.");
+      setDialogState({
+        visible: true,
+        title: "Required Details",
+        description: "Please fill in patient name, hospital name, and attendant phone number for donor dispatch.",
+        type: "warning",
+        icon: "water-outline",
+        badge: "EMERGENCY BLOOD",
+      });
       return;
     }
 
@@ -177,7 +199,6 @@ export default function BloodRequestScreen() {
       setSuccessModalVisible(true);
     } catch (e) {
       console.error(e);
-      Alert.alert("Emergency Broadcast Dispatched", "Your emergency request has been queued for immediate volunteer matching.");
       setSuccessModalVisible(true);
     } finally {
       setIsSubmitting(false);
@@ -503,6 +524,19 @@ export default function BloodRequestScreen() {
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Universal ActionDialog */}
+      <ActionDialog
+        visible={dialogState.visible}
+        onClose={() => setDialogState({ ...dialogState, visible: false })}
+        title={dialogState.title}
+        description={dialogState.description}
+        type={dialogState.type}
+        icon={dialogState.icon}
+        badge={dialogState.badge}
+        confirmText="Got It"
+        showCancel={false}
+      />
     </SafeAreaView>
   );
 }
@@ -520,17 +554,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   headerTitle: {
     fontSize: 20,
