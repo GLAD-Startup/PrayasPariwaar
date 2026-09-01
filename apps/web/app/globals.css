@@ -154,6 +154,40 @@ html.lenis, html.lenis body {
   }
 }
 
+@keyframes dropdownFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdownFadeSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top left;
+  will-change: transform, opacity;
+}
+
+@keyframes dropdownAccordion {
+  0% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+.animate-accordion {
+  animation: dropdownAccordion 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Reveal class — applied via Intersection Observer or directly */
 .reveal {
   opacity: 0;
