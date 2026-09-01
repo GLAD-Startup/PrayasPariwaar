@@ -127,8 +127,10 @@ export const api = {
 
 export function resolveImageUrl(url: any, fallback?: any): any {
   if (!url) return fallback || require("../assets/onboarding/education.jpg");
-  if (typeof url !== "string") return url;
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (typeof url === "object" && url.uri) return url;
+  if (typeof url === "number") return url;
+  if (typeof url !== "string") return fallback || require("../assets/onboarding/education.jpg");
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://") || url.startsWith("data:")) {
     return { uri: url };
   }
   if (url.startsWith("/")) {

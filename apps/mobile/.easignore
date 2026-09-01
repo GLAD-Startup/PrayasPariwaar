@@ -1,12 +1,18 @@
-# Dependencies
-node_modules/
+# EAS Build Ignore for Mobile App
 
-# Expo & Local Caches
+# Dependencies (EAS installs fresh in cloud container)
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+
+# Local Build Caches & Outputs
 .expo/
 .expo-shared/
-expo-env.d.ts
+.turbo/
 dist/
 build/
+out/
 android/
 ios/
 
@@ -24,10 +30,6 @@ yarn-debug.log*
 *.keystore
 prayas-*-firebase-adminsdk-*.json
 
-# Environment
-.env
-.env*.local
-
-# OS
+# OS specific files
 .DS_Store
 Thumbs.db

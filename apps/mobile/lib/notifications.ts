@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { api } from "./api";
+import { getItem, setItem } from "./secureStore";
 
 // Configure local notification display behavior
 Notifications.setNotificationHandler({
@@ -12,9 +13,71 @@ Notifications.setNotificationHandler({
   }),
 });
 
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  emergencyBloodAlerts: boolean;
+  sevaDrivesAnnouncements: boolean;
+  soundEnabled: boolean;
+}
+
+const DEFAULT_PREFERENCES: NotificationPreferences = {
+  pushEnabled: true,
+  emergencyBloodAlerts: true,
+  sevaDrivesAnnouncements: true,
+  soundEnabled: true,
+};
+
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  try {
+    const raw = await getItem("prayas_notif_preferences");
+    if (raw) {
+      return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
+    }
+  } catch (e) {}
+  return DEFAULT_PREFERENCES;
+}
+
+export async function saveNotificationPreferences(
+  prefs: NotificationPreferences,
+  userId?: string
+): Promise<void> {
+  try {
+    await setItem("prayas_notif_preferences", JSON.stringify(prefs));
+
+    if (prefs.pushEnabled) {
+      await registerForPushNotificationsAsync(userId);
+    } else {
+      await unregisterPushNotificationsAsync(userId);
+    }
+  } catch (e) {
+    console.warn("Failed to save notification preferences:", e);
+  }
+}
+
+export async function unregisterPushNotificationsAsync(userId?: string): Promise<void> {
+  try {
+    const storedToken = await getItem("prayas_expo_push_token");
+    if (storedToken) {
+      await api.delete(`/push/register?token=${encodeURIComponent(storedToken)}`);
+    } else if (userId) {
+      await api.delete(`/push/register?userId=${encodeURIComponent(userId)}`);
+    }
+    console.log("[Notifications] Unregistered push token from server.");
+  } catch (e) {
+    console.warn("[Notifications] Failed to unregister push token:", e);
+  }
+}
+
 export async function registerForPushNotificationsAsync(userId?: string): Promise<string | null> {
   if (Platform.OS === "web") {
     console.log("[Notifications] Push notifications are not supported on web.");
+    return null;
+  }
+
+  // Check user preference
+  const prefs = await getNotificationPreferences();
+  if (!prefs.pushEnabled) {
+    console.log("[Notifications] Push notifications are disabled in user settings.");
     return null;
   }
 
@@ -69,6 +132,9 @@ export async function registerForPushNotificationsAsync(userId?: string): Promis
 
     if (!pushToken) return null;
 
+    // Cache locally
+    await setItem("prayas_expo_push_token", pushToken);
+
     // Send token to backend API
     await api.post("/push/register", {
       expoPushToken: pushToken,
@@ -91,6 +157,9 @@ export async function sendLocalNotification(
 ): Promise<void> {
   if (Platform.OS === "web") return;
   try {
+    const prefs = await getNotificationPreferences();
+    if (!prefs.pushEnabled) return;
+
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== "granted") {
       const req = await Notifications.requestPermissionsAsync();
@@ -102,7 +171,7 @@ export async function sendLocalNotification(
         title,
         body,
         data: data || {},
-        sound: true,
+        sound: prefs.soundEnabled ? "default" : undefined,
       },
       trigger: null,
     });
@@ -110,4 +179,3 @@ export async function sendLocalNotification(
     console.log("[Local Notification Log]", e);
   }
 }
-

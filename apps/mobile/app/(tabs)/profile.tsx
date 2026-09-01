@@ -12,6 +12,7 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,7 +21,12 @@ import { Colors, Shadows } from "../../lib/theme";
 import { getStoredUser, saveAuthSession, clearAuthSession, getAccessToken, getRefreshToken } from "../../lib/secureStore";
 import { api, uploadFile } from "../../lib/api";
 import { pickImageFromGallery, captureImageWithCamera } from "../../lib/imagePickerHelper";
-import { sendLocalNotification } from "../../lib/notifications";
+import {
+  sendLocalNotification,
+  getNotificationPreferences,
+  saveNotificationPreferences,
+  NotificationPreferences,
+} from "../../lib/notifications";
 
 const { width } = Dimensions.get("window");
 
@@ -50,6 +56,15 @@ export default function ProfileScreen() {
   const [customUrlInput, setCustomUrlInput] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Notification Preferences State
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({
+    pushEnabled: true,
+    emergencyBloodAlerts: true,
+    sevaDrivesAnnouncements: true,
+    soundEnabled: true,
+  });
 
   useEffect(() => {
     loadUserProfile();
@@ -86,6 +101,10 @@ export default function ProfileScreen() {
           await saveAuthSession(access, refresh, u);
         }
       }
+
+      // Load push notification preferences
+      const p = await getNotificationPreferences();
+      setNotifPrefs(p);
     } catch (e) {
       console.warn("Failed to load profile:", e);
     }
@@ -358,6 +377,15 @@ export default function ProfileScreen() {
       onPress: () => router.push("/notifications"),
     },
     {
+      id: "notification-settings",
+      title: "Push Notification Settings",
+      subtitle: notifPrefs.pushEnabled ? "Alerts enabled (Blood & Seva)" : "Push notifications paused",
+      icon: notifPrefs.pushEnabled ? "options-outline" : "notifications-off-outline",
+      iconType: "ionicons",
+      iconColor: notifPrefs.pushEnabled ? "#1D4ED8" : "#DC2626",
+      onPress: () => setNotifModalVisible(true),
+    },
+    {
       id: "contact",
       title: "Help & Office Locations",
       subtitle: "Vrindavan & Mathura Seva Dham",
@@ -367,6 +395,12 @@ export default function ProfileScreen() {
       onPress: () => router.push("/contact-us"),
     },
   ];
+
+  const handleToggleNotifPref = async (key: keyof NotificationPreferences, value: boolean) => {
+    const updated = { ...notifPrefs, [key]: value };
+    setNotifPrefs(updated);
+    await saveNotificationPreferences(updated, user?.id);
+  };
 
   return (
     <View style={styles.container}>
@@ -718,6 +752,113 @@ export default function ProfileScreen() {
                 )}
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Push Notification Settings Modal */}
+      <Modal
+        visible={notifModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNotifModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            onPress={() => setNotifModalVisible(false)}
+          />
+          <View style={styles.notifModalCard}>
+            <View style={styles.notifModalHeader}>
+              <View style={styles.notifModalTitleRow}>
+                <Ionicons name="notifications" size={22} color="#1D4ED8" />
+                <Text style={styles.notifModalTitle}>Push Notification Settings</Text>
+              </View>
+              <TouchableOpacity onPress={() => setNotifModalVisible(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.notifModalDesc}>
+              Turn push notifications ON or OFF for emergency seva and broadcast updates on this device:
+            </Text>
+
+            <View style={styles.notifTogglesContainer}>
+              {/* Master Push Toggle */}
+              <View style={styles.notifToggleRow}>
+                <View style={styles.notifToggleTextCol}>
+                  <Text style={styles.notifToggleTitle}>Allow Push Notifications</Text>
+                  <Text style={styles.notifToggleSubtitle}>
+                    Master toggle for lockscreen alerts & banners
+                  </Text>
+                </View>
+                <Switch
+                  value={notifPrefs.pushEnabled}
+                  onValueChange={(val) => handleToggleNotifPref("pushEnabled", val)}
+                  trackColor={{ false: "#CBD5E1", true: "#BFDBFE" }}
+                  thumbColor={notifPrefs.pushEnabled ? "#1D4ED8" : "#94A3B8"}
+                />
+              </View>
+
+              {/* Emergency Blood Alerts */}
+              <View style={styles.notifToggleRow}>
+                <View style={styles.notifToggleTextCol}>
+                  <Text style={styles.notifToggleTitle}>🚨 Emergency Blood Alerts</Text>
+                  <Text style={styles.notifToggleSubtitle}>
+                    Urgent blood donor calls in Mathura & Vrindavan
+                  </Text>
+                </View>
+                <Switch
+                  value={notifPrefs.emergencyBloodAlerts}
+                  disabled={!notifPrefs.pushEnabled}
+                  onValueChange={(val) => handleToggleNotifPref("emergencyBloodAlerts", val)}
+                  trackColor={{ false: "#CBD5E1", true: "#FECACA" }}
+                  thumbColor={notifPrefs.emergencyBloodAlerts && notifPrefs.pushEnabled ? "#DC2626" : "#94A3B8"}
+                />
+              </View>
+
+              {/* Seva Drives & Events */}
+              <View style={styles.notifToggleRow}>
+                <View style={styles.notifToggleTextCol}>
+                  <Text style={styles.notifToggleTitle}>🌱 Seva Drives & Camps</Text>
+                  <Text style={styles.notifToggleSubtitle}>
+                    Plantation, education, and free health camp notifications
+                  </Text>
+                </View>
+                <Switch
+                  value={notifPrefs.sevaDrivesAnnouncements}
+                  disabled={!notifPrefs.pushEnabled}
+                  onValueChange={(val) => handleToggleNotifPref("sevaDrivesAnnouncements", val)}
+                  trackColor={{ false: "#CBD5E1", true: "#BBF7D0" }}
+                  thumbColor={notifPrefs.sevaDrivesAnnouncements && notifPrefs.pushEnabled ? "#166534" : "#94A3B8"}
+                />
+              </View>
+
+              {/* Sound & Vibration */}
+              <View style={[styles.notifToggleRow, { borderBottomWidth: 0 }]}>
+                <View style={styles.notifToggleTextCol}>
+                  <Text style={styles.notifToggleTitle}>🔔 Alert Sound & Tone</Text>
+                  <Text style={styles.notifToggleSubtitle}>
+                    Play notification audio chime when an alert is received
+                  </Text>
+                </View>
+                <Switch
+                  value={notifPrefs.soundEnabled}
+                  disabled={!notifPrefs.pushEnabled}
+                  onValueChange={(val) => handleToggleNotifPref("soundEnabled", val)}
+                  trackColor={{ false: "#CBD5E1", true: "#BFDBFE" }}
+                  thumbColor={notifPrefs.soundEnabled && notifPrefs.pushEnabled ? "#1D4ED8" : "#94A3B8"}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.notifSaveBtn}
+              onPress={() => setNotifModalVisible(false)}
+              activeOpacity={0.88}
+            >
+              <Text style={styles.notifSaveBtnText}>Save Preferences</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1135,5 +1276,76 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "800",
+  },
+  notifModalCard: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 34,
+  },
+  notifModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  notifModalTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  notifModalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  notifModalDesc: {
+    fontSize: 12,
+    color: "#64748B",
+    marginBottom: 16,
+    lineHeight: 17,
+  },
+  notifTogglesContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 16,
+    marginBottom: 18,
+  },
+  notifToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+  },
+  notifToggleTextCol: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  notifToggleTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 2,
+  },
+  notifToggleSubtitle: {
+    fontSize: 11,
+    color: "#64748B",
+    lineHeight: 15,
+  },
+  notifSaveBtn: {
+    backgroundColor: "#1D4ED8",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  notifSaveBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

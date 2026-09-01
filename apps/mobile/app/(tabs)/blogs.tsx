@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,173 +9,175 @@ import {
   Image,
   TextInput,
   StatusBar,
-  Alert,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api, resolveImageUrl } from "../../lib/api";
+import { getCachedData, setCachedData } from "../../lib/cache";
 
 const { width } = Dimensions.get("window");
 
-export interface BlogPost {
+export interface LiveBlogPost {
   id: string;
+  slug: string;
   category: string;
   categoryBg: string;
   categoryColor: string;
   title: string;
   summary: string;
+  content: string;
   date: string;
   readTime: string;
-  image: any;
+  coverImage: string | null;
   author: string;
-  streamId: string;
+  type: string;
+  eventDate?: string | null;
+  location?: string | null;
+  images?: { id: string; url: string; caption?: string | null }[];
 }
 
-export const DEFAULT_BLOG_POSTS: BlogPost[] = [
-  {
-    id: "learning-center-rohini",
-    category: "Education",
-    categoryBg: "#F0FDF4",
-    categoryColor: "#166534",
-    title: "New Learning Center Inaugurated in Rohini",
-    summary:
-      "A new free education center has been inaugurated to support underprivileged children with quality learning and school kits.",
-    date: "12 May 2024",
-    readTime: "3 min read",
-    image: require("../../assets/onboarding/education.jpg"),
-    author: "Prayas Pariwaar",
-    streamId: "education",
-  },
-  {
-    id: "blood-donation-city-hospital",
-    category: "Blood Donation",
-    categoryBg: "#FEF2F2",
-    categoryColor: "#DC2626",
-    title: "Successful Blood Donation Camp at City Hospital",
-    summary:
-      "We are grateful to all the voluntary donors who came forward and made the emergency trauma camp a huge success.",
-    date: "10 May 2024",
-    readTime: "2 min read",
-    image: require("../../assets/onboarding/blood.jpg"),
-    author: "Prayas Pariwaar",
-    streamId: "blood-donation",
-  },
-  {
-    id: "tree-plantation-green-valley",
-    category: "Plantation",
-    categoryBg: "#F0FDF4",
-    categoryColor: "#15803D",
-    title: "Tree Plantation Drive at Green Valley Park",
-    summary:
-      "Together we planted more than 500 native saplings along the Parikrama Marg for a greener and healthier tomorrow.",
-    date: "08 May 2024",
-    readTime: "2 min read",
-    image: require("../../assets/onboarding/plantation.jpg"),
-    author: "Harit Braj Team",
-    streamId: "plantation",
-  },
-  {
-    id: "summer-water-bowls-birds",
-    category: "Jeev Jal Seva",
-    categoryBg: "#EFF6FF",
-    categoryColor: "#1D4ED8",
-    title: "Summer Water Bowls Initiative for Birds",
-    summary:
-      "Installed hundreds of terracotta water bowls across the city to help our feathered friends beat the intense summer heat.",
-    date: "06 May 2024",
-    readTime: "2 min read",
-    image: require("../../assets/onboarding/jeev_jal.jpg"),
-    author: "Jeev Seva Taskforce",
-    streamId: "jeev-jal",
-  },
-  {
-    id: "vocational-training-youth",
-    category: "Vocational Training",
-    categoryBg: "#FAF5FF",
-    categoryColor: "#7E22CE",
-    title: "Vocational Training Program Empowers Youth",
-    summary:
-      "Our students are gaining practical technical skills and self-reliance to build a prosperous future for their families.",
-    date: "04 May 2024",
-    readTime: "3 min read",
-    image: require("../../assets/onboarding/equipment.jpg"),
-    author: "Skill Development Wing",
-    streamId: "vocational",
-  },
-];
+const CATEGORY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
+  EDUCATION: { bg: "#EFF6FF", color: "#1D4ED8", label: "Education" },
+  BLOOD: { bg: "#FEF2F2", color: "#DC2626", label: "Blood Donation" },
+  PLANTATION: { bg: "#F0FDF4", color: "#166534", label: "Plantation" },
+  HEALTH: { bg: "#F0F9FF", color: "#0284C7", label: "Health Camp" },
+  EVENT: { bg: "#FAF5FF", color: "#7E22CE", label: "Event" },
+  ACHIEVEMENT: { bg: "#FFFBEB", color: "#B45309", label: "Milestone" },
+  NEWS: { bg: "#F8FAFC", color: "#334155", label: "Story" },
+  GENERAL: { bg: "#EFF6FF", color: "#1D4ED8", label: "Seva News" },
+};
 
-const CATEGORY_TABS = [
-  { id: "all", label: "All", icon: null, iconType: null },
-  { id: "Education", label: "Education", icon: "book-outline", iconType: "ionicons" },
-  { id: "Blood Donation", label: "Blood Donation", icon: "water-outline", iconType: "ionicons" },
-  { id: "Plantation", label: "Plantation", icon: "sprout-outline", iconType: "material" },
-  { id: "Jeev Jal Seva", label: "Jeev Jal Seva", icon: "bird", iconType: "material" },
-  { id: "Vocational Training", label: "Vocational Training", icon: "cog-outline", iconType: "material" },
-];
+function formatPost(item: any): LiveBlogPost {
+  const typeKey = (item.type || "NEWS").toUpperCase();
+  let matchedCategory = "NEWS";
+  const titleLower = (item.title || "").toLowerCase();
+
+  if (typeKey === "EVENT") matchedCategory = "EVENT";
+  else if (typeKey === "ACHIEVEMENT") matchedCategory = "ACHIEVEMENT";
+  else if (titleLower.includes("blood") || titleLower.includes("रक्तदान")) matchedCategory = "BLOOD";
+  else if (titleLower.includes("plant") || titleLower.includes("वृक्षारोपण") || titleLower.includes("harit")) matchedCategory = "PLANTATION";
+  else if (titleLower.includes("health") || titleLower.includes("camp") || titleLower.includes("स्वास्थ्य")) matchedCategory = "HEALTH";
+  else if (titleLower.includes("education") || titleLower.includes("school") || titleLower.includes("aashayein") || titleLower.includes("शिक्षा")) matchedCategory = "EDUCATION";
+
+  const catStyle = CATEGORY_STYLES[matchedCategory] || CATEGORY_STYLES.NEWS;
+
+  // Compute reading time
+  const wordCount = (item.content || "").split(/\s+/).length;
+  const mins = Math.max(1, Math.ceil(wordCount / 180));
+  const readTime = `${mins} min read`;
+
+  // Format date
+  const dateObj = new Date(item.publishedAt || item.createdAt || Date.now());
+  const dateStr = dateObj.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  return {
+    id: item.id,
+    slug: item.slug || item.id,
+    category: catStyle.label,
+    categoryBg: catStyle.bg,
+    categoryColor: catStyle.color,
+    title: item.title || "Seva Initiative",
+    summary: item.excerpt || (item.content ? item.content.substring(0, 140) + "..." : ""),
+    content: item.content || "",
+    date: dateStr,
+    readTime,
+    coverImage: item.coverImage || null,
+    author: item.author?.name || "Prayas Pariwaar",
+    type: item.type || "NEWS",
+    eventDate: item.eventDate,
+    location: item.location,
+    images: item.images || [],
+  };
+}
 
 export default function BlogsScreen() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [posts, setPosts] = useState<BlogPost[]>(DEFAULT_BLOG_POSTS);
+  const [posts, setPosts] = useState<LiveBlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("ALL");
+
+  // Load from cache instantly, then fetch live from backend
+  const loadPosts = useCallback(async (isRefresh = false) => {
+    try {
+      if (!isRefresh) {
+        // Instant render from local cache
+        const cached = await getCachedData<LiveBlogPost[]>("prayas_blog_posts");
+        if (cached && Array.isArray(cached) && cached.length > 0) {
+          setPosts(cached);
+          setLoading(false);
+        }
+      }
+
+      // Live fetch from backend API
+      const res = await api.get<any>("/posts");
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const livePosts = res.data.data.map(formatPost);
+        setPosts(livePosts);
+        await setCachedData("prayas_blog_posts", livePosts);
+      }
+    } catch (e) {
+      console.log("[Blogs Fetch Notice]", e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadPosts();
-  }, []);
+  }, [loadPosts]);
 
-  const loadPosts = async () => {
-    try {
-      const res = await api.get<any>("/posts");
-      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        const livePosts = res.data.data;
-        const mapped: BlogPost[] = livePosts.map((post: any) => {
-          let cat = post.category || "Education";
-          if (cat === "HEALTH") cat = "Blood Donation";
-          else if (cat === "EDUCATION") cat = "Education";
-          else if (cat === "PLANTATION") cat = "Plantation";
-          else if (cat === "JEEV_JAL") cat = "Jeev Jal Seva";
-          else if (cat === "VOCATIONAL") cat = "Vocational Training";
-
-          return {
-            id: post.id || post.slug,
-            category: cat,
-            categoryBg: cat === "Education" ? "#F0FDF4" : cat === "Blood Donation" ? "#FEF2F2" : "#F0FDF4",
-            categoryColor: cat === "Education" ? "#166534" : cat === "Blood Donation" ? "#DC2626" : "#15803D",
-            title: post.title,
-            summary: post.excerpt || (post.content ? post.content.substring(0, 110) + "..." : "Field update from Prayas Pariwaar."),
-            date: post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Recent",
-            readTime: post.readTime || "3 min read",
-            image: resolveImageUrl(post.images?.[0]?.url || post.coverImage, require("../../assets/onboarding/education.jpg")),
-            author: post.author?.name || "Prayas Pariwaar",
-            streamId: post.category?.toLowerCase() || "education",
-          };
-        });
-        setPosts(mapped);
-      }
-    } catch (e) {
-      console.warn("Failed to load posts:", e);
-    }
-  };
-
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    await loadPosts();
-    setRefreshing(false);
+    loadPosts(true);
   };
 
-  const filteredPosts = posts.filter((post) => {
-    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
-    const matchesSearch =
-      !searchQuery ||
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.summary.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filterTabs = [
+    { id: "ALL", label: `All (${posts.length})` },
+    { id: "EDUCATION", label: "🎓 Education" },
+    { id: "BLOOD", label: "🩸 Blood Seva" },
+    { id: "PLANTATION", label: "🌱 Plantation" },
+    { id: "HEALTH", label: "🩺 Health Camps" },
+    { id: "ACHIEVEMENT", label: "🏆 Milestones" },
+  ];
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((p) => {
+      // Category filter
+      if (selectedFilter !== "ALL") {
+        const matchesCategory =
+          (selectedFilter === "EDUCATION" && (p.category.includes("Education") || p.title.toLowerCase().includes("education") || p.title.toLowerCase().includes("learning"))) ||
+          (selectedFilter === "BLOOD" && (p.category.includes("Blood") || p.title.toLowerCase().includes("blood"))) ||
+          (selectedFilter === "PLANTATION" && (p.category.includes("Plantation") || p.title.toLowerCase().includes("plant") || p.title.toLowerCase().includes("harit"))) ||
+          (selectedFilter === "HEALTH" && (p.category.includes("Health") || p.title.toLowerCase().includes("health") || p.title.toLowerCase().includes("camp"))) ||
+          (selectedFilter === "ACHIEVEMENT" && (p.type === "ACHIEVEMENT" || p.category.includes("Milestone")));
+        if (!matchesCategory) return false;
+      }
+
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          p.title.toLowerCase().includes(q) ||
+          p.summary.toLowerCase().includes(q) ||
+          p.author.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+        );
+      }
+
+      return true;
+    });
+  }, [posts, selectedFilter, searchQuery]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -183,189 +185,213 @@ export default function BlogsScreen() {
 
       {/* Top Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => router.replace("/(tabs)/home")}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="arrow-back" size={22} color="#164E2E" />
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Blogs & Stories</Text>
+        <View>
+          <View style={styles.headerBadgeRow}>
+            <View style={styles.livePulseDot} />
+            <Text style={styles.headerBadgeText}>LIVE STORIES & FIELD UPDATES</Text>
+          </View>
+          <Text style={styles.headerTitle}>Stories & Blogs</Text>
+        </View>
 
         <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => setSearchOpen(!searchOpen)}
+          style={styles.refreshIconBtn}
+          onPress={() => {
+            setRefreshing(true);
+            loadPosts(true);
+          }}
           activeOpacity={0.8}
         >
-          <Ionicons name={searchOpen ? "close" : "search-outline"} size={22} color="#164E2E" />
+          <Ionicons
+            name="refresh-outline"
+            size={20}
+            color={Colors.primary}
+            style={refreshing ? { transform: [{ rotate: "45deg" }] } : undefined}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* Optional Search Bar */}
-      {searchOpen && (
-        <View style={styles.searchBarWrapper}>
-          <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search stories, campaigns, news..."
-            placeholderTextColor="#94A3B8"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus
-          />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      )}
+      {/* Search Input Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search seva stories, medical drives, camps..."
+          placeholderTextColor="#94A3B8"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+        )}
+      </View>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[Colors.primary]}
-            tintColor={Colors.primary}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>Stories of compassion, impact, and seva across Braj.</Text>
-
-        {/* Category Horizontal Filter Tabs */}
+      {/* Category Filter Chips */}
+      <View style={styles.filterBar}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterTabsScroll}
+          contentContainerStyle={styles.filterScroll}
         >
-          {CATEGORY_TABS.map((tab) => {
-            const isActive = selectedCategory === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.filterTab, isActive && styles.filterTabActive]}
-                onPress={() => setSelectedCategory(tab.id)}
-                activeOpacity={0.8}
-              >
-                {tab.icon && (
-                  <View style={{ marginRight: 6 }}>
-                    {tab.iconType === "ionicons" ? (
-                      <Ionicons
-                        name={tab.icon as any}
-                        size={15}
-                        color={isActive ? "#FFFFFF" : "#166534"}
-                      />
-                    ) : (
-                      <MaterialCommunityIcons
-                        name={tab.icon as any}
-                        size={15}
-                        color={isActive ? "#FFFFFF" : "#166534"}
-                      />
-                    )}
-                  </View>
-                )}
-                <Text style={[styles.filterTabText, isActive && styles.filterTabTextActive]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Sort & Filter Controls Bar */}
-        <View style={styles.controlsBar}>
-          <TouchableOpacity
-            style={styles.sortDropdown}
-            onPress={() => Alert.alert("Sort Stories", "Showing latest stories first.")}
-          >
-            <Text style={styles.sortText}>Latest First ({filteredPosts.length})</Text>
-            <Ionicons name="chevron-down" size={14} color="#64748B" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.filterBtn}
-            onPress={() => Alert.alert("Filters", "Filter by date, category or location.")}
-          >
-            <Text style={styles.filterBtnText}>Filter</Text>
-            <Ionicons name="options-outline" size={14} color="#166534" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Blog Cards List */}
-        <View style={styles.postsList}>
-          {filteredPosts.map((post) => (
+          {filterTabs.map((tab) => (
             <TouchableOpacity
-              key={post.id}
-              style={styles.blogCard}
-              onPress={() => router.push(`/blog/${post.id}` as any)}
-              activeOpacity={0.88}
+              key={tab.id}
+              style={[
+                styles.filterChip,
+                selectedFilter === tab.id && styles.filterChipActive,
+              ]}
+              onPress={() => setSelectedFilter(tab.id)}
+              activeOpacity={0.8}
             >
-              {/* Left Image Thumbnail */}
-              <View style={styles.cardImageWrapper}>
-                <Image
-                  source={typeof post.image === "string" ? { uri: post.image } : post.image}
-                  style={styles.cardImage}
-                  resizeMode="cover"
-                />
-              </View>
-
-              {/* Right Content */}
-              <View style={styles.cardBody}>
-                {/* Category Pill */}
-                <View style={[styles.categoryPill, { backgroundColor: post.categoryBg }]}>
-                  <Text style={[styles.categoryPillText, { color: post.categoryColor }]}>
-                    {post.category}
-                  </Text>
-                </View>
-
-                {/* Title */}
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {post.title}
-                </Text>
-
-                {/* Summary */}
-                <Text style={styles.cardSummary} numberOfLines={2}>
-                  {post.summary}
-                </Text>
-
-                {/* Meta Row: Date & Read Time */}
-                <View style={styles.cardMetaRow}>
-                  <View style={styles.metaItem}>
-                    <Ionicons name="calendar-outline" size={11} color="#94A3B8" style={{ marginRight: 3 }} />
-                    <Text style={styles.metaText}>{post.date}</Text>
-                  </View>
-                  <Text style={styles.metaDot}>•</Text>
-                  <View style={styles.metaItem}>
-                    <Ionicons name="time-outline" size={11} color="#94A3B8" style={{ marginRight: 3 }} />
-                    <Text style={styles.metaText}>{post.readTime}</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Right Chevron */}
-              <View style={styles.cardChevronWrapper}>
-                <Ionicons name="chevron-forward" size={18} color="#166534" />
-              </View>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedFilter === tab.id && styles.filterChipTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
+      </View>
 
-        {/* Load More Blogs Button */}
-        <TouchableOpacity
-          style={styles.loadMoreBtn}
-          onPress={() => Alert.alert("Latest Stories", "All current stories are loaded.")}
-          activeOpacity={0.85}
+      {/* Main Content List with Slide-Down Pull-to-Refresh */}
+      {loading && posts.length === 0 ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingStateText}>Loading latest stories...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+              title="Pull down to refresh stories"
+              titleColor="#64748B"
+            />
+          }
         >
-          <Ionicons name="refresh-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
-          <Text style={styles.loadMoreText}>Load More Blogs</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {filteredPosts.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="newspaper-outline" size={36} color={Colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>No Stories Found</Text>
+              <Text style={styles.emptySubtitle}>
+                {searchQuery
+                  ? `No stories matched "${searchQuery}". Try a different search term.`
+                  : "No published posts in this category yet. Pull down to refresh."}
+              </Text>
+              {searchQuery ? (
+                <TouchableOpacity
+                  style={styles.clearSearchBtn}
+                  onPress={() => setSearchQuery("")}
+                >
+                  <Text style={styles.clearSearchBtnText}>Clear Search Filter</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.postsList}>
+              {filteredPosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={styles.postCard}
+                  onPress={() => router.push(`/blog/${post.slug || post.id}` as any)}
+                  activeOpacity={0.88}
+                >
+                  {/* Post Image Banner */}
+                  <View style={styles.imageWrap}>
+                    {post.coverImage ? (
+                      <Image
+                        source={resolveImageUrl(post.coverImage)}
+                        style={styles.postImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.fallbackImageBanner}>
+                        <Ionicons name="sparkles" size={32} color="#1D4ED8" />
+                        <Text style={styles.fallbackImageText}>Prayas Seva Report</Text>
+                      </View>
+                    )}
+
+                    {/* Category Overlay Badge */}
+                    <View
+                      style={[
+                        styles.categoryOverlayBadge,
+                        { backgroundColor: post.categoryBg },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryOverlayText,
+                          { color: post.categoryColor },
+                        ]}
+                      >
+                        {post.category}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Card Details */}
+                  <View style={styles.postContent}>
+                    {/* Meta Row: Date & Reading Time */}
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="calendar-outline" size={12} color="#94A3B8" style={{ marginRight: 4 }} />
+                        <Text style={styles.metaText}>{post.date}</Text>
+                      </View>
+                      <View style={styles.metaDot} />
+                      <View style={styles.metaItem}>
+                        <Ionicons name="time-outline" size={12} color="#94A3B8" style={{ marginRight: 4 }} />
+                        <Text style={styles.metaText}>{post.readTime}</Text>
+                      </View>
+                    </View>
+
+                    {/* Title */}
+                    <Text style={styles.postTitle} numberOfLines={2}>
+                      {post.title}
+                    </Text>
+
+                    {/* Excerpt Summary */}
+                    <Text style={styles.postSummary} numberOfLines={2}>
+                      {post.summary}
+                    </Text>
+
+                    {/* Footer Row: Author & Read More Link */}
+                    <View style={styles.cardFooter}>
+                      <View style={styles.authorCol}>
+                        <View style={styles.authorAvatar}>
+                          <Text style={styles.authorAvatarText}>
+                            {post.author.substring(0, 1).toUpperCase()}
+                          </Text>
+                        </View>
+                        <Text style={styles.authorName} numberOfLines={1}>
+                          {post.author}
+                        </Text>
+                      </View>
+
+                      <View style={styles.readMoreLink}>
+                        <Text style={styles.readMoreText}>Read Story</Text>
+                        <Ionicons name="arrow-forward" size={13} color={Colors.primary} />
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -377,39 +403,63 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  headerBadgeRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    marginBottom: 2,
+  },
+  livePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#16A34A",
+    marginRight: 6,
+  },
+  headerBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#16A34A",
+    letterSpacing: 0.6,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#164E2E",
+    color: "#1E3A8A",
     letterSpacing: -0.3,
   },
-  searchBarWrapper: {
+  refreshIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* Search Bar */
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    backgroundColor: "#F1F5F9",
+    marginHorizontal: 16,
     marginTop: 10,
-    paddingHorizontal: 14,
-    height: 44,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderRadius: 12,
-    backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
@@ -417,162 +467,235 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     color: "#0F172A",
+    padding: 0,
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 30,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 14,
-  },
-  filterTabsScroll: {
-    gap: 8,
-    paddingBottom: 6,
-  },
-  filterTab: {
-    flexDirection: "row",
-    alignItems: "center",
+
+  /* Filters */
+  filterBar: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+    paddingBottom: 8,
+  },
+  filterScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 13,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#F1F5F9",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    ...Shadows.soft,
   },
-  filterTabActive: {
-    backgroundColor: "#166534",
-    borderColor: "#166534",
+  filterChipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  filterTabText: {
+  filterChipText: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#475569",
   },
-  filterTabTextActive: {
+  filterChipTextActive: {
     color: "#FFFFFF",
-  },
-  controlsBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 12,
-    marginBottom: 14,
-  },
-  sortDropdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  sortText: {
-    fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
   },
-  filterBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  filterBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#166534",
+
+  /* List & Cards */
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 36,
   },
   postsList: {
-    gap: 12,
+    gap: 14,
   },
-  blogCard: {
-    flexDirection: "row",
+  postCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 10,
-    alignItems: "center",
-    ...Shadows.soft,
-  },
-  cardImageWrapper: {
-    width: 100,
-    height: 96,
-    borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#F1F5F9",
+    ...Shadows.card,
   },
-  cardImage: {
+  imageWrap: {
+    width: "100%",
+    height: 170,
+    backgroundColor: "#EFF6FF",
+    position: "relative",
+  },
+  postImage: {
     width: "100%",
     height: "100%",
   },
-  cardBody: {
-    flex: 1,
+  fallbackImageBanner: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fallbackImageText: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#1D4ED8",
+  },
+  categoryOverlayBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
     paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.7)",
   },
-  categoryPill: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  categoryPillText: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  cardTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#0F172A",
-    lineHeight: 17,
-    marginBottom: 3,
-  },
-  cardSummary: {
+  categoryOverlayText: {
     fontSize: 11,
-    color: "#64748B",
-    lineHeight: 15,
-    marginBottom: 5,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
-  cardMetaRow: {
+
+  /* Post Content */
+  postContent: {
+    padding: 14,
+  },
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 6,
   },
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
   },
   metaText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#94A3B8",
     fontWeight: "600",
   },
   metaDot: {
-    fontSize: 10,
-    color: "#CBD5E1",
-    marginHorizontal: 4,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#CBD5E1",
+    marginHorizontal: 8,
   },
-  cardChevronWrapper: {
-    paddingLeft: 2,
-    paddingRight: 4,
+  postTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0F172A",
+    lineHeight: 21,
+    marginBottom: 6,
   },
-  loadMoreBtn: {
+  postSummary: {
+    fontSize: 12.5,
+    color: "#64748B",
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "#F0FDF4",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    marginTop: 18,
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    paddingTop: 10,
   },
-  loadMoreText: {
+  authorCol: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginRight: 8,
+  },
+  authorAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  authorAvatarText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.primary,
+  },
+  authorName: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#475569",
+  },
+  readMoreLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  readMoreText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: Colors.primary,
+  },
+
+  /* Empty & Loading States */
+  loadingState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 30,
+  },
+  loadingStateText: {
+    marginTop: 12,
     fontSize: 13,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+    paddingHorizontal: 24,
+  },
+  emptyIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#1E3A8A",
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  clearSearchBtn: {
+    marginTop: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+  },
+  clearSearchBtnText: {
+    fontSize: 12,
     fontWeight: "700",
-    color: "#166534",
+    color: Colors.primary,
   },
 });

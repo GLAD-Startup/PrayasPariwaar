@@ -2,6 +2,33 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 
+// GET /api/posts/[id] - Fetch single post by id or slug with author and images
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const post = await prisma.post.findFirst({
+      where: {
+        OR: [{ id: params.id }, { slug: params.id }],
+      },
+      include: {
+        author: { select: { name: true, email: true } },
+        images: { orderBy: { order: "asc" } },
+      },
+    });
+
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: post });
+  } catch (error: any) {
+    console.error("[Post GET Error]", error);
+    return NextResponse.json({ error: "Failed to fetch post", details: error.message }, { status: 500 });
+  }
+}
+
 // PATCH /api/posts/[id] - Update post
 export async function PATCH(
   req: Request,

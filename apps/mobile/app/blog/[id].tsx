@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,693 +10,747 @@ import {
   StatusBar,
   Alert,
   Share,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
+import { api, resolveImageUrl } from "../../lib/api";
+import { getCachedData, setCachedData } from "../../lib/cache";
+import { LiveBlogPost } from "../(tabs)/blogs";
 
 const { width } = Dimensions.get("window");
 
-interface BlogStoryDetail {
+interface DetailedPost {
   id: string;
+  slug: string;
+  title: string;
+  content: string;
+  excerpt: string | null;
   category: string;
   categoryBg: string;
   categoryColor: string;
-  title: string;
-  summary: string;
+  coverImage: string | null;
   date: string;
+  eventDate: string | null;
+  location: string | null;
   author: string;
+  authorRole: string;
   readTime: string;
-  heroImage: any;
-  photoCount: string;
-  content: string[];
-  highlights: { value: string; label: string; icon: string; iconType: "ionicons" | "material" }[];
-  gallery: any[];
+  images: { id: string; url: string; caption?: string | null }[];
 }
 
-const BLOG_STORIES_MAP: Record<string, BlogStoryDetail> = {
-  "learning-center-rohini": {
-    id: "learning-center-rohini",
-    category: "Education",
-    categoryBg: "#F0FDF4",
-    categoryColor: "#166534",
-    title: "New Learning Center Inaugurated in Rohini",
-    summary:
-      "A new free education center has been inaugurated to support underprivileged children with quality learning.",
-    date: "12 May 2024",
-    author: "Prayas Pariwaar",
-    readTime: "3 min read",
-    heroImage: require("../../assets/onboarding/education.jpg"),
-    photoCount: "1/8",
-    content: [
-      "We are happy to share that our new free education center in Rohini was successfully inaugurated on 12th May 2024. The center will provide quality education, study materials and a safe learning environment to children from underprivileged communities.",
-      "This is a small step towards building a better tomorrow for our children. A heartfelt thank you to our volunteers, donors and well-wishers who made this possible.",
-      "Together, let's continue to empower young minds and create a brighter future.",
-    ],
-    highlights: [
-      { value: "120+", label: "Children Enrolled", icon: "people-outline", iconType: "ionicons" },
-      { value: "6", label: "Classrooms", icon: "book-outline", iconType: "ionicons" },
-      { value: "8", label: "Volunteer Teachers", icon: "school-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/onboarding/ribbon_cutting.jpg"),
-      require("../../assets/onboarding/classroom.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-    ],
-  },
-  "blood-donation-city-hospital": {
-    id: "blood-donation-city-hospital",
-    category: "Blood Donation",
-    categoryBg: "#FEF2F2",
-    categoryColor: "#DC2626",
-    title: "Successful Blood Donation Camp at City Hospital",
-    summary:
-      "We are grateful to all the voluntary donors who came forward and made the trauma emergency camp a huge success.",
-    date: "10 May 2024",
-    author: "Prayas Pariwaar",
-    readTime: "2 min read",
-    heroImage: require("../../assets/onboarding/blood.jpg"),
-    photoCount: "1/6",
-    content: [
-      "Over 120 voluntary blood donors participated in our mega blood donation drive at City Hospital, collecting 85 units of critical blood groups.",
-      "Every drop of donated blood was allocated to surgical patients, accident victims, and Thalassemia children in urgent need.",
-      "We salute the selfless spirit of all our voluntary donors and medical staff who made this possible.",
-    ],
-    highlights: [
-      { value: "85+", label: "Units Collected", icon: "water-outline", iconType: "ionicons" },
-      { value: "120", label: "Donors Screened", icon: "people-outline", iconType: "ionicons" },
-      { value: "100%", label: "Free Dispatch", icon: "shield-checkmark-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/onboarding/blood.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/plantation.jpg"),
-    ],
-  },
-  "tree-plantation-green-valley": {
-    id: "tree-plantation-green-valley",
-    category: "Plantation",
-    categoryBg: "#F0FDF4",
-    categoryColor: "#15803D",
-    title: "Tree Plantation Drive at Green Valley Park",
-    summary:
-      "Together we planted more than 500 native saplings for a greener and healthier tomorrow.",
-    date: "08 May 2024",
-    author: "Harit Braj Team",
-    readTime: "2 min read",
-    heroImage: require("../../assets/onboarding/plantation.jpg"),
-    photoCount: "1/5",
-    content: [
-      "Our Harit Braj taskforce planted 500 native Neem, Peepal, and Banyan saplings along the Green Valley corridor.",
-      "Each sapling has been assigned a local volunteer caretaker and equipped with bio-degradable tree guards.",
-      "Thank you to the 80 volunteers who joined this sacred green mission!",
-    ],
-    highlights: [
-      { value: "500+", label: "Trees Planted", icon: "leaf-outline", iconType: "ionicons" },
-      { value: "80", label: "Green Volunteers", icon: "people-outline", iconType: "ionicons" },
-      { value: "100%", label: "Native Flora", icon: "sprout-outline", iconType: "material" },
-    ],
-    gallery: [
-      require("../../assets/onboarding/plantation.jpg"),
-      require("../../assets/onboarding/jeev_jal.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/classroom.jpg"),
-    ],
-  },
-  "summer-water-bowls-birds": {
-    id: "summer-water-bowls-birds",
-    category: "Jeev Jal Seva",
-    categoryBg: "#EFF6FF",
-    categoryColor: "#1D4ED8",
-    title: "Summer Water Bowls Initiative for Birds",
-    summary:
-      "Installed hundreds of water bowls across the city to help our feathered friends beat the summer heat.",
-    date: "06 May 2024",
-    author: "Jeev Seva Taskforce",
-    readTime: "2 min read",
-    heroImage: require("../../assets/onboarding/jeev_jal.jpg"),
-    photoCount: "1/4",
-    content: [
-      "With scorching summer heat hitting 45°C in Mathura and Vrindavan, our team distributed over 400 terracotta earthen water bowls to households and temple courtyards.",
-      "Volunteers ensure public bowls are cleaned and refilled daily with fresh water.",
-      "Compassion towards all living beings is at the heart of our seva.",
-    ],
-    highlights: [
-      { value: "400+", label: "Bowls Placed", icon: "water-outline", iconType: "ionicons" },
-      { value: "60+", label: "Refill Points", icon: "refresh-outline", iconType: "ionicons" },
-      { value: "100%", label: "Community Seva", icon: "heart-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/onboarding/jeev_jal.jpg"),
-      require("../../assets/onboarding/plantation.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-    ],
-  },
-  "vocational-training-youth": {
-    id: "vocational-training-youth",
-    category: "Vocational Training",
-    categoryBg: "#FAF5FF",
-    categoryColor: "#7E22CE",
-    title: "Vocational Training Program Empowers Youth",
-    summary:
-      "Our students are gaining skills and confidence to build a better future for themselves.",
-    date: "04 May 2024",
-    author: "Skill Development Wing",
-    readTime: "3 min read",
-    heroImage: require("../../assets/onboarding/equipment.jpg"),
-    photoCount: "1/6",
-    content: [
-      "Our technical skills batch completed hands-on training in machine maintenance, electrical repair, and medical device servicing.",
-      "Every graduate receives a recognized certification and starter toolkits to launch their independent career.",
-      "Skill education empowers families and builds self-reliant communities.",
-    ],
-    highlights: [
-      { value: "45", label: "Graduates Certified", icon: "school-outline", iconType: "ionicons" },
-      { value: "100%", label: "Free Tools", icon: "gift-outline", iconType: "ionicons" },
-      { value: "85%", label: "Job Placements", icon: "briefcase-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/onboarding/equipment.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/ribbon_cutting.jpg"),
-      require("../../assets/onboarding/classroom.jpg"),
-    ],
-  },
-};
+function parsePostData(raw: any): DetailedPost {
+  const typeKey = (raw.type || "NEWS").toUpperCase();
+  let category = "Seva Update";
+  let categoryBg = "#EFF6FF";
+  let categoryColor = "#1D4ED8";
+
+  const titleLower = (raw.title || "").toLowerCase();
+  if (typeKey === "EVENT") {
+    category = "Event";
+    categoryBg = "#FAF5FF";
+    categoryColor = "#7E22CE";
+  } else if (typeKey === "ACHIEVEMENT") {
+    category = "Milestone";
+    categoryBg = "#FFFBEB";
+    categoryColor = "#B45309";
+  } else if (titleLower.includes("blood") || titleLower.includes("रक्तदान")) {
+    category = "Blood Donation";
+    categoryBg = "#FEF2F2";
+    categoryColor = "#DC2626";
+  } else if (titleLower.includes("plant") || titleLower.includes("वृक्षारोपण") || titleLower.includes("harit")) {
+    category = "Plantation";
+    categoryBg = "#F0FDF4";
+    categoryColor = "#166534";
+  } else if (titleLower.includes("health") || titleLower.includes("camp") || titleLower.includes("स्वास्थ्य")) {
+    category = "Health Camp";
+    categoryBg = "#F0F9FF";
+    categoryColor = "#0284C7";
+  } else if (titleLower.includes("education") || titleLower.includes("aashayein") || titleLower.includes("शिक्षा")) {
+    category = "Education";
+    categoryBg = "#EFF6FF";
+    categoryColor = "#1D4ED8";
+  }
+
+  const wordCount = (raw.content || "").split(/\s+/).length;
+  const mins = Math.max(1, Math.ceil(wordCount / 180));
+  const readTime = `${mins} min read`;
+
+  const dateObj = new Date(raw.publishedAt || raw.createdAt || Date.now());
+  const dateStr = dateObj.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  return {
+    id: String(raw.id || ""),
+    slug: String(raw.slug || raw.id || ""),
+    title: raw.title || "Prayas Seva Initiative",
+    content: raw.content || "",
+    excerpt: raw.excerpt || null,
+    category,
+    categoryBg,
+    categoryColor,
+    coverImage: raw.coverImage || null,
+    date: dateStr,
+    eventDate: raw.eventDate
+      ? new Date(raw.eventDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+      : null,
+    location: raw.location || null,
+    author: raw.author?.name || "Prayas Pariwaar",
+    authorRole: "Editorial & Seva Desk",
+    readTime,
+    images: Array.isArray(raw.images)
+      ? raw.images.map((img: any) => ({
+          id: img.id || String(Math.random()),
+          url: typeof img === "string" ? img : img.url || "",
+          caption: img.caption || null,
+        }))
+      : [],
+  };
+}
 
 export default function BlogDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const storyKey = typeof id === "string" && BLOG_STORIES_MAP[id] ? id : "learning-center-rohini";
-  const story = BLOG_STORIES_MAP[storyKey];
+  const rawParams = useLocalSearchParams();
+  const id = Array.isArray(rawParams.id) ? rawParams.id[0] : (rawParams.id as string | undefined);
 
-  const [bookmarked, setBookmarked] = useState(false);
+  const [post, setPost] = useState<DetailedPost | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPostDetail = useCallback(async (isRefresh = false) => {
+    if (!id) {
+      setLoading(false);
+      setError("No story identifier provided.");
+      return;
+    }
+
+    try {
+      // 1. Check cached blog list first for instant 0ms UI load
+      if (!isRefresh) {
+        const cachedList = await getCachedData<LiveBlogPost[]>("prayas_blog_posts");
+        if (cachedList && Array.isArray(cachedList)) {
+          const found = cachedList.find(
+            (p) => String(p.id) === String(id) || String(p.slug) === String(id)
+          );
+          if (found) {
+            setPost(parsePostData(found));
+            setLoading(false);
+          }
+        }
+      }
+
+      // 2. Fetch latest live story data from backend API
+      const res = await api.get<any>(`/posts/${encodeURIComponent(id)}`);
+      if (res.data?.success && res.data.data) {
+        const parsed = parsePostData(res.data.data);
+        setPost(parsed);
+        setError(null);
+      } else {
+        setPost((current) => {
+          if (!current) {
+            setError(res.error || "Story not found or unpublished.");
+          }
+          return current;
+        });
+      }
+    } catch (e: any) {
+      console.log("[Post Detail Load Error]", e?.message);
+      setPost((current) => {
+        if (!current) {
+          setError("Unable to load story. Pull down to retry.");
+        }
+        return current;
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchPostDetail();
+  }, [fetchPostDetail]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchPostDetail(true);
+  };
 
   const handleShare = async () => {
+    if (!post) return;
     try {
       await Share.share({
-        message: `${story.title} - Read inspiring stories of change on Prayas Pariwaar.`,
+        title: post.title,
+        message: `${post.title}\n\nRead this seva story on Prayas Sanstha: https://prayas-sanstha.org/posts/${post.slug}`,
       });
-    } catch (error) {
-      // ignore
+    } catch (e) {
+      console.log(e);
     }
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+  if (loading && !post) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Fetching story...</Text>
+      </SafeAreaView>
+    );
+  }
 
-      {/* Top Header */}
-      <View style={styles.header}>
+  if (error && !post) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <Ionicons name="alert-circle-outline" size={48} color="#DC2626" />
+        <Text style={styles.errorTitle}>Story Unavailable</Text>
+        <Text style={styles.errorSubtitle}>{error}</Text>
         <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/blogs"))}
-          activeOpacity={0.8}
+          style={styles.retryBtn}
+          onPress={() => {
+            setLoading(true);
+            fetchPostDetail(true);
+          }}
         >
-          <Ionicons name="arrow-back" size={22} color="#164E2E" />
+          <Text style={styles.retryBtnText}>Retry Connection</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
+          <Text style={styles.backLinkText}>← Go Back to Stories</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
-        <Text style={styles.headerTitle}>Blog Details</Text>
+  if (!post) return null;
 
-        <View style={styles.headerRightActions}>
+  // Split content into clean paragraphs
+  const paragraphs = post.content
+    ? post.content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+    : [];
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+
+      {/* Floating Top Nav Bar */}
+      <SafeAreaView edges={["top"]} style={styles.floatingNavSafe}>
+        <View style={styles.floatingNav}>
           <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => {
-              setBookmarked(!bookmarked);
-              Alert.alert(bookmarked ? "Removed from Saved" : "Story Saved", "You can find this story in your profile.");
-            }}
+            style={styles.navIconBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
           >
-            <Ionicons
-              name={bookmarked ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color={bookmarked ? "#166534" : "#164E2E"}
-            />
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.headerActionBtn} onPress={handleShare}>
-            <Ionicons name="share-social-outline" size={22} color="#164E2E" />
-          </TouchableOpacity>
+          <View style={styles.navRightActions}>
+            <TouchableOpacity
+              style={styles.navIconBtn}
+              onPress={handleShare}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
 
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
       >
-        {/* Featured Hero Image with Less-Rounded Corners */}
-        <View style={styles.heroImageWrapper}>
-          <Image source={story.heroImage} style={styles.heroImage} resizeMode="cover" />
-          <View style={styles.photoCountBadge}>
-            <Ionicons name="images-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.photoCountText}>{story.photoCount}</Text>
-          </View>
-        </View>
-
-        {/* Category Pill */}
-        <View style={[styles.categoryPill, { backgroundColor: story.categoryBg }]}>
-          <Text style={[styles.categoryPillText, { color: story.categoryColor }]}>
-            {story.category}
-          </Text>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>{story.title}</Text>
-
-        {/* Summary */}
-        <Text style={styles.summaryLead}>{story.summary}</Text>
-
-        {/* Meta Row */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Ionicons name="calendar-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
-            <Text style={styles.metaText}>{story.date}</Text>
-          </View>
-          <Text style={styles.metaDivider}>|</Text>
-          <View style={styles.metaItem}>
-            <Ionicons name="person-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
-            <Text style={styles.metaText}>{story.author}</Text>
-          </View>
-          <Text style={styles.metaDivider}>|</Text>
-          <View style={styles.metaItem}>
-            <Ionicons name="time-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
-            <Text style={styles.metaText}>{story.readTime}</Text>
-          </View>
-        </View>
-
-        {/* Article Body Content */}
-        <View style={styles.articleBody}>
-          {story.content.map((para, i) => (
-            <Text key={i} style={styles.paragraph}>
-              {para}
-            </Text>
-          ))}
-        </View>
-
-        {/* Highlights Box with Less Rounded Corners */}
-        <View style={styles.highlightsCard}>
-          <View style={styles.highlightsHeaderRow}>
-            <Text style={styles.highlightsHeaderIcon}>🌿</Text>
-            <Text style={styles.highlightsHeading}>Highlights</Text>
-          </View>
-
-          <View style={styles.highlightsGrid}>
-            {story.highlights.map((hl, i) => (
-              <View key={i} style={styles.highlightItem}>
-                <View style={styles.hlIconCircle}>
-                  <Ionicons name={hl.icon as any} size={18} color="#166534" />
-                </View>
-                <View>
-                  <Text style={styles.hlValue}>{hl.value}</Text>
-                  <Text style={styles.hlLabel}>{hl.label}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Photo Gallery */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Photo Gallery</Text>
-          <TouchableOpacity onPress={() => router.push("/gallery")}>
-            <Text style={styles.viewAllText}>View All ›</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.galleryScroll}
-        >
-          {story.gallery.map((img, i) => (
-            <View key={i} style={styles.galleryThumb}>
-              <Image source={img} style={styles.galleryImage} resizeMode="cover" />
+        {/* Hero Cover Image */}
+        <View style={styles.heroWrap}>
+          {post.coverImage ? (
+            <Image
+              source={resolveImageUrl(post.coverImage)}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.heroFallback}>
+              <Ionicons name="sparkles" size={48} color="#FFFFFF" />
             </View>
-          ))}
-        </ScrollView>
+          )}
+          <View style={styles.heroGradientOverlay} />
 
-        {/* Share This Story Section */}
-        <View style={styles.shareSection}>
-          <Text style={styles.shareTitle}>Share this story</Text>
-          <View style={styles.socialButtonsRow}>
-            {/* WhatsApp */}
-            <TouchableOpacity style={[styles.socialShareBtn, { backgroundColor: "#25D366" }]} onPress={handleShare}>
-              <FontAwesome name="whatsapp" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {/* Facebook */}
-            <TouchableOpacity style={[styles.socialShareBtn, { backgroundColor: "#1877F2" }]} onPress={handleShare}>
-              <FontAwesome name="facebook" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {/* Twitter */}
-            <TouchableOpacity style={[styles.socialShareBtn, { backgroundColor: "#1DA1F2" }]} onPress={handleShare}>
-              <FontAwesome name="twitter" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {/* Email */}
-            <TouchableOpacity style={[styles.socialShareBtn, { backgroundColor: "#166534" }]} onPress={handleShare}>
-              <Ionicons name="mail" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {/* Link */}
-            <TouchableOpacity
-              style={[styles.socialShareBtn, { backgroundColor: "#64748B" }]}
-              onPress={() => Alert.alert("Link Copied", "Story link copied to clipboard.")}
+          {/* Category Chip */}
+          <View
+            style={[
+              styles.heroCategoryBadge,
+              { backgroundColor: post.categoryBg },
+            ]}
+          >
+            <Text
+              style={[
+                styles.heroCategoryText,
+                { color: post.categoryColor },
+              ]}
             >
-              <Ionicons name="link" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
+              {post.category}
+            </Text>
           </View>
         </View>
 
-        {/* Bottom CTA Card */}
-        <View style={styles.bottomMissionCard}>
-          <View style={styles.missionLeftCol}>
-            <View style={styles.missionIconCircle}>
-              <MaterialCommunityIcons name="hand-heart-outline" size={22} color="#166534" />
+        {/* Main Article Body Card */}
+        <View style={styles.articleCard}>
+          {/* Metadata Row */}
+          <View style={styles.metaRow}>
+            <View style={styles.metaBadge}>
+              <Ionicons name="calendar-outline" size={12} color={Colors.primary} style={{ marginRight: 4 }} />
+              <Text style={styles.metaBadgeText}>{post.date}</Text>
             </View>
-            <View style={styles.missionTextCol}>
-              <Text style={styles.missionTitle}>Be a part of this mission</Text>
-              <Text style={styles.missionSubtitle}>
-                Your support can help us educate more children.
+            <View style={styles.metaBadge}>
+              <Ionicons name="time-outline" size={12} color="#64748B" style={{ marginRight: 4 }} />
+              <Text style={[styles.metaBadgeText, { color: "#64748B" }]}>{post.readTime}</Text>
+            </View>
+            {post.location && (
+              <View style={styles.metaBadge}>
+                <Ionicons name="location-outline" size={12} color="#16A34A" style={{ marginRight: 4 }} />
+                <Text style={[styles.metaBadgeText, { color: "#16A34A" }]}>{post.location}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Article Title */}
+          <Text style={styles.articleTitle}>{post.title}</Text>
+
+          {/* Author Byline */}
+          <View style={styles.authorBar}>
+            <View style={styles.authorAvatar}>
+              <Text style={styles.authorAvatarText}>
+                {post.author.substring(0, 1).toUpperCase()}
               </Text>
             </View>
+            <View style={styles.authorDetails}>
+              <Text style={styles.authorName}>{post.author}</Text>
+              <Text style={styles.authorRole}>{post.authorRole}</Text>
+            </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.donateNowBtn}
-            onPress={() => router.push("/(tabs)/donate")}
-            activeOpacity={0.88}
-          >
-            <Text style={styles.donateNowBtnText}>Donate Now</Text>
-            <Ionicons name="arrow-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
+          {/* Excerpt Lead Box if present */}
+          {post.excerpt ? (
+            <View style={styles.excerptBox}>
+              <Ionicons name="bookmark-outline" size={16} color={Colors.primary} style={{ marginRight: 8, marginTop: 1 }} />
+              <Text style={styles.excerptText}>{post.excerpt}</Text>
+            </View>
+          ) : null}
+
+          {/* Content Paragraphs */}
+          <View style={styles.paragraphsList}>
+            {paragraphs.map((p, i) => (
+              <Text key={i} style={styles.paragraphText}>
+                {p}
+              </Text>
+            ))}
+          </View>
+
+          {/* Embedded Photo Gallery */}
+          {post.images && post.images.length > 0 && (
+            <View style={styles.gallerySection}>
+              <View style={styles.galleryHeader}>
+                <Ionicons name="images-outline" size={18} color={Colors.primary} />
+                <Text style={styles.gallerySectionTitle}>Field Photos & Documentation</Text>
+              </View>
+
+              <View style={styles.galleryGrid}>
+                {post.images.map((img) => (
+                  <View key={img.id} style={styles.galleryCard}>
+                    <Image
+                      source={resolveImageUrl(img.url)}
+                      style={styles.galleryImg}
+                      resizeMode="cover"
+                    />
+                    {img.caption && (
+                      <Text style={styles.galleryCaption}>{img.caption}</Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Support / CTA Seva Card */}
+          <View style={styles.ctaCard}>
+            <View style={styles.ctaIconCircle}>
+              <Ionicons name="heart" size={24} color="#FFFFFF" />
+            </View>
+            <Text style={styles.ctaTitle}>Be a Part of This Seva</Text>
+            <Text style={styles.ctaSubtitle}>
+              Prayas Pariwaar is 100% volunteer-driven and transparent. Every contribution goes directly into grassroots community impact.
+            </Text>
+
+            <View style={styles.ctaButtonsRow}>
+              <TouchableOpacity
+                style={styles.ctaDonateBtn}
+                onPress={() => router.push("/(tabs)/donate")}
+                activeOpacity={0.88}
+              >
+                <Text style={styles.ctaDonateBtnText}>Contribute / 80G Seva</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.ctaVolunteerBtn}
+                onPress={() => router.push("/volunteer-form")}
+                activeOpacity={0.88}
+              >
+                <Text style={styles.ctaVolunteerBtnText}>Join as Volunteer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.3,
-  },
-  headerRightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  headerActionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
-  heroImageWrapper: {
-    height: 220,
-    borderRadius: 14,
-    overflow: "hidden",
+  floatingNavSafe: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+  },
+  floatingNav: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  navIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navRightActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  /* Hero Section */
+  heroWrap: {
+    width: "100%",
+    height: 280,
+    backgroundColor: "#1E3A8A",
     position: "relative",
-    backgroundColor: "#F1F5F9",
-    marginBottom: 14,
-    ...Shadows.soft,
   },
   heroImage: {
     width: "100%",
     height: "100%",
   },
-  photoCountBadge: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    flexDirection: "row",
+  heroFallback: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#1D4ED8",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    justifyContent: "center",
   },
-  photoCountText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "700",
+  heroGradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 23, 42, 0.35)",
   },
-  categoryPill: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginBottom: 8,
+  heroCategoryBadge: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
-  categoryPillText: {
-    fontSize: 11,
+  heroCategoryText: {
+    fontSize: 12,
     fontWeight: "800",
-    letterSpacing: 0.3,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.3,
-    lineHeight: 26,
-    marginBottom: 6,
-  },
-  summaryLead: {
-    fontSize: 13,
-    color: "#475569",
-    lineHeight: 19,
-    marginBottom: 10,
-    fontWeight: "500",
+
+  /* Article Card */
+  articleCard: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+    ...Shadows.card,
   },
   metaRow: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingBottom: 14,
-    marginBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  metaText: {
-    fontSize: 11,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  metaDivider: {
-    color: "#CBD5E1",
-    marginHorizontal: 8,
-    fontSize: 11,
-  },
-  articleBody: {
-    gap: 12,
-    marginBottom: 18,
-  },
-  paragraph: {
-    fontSize: 13,
-    color: "#334155",
-    lineHeight: 21,
-  },
-  highlightsCard: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    padding: 14,
-    marginBottom: 20,
-  },
-  highlightsHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 12,
   },
-  highlightsHeaderIcon: {
-    fontSize: 14,
-  },
-  highlightsHeading: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#166534",
-  },
-  highlightsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  highlightItem: {
+  metaBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
-  hlIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-  },
-  hlValue: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#166534",
-  },
-  hlLabel: {
-    fontSize: 9,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  sectionHeading: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  viewAllText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#166534",
-  },
-  galleryScroll: {
-    gap: 10,
-    marginBottom: 22,
-  },
-  galleryThumb: {
-    width: 105,
-    height: 85,
-    borderRadius: 10,
-    overflow: "hidden",
     backgroundColor: "#F1F5F9",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  galleryImage: {
-    width: "100%",
-    height: "100%",
-  },
-  shareSection: {
-    alignItems: "center",
-    marginBottom: 20,
-    paddingVertical: 10,
-  },
-  shareTitle: {
-    fontSize: 13,
+  metaBadgeText: {
+    fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
-    marginBottom: 12,
+    color: Colors.primary,
   },
-  socialButtonsRow: {
+  articleTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#0F172A",
+    lineHeight: 29,
+    marginBottom: 16,
+    letterSpacing: -0.3,
+  },
+
+  /* Author Bar */
+  authorBar: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 14,
-  },
-  socialShareBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
     alignItems: "center",
-    justifyContent: "center",
-    ...Shadows.soft,
-  },
-  bottomMissionCard: {
-    backgroundColor: "#F8FAF9",
+    backgroundColor: "#F8FAFC",
+    padding: 12,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    ...Shadows.soft,
+    marginBottom: 18,
   },
-  missionLeftCol: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 10,
-  },
-  missionIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
+  authorAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
   },
-  missionTextCol: {
+  authorAvatarText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: Colors.primary,
+  },
+  authorDetails: {
     flex: 1,
   },
-  missionTitle: {
+  authorName: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#164E2E",
+    color: "#1E293B",
   },
-  missionSubtitle: {
-    fontSize: 10,
+  authorRole: {
+    fontSize: 11,
     color: "#64748B",
-    marginTop: 2,
-    lineHeight: 14,
   },
-  donateNowBtn: {
-    backgroundColor: "#166534",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+
+  /* Excerpt */
+  excerptBox: {
+    flexDirection: "row",
+    backgroundColor: "#EFF6FF",
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
+    padding: 14,
     borderRadius: 10,
+    marginBottom: 20,
+  },
+  excerptText: {
+    flex: 1,
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: "#1E3A8A",
+    lineHeight: 20,
+    fontStyle: "italic",
+  },
+
+  /* Paragraphs */
+  paragraphsList: {
+    gap: 16,
+    marginBottom: 28,
+  },
+  paragraphText: {
+    fontSize: 14.5,
+    color: "#334155",
+    lineHeight: 24,
+  },
+
+  /* Gallery */
+  gallerySection: {
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+    paddingTop: 20,
+    marginBottom: 28,
+  },
+  galleryHeader: {
     flexDirection: "row",
     alignItems: "center",
-    ...Shadows.soft,
+    gap: 8,
+    marginBottom: 14,
   },
-  donateNowBtnText: {
-    color: "#FFFFFF",
-    fontSize: 12,
+  gallerySectionTitle: {
+    fontSize: 15,
     fontWeight: "800",
+    color: "#0F172A",
+  },
+  galleryGrid: {
+    gap: 14,
+  },
+  galleryCard: {
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  galleryImg: {
+    width: "100%",
+    height: 190,
+  },
+  galleryCaption: {
+    padding: 10,
+    fontSize: 11.5,
+    color: "#64748B",
+    fontStyle: "italic",
+  },
+
+  /* CTA Card */
+  ctaCard: {
+    backgroundColor: "#1E3A8A",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    ...Shadows.card,
+  },
+  ctaIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  ctaTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: 6,
+  },
+  ctaSubtitle: {
+    fontSize: 12,
+    color: "#BFDBFE",
+    textAlign: "center",
+    lineHeight: 17,
+    marginBottom: 16,
+  },
+  ctaButtonsRow: {
+    width: "100%",
+    gap: 10,
+  },
+  ctaDonateBtn: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  ctaDonateBtnText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#1D4ED8",
+  },
+  ctaVolunteerBtn: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  ctaVolunteerBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+
+  /* Loading & Error */
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: "#64748B",
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#FFFFFF",
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  errorSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  retryBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  retryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  backLink: {
+    padding: 8,
+  },
+  backLinkText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

@@ -1,0 +1,38 @@
+# Root EAS Build Ignore for Monorepo
+
+# Dependencies
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+
+# Monorepo Web & Server (Not needed for Mobile build, saves upload time)
+apps/web/
+.next/
+out/
+
+# Build caches & outputs
+.turbo/
+dist/
+build/
+.expo/
+.expo-shared/
+apps/mobile/android/
+apps/mobile/ios/
+
+# Logs
+*.log
+logs/
+
+# Secrets & Private Keys
+*.pem
+*.jks
+*.p8
+*.p12
+*.key
+*.keystore
+prayas-*-firebase-adminsdk-*.json
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -16,6 +16,9 @@ export async function GET(req: Request) {
         author: {
           select: { name: true, email: true },
         },
+        images: {
+          orderBy: { order: "asc" },
+        },
       },
     });
 
