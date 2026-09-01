@@ -38,6 +38,8 @@ export async function deleteItem(key: string): Promise<void> {
   await SecureStore.deleteItemAsync(key);
 }
 
+export const removeItem = deleteItem;
+
 // ---------------------------------------------------------------------------
 // Convenience Token & User Helpers
 // ---------------------------------------------------------------------------
