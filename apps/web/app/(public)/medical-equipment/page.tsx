@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Stethoscope, CheckCircle2, Phone, ArrowLeft, ArrowRight, ShieldCheck, Clock, MapPin } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface EquipmentItem {
   id: string;
@@ -43,7 +44,7 @@ export default function MedicalEquipmentPage() {
   const fetchEquipment = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/equipment");
+      const res = await apiFetch("/api/equipment");
       const data = await res.json();
       if (data.success) {
         setItems(data.data);
@@ -69,7 +70,7 @@ export default function MedicalEquipmentPage() {
     setErrorMessage(null);
 
     try {
-      const res = await fetch("/api/equipment", {
+      const res = await apiFetch("/api/equipment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

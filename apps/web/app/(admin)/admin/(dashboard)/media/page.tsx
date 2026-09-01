@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
+import { apiFetch } from "@/lib/api";
 import {
   Newspaper,
   Tv,
@@ -55,7 +56,7 @@ export default function AdminMediaPage() {
   const fetchMedia = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/media");
+      const res = await apiFetch("/api/media");
       const json = await res.json();
       if (json.success) {
         setMediaItems(json.data);
@@ -121,7 +122,7 @@ export default function AdminMediaPage() {
       const url = editingItemId ? `/api/media/${editingItemId}` : "/api/media";
       const method = editingItemId ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -151,7 +152,7 @@ export default function AdminMediaPage() {
 
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/media/${id}`, {
+      const res = await apiFetch(`/api/media/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

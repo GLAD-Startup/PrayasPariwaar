@@ -19,6 +19,7 @@ import {
   Filter,
 } from "lucide-react";
 import { BloodGroupValues, BloodGroupDisplayMap } from "@prayas/utils";
+import { apiFetch } from "@/lib/api";
 
 export default function AdminBloodRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -39,7 +40,7 @@ export default function AdminBloodRequestsPage() {
       if (statusFilter !== "ALL") params.set("status", statusFilter);
       if (groupFilter !== "ALL") params.set("bloodGroup", groupFilter);
 
-      const res = await fetch(`/api/blood-requests?${params.toString()}`);
+      const res = await apiFetch(`/api/blood-requests?${params.toString()}`);
       const json = await res.json();
       if (json.success) {
         setRequests(json.data);
@@ -54,7 +55,7 @@ export default function AdminBloodRequestsPage() {
   const updateStatus = async (id: string, newStatus: string) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/blood-requests/${id}`, {
+      const res = await apiFetch(`/api/blood-requests/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -75,7 +76,7 @@ export default function AdminBloodRequestsPage() {
     if (!confirm("Are you sure you want to remove this emergency blood request?")) return;
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/blood-requests/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/blood-requests/${id}`, { method: "DELETE" });
       if (res.ok) {
         setRequests((prev) => prev.filter((r) => r.id !== id));
       }

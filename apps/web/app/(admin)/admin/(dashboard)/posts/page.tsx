@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
+import { apiFetch } from "@/lib/api";
 import {
   FileText,
   Plus,
@@ -68,7 +69,7 @@ export default function AdminPostsPage() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/posts?all=true");
+      const res = await apiFetch("/api/posts?all=true");
       const data = await res.json();
       if (data.success) {
         setPosts(data.data);
@@ -89,36 +90,32 @@ export default function AdminPostsPage() {
     setFormData((prev) => ({
       ...prev,
       title,
-      slug: generatedSlug,
+      slug: prev.slug === "" || prev.slug === generatedSlug ? generatedSlug : prev.slug,
     }));
   };
 
   const handleStartEdit = (post: any) => {
     setEditingPostId(post.id);
+    setIsCreating(true);
     setFormData({
       title: post.title || "",
       slug: post.slug || "",
       type: post.type || "EVENT",
       excerpt: post.excerpt || "",
       content: post.content || "",
-      eventDate: post.eventDate
-        ? new Date(post.eventDate).toISOString().split("T")[0]
-        : new Date(post.createdAt).toISOString().split("T")[0],
+      eventDate: post.eventDate ? new Date(post.eventDate).toISOString().split("T")[0] : "",
       location: post.location || "Vrindavan, Mathura District, UP",
       coverImage: post.coverImage || "",
-      galleryImages: post.images ? post.images.map((img: any) => img.url) : [],
+      galleryImages: Array.isArray(post.images) ? post.images.map((img: any) => img.url) : [],
       published: post.published ?? true,
     });
-    setIsCreating(true);
     setErrorMsg(null);
     setSuccessMsg(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelForm = () => {
     setIsCreating(false);
     setEditingPostId(null);
-    setErrorMsg(null);
     setFormData({
       title: "",
       slug: "",
@@ -131,22 +128,28 @@ export default function AdminPostsPage() {
       galleryImages: [],
       published: true,
     });
+    setErrorMsg(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.title.trim()) {
+      setErrorMsg("Post Title is required.");
+      return;
+    }
+
     setSubmitting(true);
     setErrorMsg(null);
     setSuccessMsg(null);
 
     try {
       const payload = {
-        title: formData.title,
-        slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, "-"),
+        title: formData.title.trim(),
+        slug: formData.slug.trim() || formData.title.toLowerCase().replace(/\s+/g, "-"),
         type: formData.type,
-        excerpt: formData.excerpt,
-        content: formData.content,
-        eventDate: formData.eventDate,
+        excerpt: formData.excerpt.trim() || null,
+        content: formData.content.trim(),
+        eventDate: formData.eventDate ? new Date(formData.eventDate) : null,
         location: formData.location,
         coverImage: formData.coverImage || (formData.galleryImages[0] || null),
         imageUrls: formData.galleryImages,
@@ -155,13 +158,13 @@ export default function AdminPostsPage() {
 
       let res;
       if (editingPostId) {
-        res = await fetch(`/api/posts/${editingPostId}`, {
+        res = await apiFetch(`/api/posts/${editingPostId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch("/api/posts", {
+        res = await apiFetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -190,7 +193,7 @@ export default function AdminPostsPage() {
   const togglePublished = async (post: any) => {
     setActionLoading(post.id);
     try {
-      const res = await fetch(`/api/posts/${post.id}`, {
+      const res = await apiFetch(`/api/posts/${post.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ published: !post.published }),
@@ -212,7 +215,7 @@ export default function AdminPostsPage() {
 
     setActionLoading(postId);
     try {
-      const res = await fetch(`/api/posts/${postId}`, {
+      const res = await apiFetch(`/api/posts/${postId}`, {
         method: "DELETE",
       });
       if (res.ok) {

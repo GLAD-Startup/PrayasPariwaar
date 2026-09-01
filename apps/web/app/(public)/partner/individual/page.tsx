@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, CheckCircle2, ArrowLeft } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export default function IndividualPartnerPage() {
   const [form, setForm] = useState({
@@ -21,7 +22,7 @@ export default function IndividualPartnerPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/partnerships", {
+      const res = await apiFetch("/api/partnerships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, type: "INDIVIDUAL" }),

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ImageUpload from "@/components/ImageUpload";
+import { apiFetch } from "@/lib/api";
 import {
   Image as ImageIcon,
   Plus,
@@ -59,9 +60,9 @@ export default function AdminGalleryPage() {
     setLoading(true);
     try {
       const url = categoryFilter === "All" ? "/api/gallery" : `/api/gallery?category=${encodeURIComponent(categoryFilter)}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       const json = await res.json();
-      if (json.success) {
+      if (json.success && json.data) {
         setAlbums(json.data.albums || []);
         setRecentPhotos(json.data.recentPhotos || []);
       }
@@ -76,7 +77,7 @@ export default function AdminGalleryPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/gallery", {
+      const res = await apiFetch("/api/gallery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +113,7 @@ export default function AdminGalleryPage() {
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/gallery", {
+      const res = await apiFetch("/api/gallery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,7 +143,7 @@ export default function AdminGalleryPage() {
   const handleDeleteAlbum = async (id: string) => {
     if (!confirm("Are you sure you want to delete this album and its associated photo records?")) return;
     try {
-      const res = await fetch(`/api/gallery?albumId=${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/gallery?albumId=${id}`, { method: "DELETE" });
       if (res.ok) {
         setSuccessMsg("Album removed.");
         fetchGallery();
@@ -155,7 +156,7 @@ export default function AdminGalleryPage() {
   const handleDeletePhoto = async (id: string) => {
     if (!confirm("Remove this photo from gallery?")) return;
     try {
-      const res = await fetch(`/api/gallery?photoId=${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/gallery?photoId=${id}`, { method: "DELETE" });
       if (res.ok) {
         setSuccessMsg("Photo removed.");
         fetchGallery();
