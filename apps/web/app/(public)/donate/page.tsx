@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Script from "next/script";
 import { useSearchParams } from "next/navigation";
 import { Heart, ShieldCheck, CheckCircle2, Lock, GraduationCap, Award, BookOpen } from "lucide-react";
@@ -20,6 +20,23 @@ const SPONSORSHIP_TIERS = [
 ];
 
 export default function DonatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[60vh] py-16 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-prayas-muted font-sans">Loading 80G Seva Donation Portal...</p>
+          </div>
+        </div>
+      }
+    >
+      <DonateForm />
+    </Suspense>
+  );
+}
+
+function DonateForm() {
   const searchParams = useSearchParams();
   const initialProject = searchParams.get("project");
   const initialAmount = searchParams.get("amount");

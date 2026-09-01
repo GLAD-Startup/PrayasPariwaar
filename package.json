@@ -22,6 +22,8 @@
     "db:studio": "npm run db:studio --workspace=@prayas/database",
     "postinstall": "npm run db:generate",
     "web:dev": "npm run dev --workspace=@prayas/web",
+    "web:build": "npm run build --workspace=@prayas/web",
+    "web:start": "npm run start --workspace=@prayas/web",
     "mobile:dev": "npm run dev --workspace=@prayas/mobile"
   },
   "devDependencies": {
