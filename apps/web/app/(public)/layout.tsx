@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SmoothScroll from "@/components/SmoothScroll";
 
 export default function PublicLayout({
   children,
@@ -8,12 +9,13 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-prayas-paper text-prayas-ink">
-      {/* Enhanced Masthead & Header Navbar */}
-      <Navbar />
+    <SmoothScroll>
+      <div className="flex flex-col min-h-screen bg-prayas-paper text-prayas-ink">
+        {/* Enhanced Masthead & Header Navbar */}
+        <Navbar />
 
-      {/* Main Content */}
-      <main className="flex-grow">{children}</main>
+        {/* Main Content */}
+        <main className="flex-grow">{children}</main>
 
       {/* Grounded Institutional Footer */}
       <footer className="bg-[#1C2421] text-[#EFECE6] pt-12 sm:pt-14 pb-10 border-t border-prayas-rule">
@@ -158,5 +160,6 @@ export default function PublicLayout({
         </div>
       </footer>
     </div>
+    </SmoothScroll>
   );
 }

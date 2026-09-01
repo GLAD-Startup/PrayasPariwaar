@@ -63,25 +63,25 @@ export default async function AdminDashboardPage() {
     availableEquipmentCount,
     galleryOverview,
   ] = await Promise.all([
-    prisma.bloodRequest.count({ where: { status: "PENDING" } }),
-    prisma.equipmentRequest.count({ where: { status: "PENDING" } }),
-    prisma.volunteer.count({ where: { status: "PENDING" } }),
-    prisma.partnershipInquiry.count({ where: { status: "PENDING" } }),
-    prisma.contactMessage.count({ where: { isRead: false } }),
+    prisma.bloodRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.equipmentRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.volunteer.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.partnershipInquiry.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.contactMessage.count({ where: { isRead: false } }).catch(() => 0),
     prisma.donation.aggregate({
       _sum: { amount: true },
       where: { status: "SUCCESS" },
-    }),
+    }).catch(() => ({ _sum: { amount: 0 } })),
     prisma.bloodRequest.findMany({
       take: 6,
       orderBy: { createdAt: "desc" },
-    }),
+    }).catch(() => []),
     prisma.volunteer.findMany({
       take: 4,
       orderBy: { createdAt: "desc" },
-    }),
-    prisma.medicalEquipment.count(),
-    prisma.medicalEquipment.count({ where: { status: "AVAILABLE" } }),
+    }).catch(() => []),
+    prisma.medicalEquipment.count().catch(() => 0),
+    prisma.medicalEquipment.count({ where: { status: "AVAILABLE" } }).catch(() => 0),
     getGalleryOverview(),
   ]);
 
