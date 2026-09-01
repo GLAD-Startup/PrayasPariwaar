@@ -13,6 +13,15 @@ import {
   ShieldCheck,
   Camera,
   ExternalLink,
+  Target,
+  GraduationCap,
+  Compass,
+  BookOpen,
+  Sparkles,
+  Layers,
+  Award,
+  Clock,
+  Share2,
 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -82,9 +91,9 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     : 0;
 
   const categoryColorMap: Record<string, { bg: string; text: string; border: string }> = {
-    EDUCATION: { bg: "bg-green-50", text: "text-emerald-900", border: "border-green-200" },
-    HEALTH: { bg: "bg-red-50", text: "text-red-900", border: "border-red-200" },
-    PLANTATION: { bg: "bg-green-50", text: "text-green-900", border: "border-green-200" },
+    EDUCATION: { bg: "bg-emerald-50", text: "text-emerald-900", border: "border-emerald-200" },
+    HEALTH: { bg: "bg-rose-50", text: "text-rose-900", border: "border-rose-200" },
+    PLANTATION: { bg: "bg-emerald-50", text: "text-emerald-900", border: "border-emerald-200" },
     AWARENESS: { bg: "bg-amber-50", text: "text-amber-900", border: "border-amber-200" },
     OTHER: { bg: "bg-prayas-stone", text: "text-prayas-ink", border: "border-prayas-rule" },
   };
@@ -92,122 +101,297 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
   const catStyle = categoryColorMap[project.category] || categoryColorMap.OTHER;
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-[#FAF8F5]">
       {/* ====================================================================== */}
-      {/* HERO BANNER with Cover Image Background                               */}
+      {/* HERO BANNER with Generous Padding & High Legibility                   */}
       {/* ====================================================================== */}
-      <section className="relative overflow-hidden pt-10 pb-16 lg:pt-14 lg:pb-24">
-        {project.coverImage && (
+      <section className="relative overflow-hidden pt-16 sm:pt-20 pb-20 lg:pt-24 lg:pb-28 bg-[#11241A] text-white">
+        {project.coverImage ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={project.coverImage}
               alt={project.title}
-              className="absolute inset-0 w-full h-full object-cover object-center z-0"
+              className="absolute inset-0 w-full h-full object-cover object-center z-0 opacity-40"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/40 z-0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#11241A] via-[#11241A]/80 to-[#11241A]/60 z-0" />
           </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0B1E14] via-[#133022] to-[#1C4531] z-0" />
         )}
 
-        <div className="relative z-10 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 space-y-6">
-          {/* Back link */}
+        <div className="relative z-10 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 space-y-5">
+          {/* Back Navigation & Breadcrumb */}
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1.5 text-xs 2xl:text-sm font-semibold text-white/80 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-xs 2xl:text-sm font-semibold text-emerald-200/90 hover:text-white transition-colors bg-white/10 px-3 py-1.5 rounded-lg border border-white/15 backdrop-blur-xs group"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to All Programs</span>
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Return to All Seva Programs</span>
           </Link>
 
-          {/* Category & Status */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-[11px] 2xl:text-xs font-bold uppercase tracking-wider ${catStyle.bg} ${catStyle.text} ${catStyle.border} border`}>
-              {project.category}
+          {/* Category & Status Badges */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${catStyle.bg} ${catStyle.text} ${catStyle.border} border shadow-xs`}>
+              {project.category} Seva
             </span>
-            <span className="flex items-center gap-1.5 text-xs 2xl:text-sm font-semibold text-emerald-300">
+            <span className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-300 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800/60">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Active Grassroots Program
+              <span>Active Grassroots Program</span>
             </span>
           </div>
 
           {/* Title */}
-          <h1 className={`font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold leading-[1.15] ${project.coverImage ? "text-white drop-shadow-lg" : "text-prayas-ink"}`}>
+          <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold leading-tight text-white tracking-tight drop-shadow-md">
             {project.title}
           </h1>
 
-          {/* Quick stats strip */}
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-xs 2xl:text-sm">
+          {/* Quick Statistics Strip */}
+          <div className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm pt-2 text-emerald-100/90 font-medium">
             {project.goalAmount > 0 && (
-              <span className={`flex items-center gap-1.5 font-medium ${project.coverImage ? "text-white/90" : "text-prayas-muted"}`}>
+              <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg border border-white/15">
                 <Heart className="w-3.5 h-3.5 text-rose-400 fill-current" />
-                ₹{project.raisedAmount.toLocaleString("en-IN")} raised of ₹{project.goalAmount.toLocaleString("en-IN")}
+                <span>₹{project.raisedAmount.toLocaleString("en-IN")} raised of ₹{project.goalAmount.toLocaleString("en-IN")} goal</span>
               </span>
             )}
-            <span className={`flex items-center gap-1.5 font-medium ${project.coverImage ? "text-white/90" : "text-prayas-muted"}`}>
-              <MapPin className="w-3.5 h-3.5" />
-              Vrindavan & Mathura District, UP
+            <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg border border-white/15">
+              <MapPin className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Vrindavan & Mathura District, UP</span>
             </span>
-            <span className={`flex items-center gap-1.5 font-medium ${project.coverImage ? "text-white/90" : "text-prayas-muted"}`}>
+            <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg border border-white/15">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              80G Tax Exempt Donations
+              <span>80G Tax Exempt Donations</span>
             </span>
           </div>
         </div>
       </section>
 
       {/* ====================================================================== */}
-      {/* MAIN CONTENT GRID                                                     */}
+      {/* MAIN CONTENT GRID - BALANCED & WELL-STRUCTURED                         */}
       {/* ====================================================================== */}
-      <div className="max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 -mt-8 relative z-10 space-y-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Narrative & Photos */}
+      <div className="max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 -mt-10 relative z-10 space-y-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* ================================================================= */}
+          {/* LEFT COLUMN: Narrative, Focus Areas, Roadmap & Documentation       */}
+          {/* ================================================================= */}
           <div className="lg:col-span-8 space-y-8">
-            {/* Program Description */}
+            {/* 1. Program Scope & Purpose */}
             <ScrollReveal>
-              <div className="border border-prayas-rule bg-white rounded-xl p-6 sm:p-8 shadow-card space-y-4">
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink border-b border-prayas-rule pb-3">
-                  Program Scope & Purpose
-                </h2>
-                <div className="text-sm sm:text-base text-prayas-ink leading-relaxed space-y-4 whitespace-pre-line font-light">
-                  {project.description}
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
+                <div className="space-y-2 border-b border-prayas-rule pb-4">
+                  <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    <Target className="w-4 h-4 text-emerald-700" />
+                    <span>Mission & Direct Objective</span>
+                  </div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink">
+                    Program Scope & Purpose
+                  </h2>
+                </div>
+
+                <div className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal space-y-4">
+                  <p>{project.description}</p>
+                </div>
+
+                {/* Impact Metric Chips */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Target Audience
+                    </span>
+                    <p className="text-xs font-bold text-slate-900">
+                      Rural Students & Youth
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Geographic Reach
+                    </span>
+                    <p className="text-xs font-bold text-slate-900">
+                      Mathura & Braj Villages
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Governance
+                    </span>
+                    <p className="text-xs font-bold text-slate-900">
+                      100% Audited Seva
+                    </p>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
 
-            {/* Photo Gallery */}
-            {project.images.length > 0 && (
-              <ScrollReveal>
-                <div className="border border-prayas-rule bg-white rounded-xl p-6 sm:p-8 shadow-card space-y-6">
-                  <div className="border-b border-prayas-rule pb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-serif text-lg sm:text-xl font-bold text-prayas-ink flex items-center gap-2">
-                        <Camera className="w-5 h-5 text-prayas-neem" />
-                        <span>Field Photography & Documentation</span>
-                      </h3>
-                      <p className="text-xs text-prayas-muted mt-0.5">
-                        {project.images.length} verified field photographs from Mathura & Vrindavan operations.
+            {/* 2. Key Focus Areas & Methodology Pillars */}
+            <ScrollReveal>
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
+                <div className="space-y-1 border-b border-prayas-rule pb-4">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    Core Delivery Methodology
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-prayas-ink">
+                    Key Focus Areas & On-Ground Initiatives
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    How Prayas Pariwaar coordinates direct, structured impact for this initiative.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                      <GraduationCap className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Skill Development & Practical Literacy
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Hands-on workshops, computer basics, and vocational skill seminars tailored for marginalized rural students.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                      <Compass className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Aptitude & Career Pathways
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Personalized guidance for civil exams, polytechnic diplomas, technical trades, and higher education avenues.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Resource Kits & Mentorship
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Free distribution of educational course material, career guides, and access to experienced volunteer mentors.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Community & Youth Empowerment
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Anti-substance abuse seminars, health awareness, and civic motivation camps organized across government schools.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* 3. On-Ground Seva Implementation Roadmap */}
+            <ScrollReveal>
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
+                <div className="space-y-1 border-b border-prayas-rule pb-4">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    Execution Framework
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-prayas-ink">
+                    On-Ground Seva Implementation Roadmap
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Step-by-step field execution process followed by Prayas volunteers in Mathura district.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      1
+                    </div>
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Needs Assessment & Village Outreach
+                      </h4>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Liaising directly with government school teachers, village heads, and local families to identify students most in need of guidance and support.
                       </p>
                     </div>
                   </div>
 
+                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      2
+                    </div>
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Interactive Guidance Camps & Resource Distribution
+                      </h4>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Conducting structured weekend workshops, aptitude screenings, and supplying free study and vocational reference materials.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      3
+                    </div>
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Ongoing Mentorship & Outcome Tracking
+                      </h4>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Maintaining long-term contact with students to assist with scholarship applications, entrance coaching, and apprenticeship admissions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* 4. Photo Gallery & Field Documentation */}
+            <ScrollReveal>
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
+                <div className="border-b border-prayas-rule pb-3 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-prayas-ink flex items-center gap-2">
+                      <Camera className="w-5 h-5 text-emerald-800" />
+                      <span>Field Photography & On-Ground Documentation</span>
+                    </h3>
+                    <p className="text-xs text-prayas-muted mt-0.5">
+                      Verified photographs documenting transparent seva activities across Vrindavan & Mathura.
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/gallery"
+                    className="text-xs font-bold text-emerald-800 hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    <span>View Seva Gallery</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                {project.images.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {project.images.map((img) => (
                       <div
                         key={img.id}
-                        className="gallery-item border border-prayas-rule overflow-hidden bg-prayas-stone"
+                        className="border border-prayas-rule rounded-xl overflow-hidden bg-prayas-stone shadow-2xs group"
                       >
                         <div className="aspect-[4/3] overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={img.url}
                             alt={img.caption || project.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
                           />
                         </div>
                         {img.caption && (
-                          <div className="gallery-caption">
-                            <p className="text-[11px] sm:text-xs font-medium leading-snug">
+                          <div className="p-2.5 bg-white border-t border-prayas-rule">
+                            <p className="text-[11px] sm:text-xs font-medium text-slate-700 leading-snug">
                               {img.caption}
                             </p>
                           </div>
@@ -215,14 +399,33 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                       </div>
                     ))}
                   </div>
-                </div>
-              </ScrollReveal>
-            )}
+                ) : (
+                  <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-3">
+                    <Camera className="w-8 h-8 text-slate-400 mx-auto" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-800">
+                        Active Field Work Photologs in Ongoing Curation
+                      </p>
+                      <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                        Photographs from our recent batches in Mathura government schools are logged in the central field gallery archive.
+                      </p>
+                    </div>
+                    <Link
+                      href="/gallery"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#1E5338] hover:bg-[#16432B] px-4 py-2 rounded-lg transition-colors shadow-2xs"
+                    >
+                      <span>Explore Vrindavan Seva Gallery Archive</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </ScrollReveal>
 
-            {/* Related Field Dispatches */}
+            {/* 5. Related Field Dispatches & Reports */}
             {relatedPosts.length > 0 && (
               <ScrollReveal>
-                <div className="border border-prayas-rule bg-white rounded-xl p-6 sm:p-8 shadow-card space-y-4">
+                <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-4">
                   <h3 className="font-serif text-lg font-bold text-prayas-ink border-b border-prayas-rule pb-3">
                     Related Field Dispatches & Event Reports
                   </h3>
@@ -231,7 +434,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                       <Link
                         key={post.id}
                         href={`/blog/${post.slug}`}
-                        className="block p-4 rounded-lg border border-prayas-rule hover:bg-prayas-paper transition-colors group"
+                        className="block p-4 rounded-xl border border-prayas-rule bg-slate-50/60 hover:bg-slate-50 transition-colors group"
                       >
                         <div className="flex items-center gap-2 text-[11px] text-prayas-muted mb-1">
                           <Calendar className="w-3 h-3" />
@@ -252,7 +455,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                             </>
                           )}
                         </div>
-                        <h4 className="font-serif text-sm font-bold text-prayas-ink group-hover:text-prayas-neem transition-colors">
+                        <h4 className="font-serif text-sm font-bold text-prayas-ink group-hover:text-emerald-800 transition-colors">
                           {post.title}
                         </h4>
                         <p className="text-xs text-prayas-muted line-clamp-2 mt-1">
@@ -266,17 +469,19 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
             )}
           </div>
 
-          {/* Right Sidebar */}
+          {/* ================================================================= */}
+          {/* RIGHT SIDEBAR COLUMN: Funding, Volunteer, Inquiry & Verification   */}
+          {/* ================================================================= */}
           <div className="lg:col-span-4 space-y-6">
             {/* Fundraising Card */}
             {project.goalAmount > 0 && (
               <ScrollReveal>
-                <div className="border border-prayas-rule bg-white rounded-xl p-6 shadow-card space-y-5 sticky top-24">
+                <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card space-y-5">
                   <div className="space-y-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-prayas-neem">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                       Transparent Community Fund
                     </span>
-                    <p className="font-serif text-3xl font-bold text-prayas-ink">
+                    <p className="font-serif text-3xl font-bold text-prayas-ink pt-2">
                       ₹{project.raisedAmount.toLocaleString("en-IN")}
                     </p>
                     <p className="text-xs text-prayas-muted">
@@ -286,14 +491,14 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-[11px] font-bold">
-                      <span className="text-prayas-neem">{percent}% funded</span>
+                      <span className="text-emerald-800">{percent}% funded</span>
                       <span className="text-prayas-muted">
                         ₹{(project.goalAmount - project.raisedAmount).toLocaleString("en-IN")} remaining
                       </span>
                     </div>
-                    <div className="w-full h-3 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
+                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                       <div
-                        className="h-full bg-prayas-neem rounded-full transition-all duration-700"
+                        className="h-full bg-[#1E5338] rounded-full transition-all duration-700"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -301,26 +506,27 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
                   <Link
                     href={`/donate?project=${project.slug}`}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md"
-                    style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-bold bg-[#1E5338] hover:bg-[#153D28] text-white transition-all shadow-md"
                   >
                     <Heart className="w-4 h-4 fill-white text-white" />
                     <span>Contribute to This Cause</span>
                   </Link>
 
-                  <div className="flex items-center gap-2 text-[11px] text-prayas-muted">
-                    <ShieldCheck className="w-3.5 h-3.5 text-prayas-neem shrink-0" />
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                     <span>50% tax deduction under Section 80G. Instant receipt.</span>
                   </div>
 
                   {/* Recent Donors */}
                   {project.donations.length > 0 && (
                     <div className="border-t border-prayas-rule pt-3 space-y-2">
-                      <span className="text-[11px] font-bold text-prayas-muted uppercase">Recent Supporters</span>
+                      <span className="text-[11px] font-bold text-prayas-muted uppercase tracking-wider block">
+                        Recent Supporters
+                      </span>
                       {project.donations.map((d: any) => (
-                        <div key={d.id} className="flex items-center justify-between text-xs">
-                          <span className="text-prayas-ink font-medium truncate">{d.donorName}</span>
-                          <span className="text-prayas-neem font-bold shrink-0">₹{d.amount.toLocaleString("en-IN")}</span>
+                        <div key={d.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 last:border-0">
+                          <span className="text-slate-800 font-medium truncate">{d.donorName}</span>
+                          <span className="text-emerald-800 font-bold shrink-0">₹{d.amount.toLocaleString("en-IN")}</span>
                         </div>
                       ))}
                     </div>
@@ -329,19 +535,19 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
               </ScrollReveal>
             )}
 
-            {/* Volunteer Card */}
+            {/* Volunteer Participation Card */}
             <ScrollReveal delay={100}>
-              <div className="border border-prayas-rule bg-prayas-paper rounded-xl p-6 shadow-card space-y-3">
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card space-y-3.5">
                 <h3 className="font-serif text-base font-bold text-prayas-ink flex items-center gap-2">
-                  <Users className="w-5 h-5 text-prayas-marigold" />
+                  <Users className="w-5 h-5 text-amber-600" />
                   <span>Participate on the Ground</span>
                 </h3>
-                <p className="text-xs text-prayas-muted leading-relaxed">
-                  We welcome doctors, teachers, students, and local residents to join this program as weekend volunteers in Vrindavan.
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  We welcome teachers, educators, professionals, and students to join this program as weekend volunteers in Mathura & Vrindavan.
                 </p>
                 <Link
                   href="/volunteer"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-prayas-neem hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:underline pt-1"
                 >
                   <span>Submit Volunteer Application</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -349,28 +555,39 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
               </div>
             </ScrollReveal>
 
-            {/* Contact Card */}
+            {/* Helpline / Contact Card */}
             <ScrollReveal delay={200}>
-              <div className="border border-prayas-rule bg-white rounded-xl p-6 shadow-card space-y-3">
+              <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card space-y-3.5">
                 <h3 className="font-serif text-base font-bold text-prayas-ink">
                   Questions About This Program?
                 </h3>
-                <p className="text-xs text-prayas-muted leading-relaxed">
-                  Contact our field coordination office directly for any queries about this program.
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Contact our field coordination office directly for any queries about this program or partnership.
                 </p>
-                <div className="text-xs text-prayas-ink space-y-1 font-mono">
+                <div className="text-xs text-slate-700 space-y-1.5 font-mono bg-slate-50 p-3 rounded-xl border border-slate-200">
                   <p>📞 +91 94122 79000</p>
                   <p>✉️ info@prayaspariwaar.com</p>
                 </div>
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-prayas-neem hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:underline pt-1"
                 >
                   <span>Send an Inquiry</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </ScrollReveal>
+
+            {/* Institutional Trust Badge */}
+            <div className="p-4 rounded-2xl bg-[#1C2421] text-white space-y-2 shadow-card text-xs">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                <ShieldCheck className="w-4 h-4" />
+                <span>18-Year Registered Society</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Prayas Pariwaar (Reg. 142/2006-07) ensures 100% of public donations directly fund on-ground child welfare and community relief.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -381,14 +598,19 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           <ScrollReveal>
             <section className="border-t border-prayas-rule pt-10 space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink">
-                  Explore Other Prayas Programs
-                </h2>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink">
+                    Explore Other Prayas Programs
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Discover our other grassroots initiatives across Braj region.
+                  </p>
+                </div>
                 <Link
                   href="/projects"
-                  className="text-xs font-semibold text-prayas-neem hover:underline flex items-center gap-1"
+                  className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1"
                 >
-                  <span>View All</span>
+                  <span>View All Programs</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -404,10 +626,10 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                     <Link
                       key={p.id}
                       href={`/projects/${p.slug}`}
-                      className="border border-prayas-rule bg-white rounded-xl overflow-hidden shadow-card hover:shadow-lg transition-all group block"
+                      className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all group block"
                     >
                       {p.coverImage && (
-                        <div className="aspect-[16/10] bg-prayas-stone overflow-hidden">
+                        <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={p.coverImage}
@@ -417,19 +639,25 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                           />
                         </div>
                       )}
-                      <div className="p-4 space-y-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${pStyle.bg} ${pStyle.text} ${pStyle.border} border`}>
+                      <div className="p-5 space-y-3">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${pStyle.bg} ${pStyle.text} ${pStyle.border} border`}>
                           {p.category}
                         </span>
-                        <h3 className="font-serif text-sm font-bold text-prayas-ink group-hover:text-prayas-neem transition-colors leading-snug">
+                        <h3 className="font-serif text-sm font-bold text-prayas-ink group-hover:text-emerald-800 transition-colors leading-snug line-clamp-2">
                           {p.title}
                         </h3>
                         {p.goalAmount > 0 && (
-                          <div className="w-full h-1.5 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
-                            <div
-                              className="h-full bg-prayas-neem rounded-full"
-                              style={{ width: `${pPercent}%` }}
-                            />
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
+                              <span>₹{p.raisedAmount.toLocaleString("en-IN")} raised</span>
+                              <span>{pPercent}%</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                              <div
+                                className="h-full bg-[#1E5338] rounded-full"
+                                style={{ width: `${pPercent}%` }}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
