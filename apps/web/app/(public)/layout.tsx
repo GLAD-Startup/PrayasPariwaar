@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -25,10 +26,11 @@ export default function PublicLayout({
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 rounded-lg bg-white/95 shadow-sm inline-block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="/images/prayas-logo.png"
                     alt="Prayas Pariwaar - A Trial to Move Ahead"
+                    width={160}
+                    height={44}
                     className="h-10 w-auto object-contain"
                   />
                 </div>

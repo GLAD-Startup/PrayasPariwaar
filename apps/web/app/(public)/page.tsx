@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import FAQAccordion from "@/components/FAQAccordion";
@@ -67,11 +68,13 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       <section className="relative overflow-hidden border-b border-prayas-rule pt-12 pb-14 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-28 2xl:pt-32 2xl:pb-36">
         {/* Photographic Background of Classroom under Banyan by Yamuna */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/images/banyan-study-vrindavan.jpg"
           alt="Informal outdoor classroom in Vrindavan along Yamuna riverbank - Project Aashayein"
-          className="absolute inset-0 w-full h-full object-cover object-center z-0 scale-105 transition-transform duration-1000"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center z-0 scale-105"
         />
         {/* Soft, rich dark vignette overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/60 z-0" />
@@ -226,22 +229,24 @@ export default async function HomePage() {
             {/* Left: Overlapping Photo Composition */}
             <div className="lg:col-span-6 relative pb-6 sm:pb-10 pr-2 sm:pr-8 max-w-md lg:max-w-none mx-auto lg:mx-0 w-full">
               {/* Main Primary Image */}
-              <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-[4/3] bg-prayas-stone border border-prayas-rule/60">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-[4/3] bg-prayas-stone border border-prayas-rule/60">
+                <Image
                   src="/images/youth-skills-vrindavan.jpg"
                   alt="Volunteer mentor guiding students at e-Pathshala center in Vrindavan"
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
                 />
               </div>
 
               {/* Overlapping Secondary Portrait (Bottom-Right) */}
               <div className="absolute -bottom-2 sm:-bottom-4 right-0 sm:right-2 w-5/12 sm:w-1/2 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-4 border-white shadow-2xl aspect-[4/3] bg-prayas-stone">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src="/images/child-hope-vrindavan.jpg"
                   alt="Smiling student holding notebook in Vrindavan classroom"
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 50vw, 25vw"
+                  className="object-cover"
                 />
               </div>
 
@@ -361,13 +366,14 @@ export default async function HomePage() {
             <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
               <div className="space-y-3">
                 <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="/images/youth-skills-vrindavan.jpg"
                     alt="Project Aashayein Child Education"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#2E5339] text-white text-[10px] font-bold uppercase shadow-sm">
+                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#2E5339] text-white text-[10px] font-bold uppercase shadow-sm z-10">
                     Education Pillar
                   </span>
                 </div>
@@ -403,13 +409,14 @@ export default async function HomePage() {
             <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
               <div className="space-y-3">
                 <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="/images/vrindavan-plantation.jpg"
                     alt="Vrindavan Harit Kranti Native Tree Plantation"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-green-800 text-white text-[10px] font-bold uppercase shadow-sm">
+                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-green-800 text-white text-[10px] font-bold uppercase shadow-sm z-10">
                     Environment Pillar
                   </span>
                 </div>
@@ -444,13 +451,14 @@ export default async function HomePage() {
             <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
               <div className="space-y-3">
                 <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="/images/medical-blood-seva.jpg"
                     alt="Medical Equipment Bank & Emergency Blood Registry"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#B91C1C] text-white text-[10px] font-bold uppercase shadow-sm">
+                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#B91C1C] text-white text-[10px] font-bold uppercase shadow-sm z-10">
                     Health & Emergency
                   </span>
                 </div>
@@ -485,13 +493,14 @@ export default async function HomePage() {
             <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
               <div className="space-y-3">
                 <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="/images/health-camp-vrindavan.jpg"
                     alt="Jan Swasthya Free Health & Eye Checkup Camp"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-amber-800 text-white text-[10px] font-bold uppercase shadow-sm">
+                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-amber-800 text-white text-[10px] font-bold uppercase shadow-sm z-10">
                     Health Camps
                   </span>
                 </div>
@@ -513,9 +522,9 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/volunteer"
-                  className="px-3 py-1.5 rounded-lg bg-prayas-stone text-prayas-ink border border-prayas-rule text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-white"
+                  className="px-3 py-1.5 rounded-lg bg-amber-700 text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-amber-800"
                 >
-                  Volunteer
+                  Join as Doctor
                 </Link>
               </div>
             </div>
@@ -549,15 +558,16 @@ export default async function HomePage() {
             { src: "/images/youth-skills-vrindavan.jpg", caption: "Digital literacy & computer learning center for rural youth" },
           ].map((photo, idx) => (
             <ScrollReveal key={idx} delay={idx * 60}>
-              <div className={`gallery-item ${photo.span || ""} aspect-[4/3] sm:aspect-square`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className={`gallery-item relative overflow-hidden rounded-xl bg-prayas-stone ${photo.span || ""} aspect-[4/3] sm:aspect-square`}>
+                <Image
                   src={photo.src}
                   alt={photo.caption}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
                   loading="lazy"
                 />
-                <div className="gallery-caption">
+                <div className="gallery-caption z-10">
                   <p className="text-[11px] sm:text-xs 2xl:text-sm font-medium leading-snug">{photo.caption}</p>
                 </div>
               </div>

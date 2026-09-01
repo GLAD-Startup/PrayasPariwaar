@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Phone,
@@ -169,10 +170,12 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
             {/* Brand Logo: Prayas Pariwaar */}
             <Link href="/" className="flex items-center gap-2 group shrink-0 py-1" onClick={() => setMobileMenuOpen(false)}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/images/prayas-logo.png"
                 alt="Prayas Pariwaar - A Trial to Move Ahead"
+                width={160}
+                height={50}
+                priority
                 className="h-9 sm:h-11 2xl:h-14 w-auto object-contain transition-transform group-hover:scale-105"
               />
             </Link>
