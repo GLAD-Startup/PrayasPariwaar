@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Script from "next/script";
 import { useSearchParams } from "next/navigation";
 import { Heart, ShieldCheck, CheckCircle2, Lock, GraduationCap, Award, BookOpen } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 declare global {
   interface Window {
@@ -83,7 +84,7 @@ function DonateForm() {
     setErrorMessage("");
 
     try {
-      const res = await fetch("/api/donations/create-order", {
+      const res = await apiFetch("/api/donations/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

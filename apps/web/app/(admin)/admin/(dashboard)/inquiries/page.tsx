@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 import {
   MessageSquare,
   Building2,
@@ -42,8 +43,8 @@ export default function AdminInquiriesPage() {
     setLoading(true);
     try {
       const [resP, resC] = await Promise.all([
-        fetch("/api/partnerships"),
-        fetch("/api/contact"),
+        apiFetch("/api/partnerships"),
+        apiFetch("/api/contact"),
       ]);
       const jsonP = await resP.json();
       const jsonC = await resC.json();
@@ -59,7 +60,7 @@ export default function AdminInquiriesPage() {
   const updatePartnershipStatus = async (id: string, newStatus: string) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/partnerships/${id}`, {
+      const res = await apiFetch(`/api/partnerships/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -82,7 +83,7 @@ export default function AdminInquiriesPage() {
 
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/partnerships/${id}`, {
+      const res = await apiFetch(`/api/partnerships/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -99,7 +100,7 @@ export default function AdminInquiriesPage() {
   const toggleMessageRead = async (id: string, currentRead: boolean) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/contact/${id}`, {
+      const res = await apiFetch(`/api/contact/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isRead: !currentRead }),
@@ -121,7 +122,7 @@ export default function AdminInquiriesPage() {
 
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/contact/${id}`, {
+      const res = await apiFetch(`/api/contact/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

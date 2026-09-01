@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Phone, Mail, MapPin, Clock, CheckCircle2, ShieldCheck } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -22,7 +23,7 @@ export default function ContactPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await apiFetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api";
 import {
   Bell,
   Send,
@@ -43,7 +44,7 @@ export default function AdminNotificationsPage() {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/notifications");
+      const res = await apiFetch("/api/notifications");
       const data = await res.json();
       if (data.success) {
         setHistory(data.data);
@@ -81,25 +82,25 @@ export default function AdminNotificationsPage() {
       },
     },
     {
-      label: "🌱 Tree Plantation Seva",
+      label: "🌳 Plantation Seva Drive",
       icon: TreePine,
       accent: "text-green-700 bg-green-50 border-green-200",
       data: {
-        title: "🌱 Monsoon Native Tree Plantation Drive - 350 Saplings",
-        body: "Join us this Saturday at 7:00 AM on Vrindavan Parikrama Marg for planting Neem, Peepal, and Banyan saplings.",
+        title: "🌳 Vrindavan Harit Kranti: 100 Neem Trees Plantation Drive",
+        body: "Join us this Saturday at 7:00 AM on Parikrama Marg for planting native sacred trees with protective guards.",
         type: "EVENT",
         targetBloodGroup: "ALL",
         targetCity: "Vrindavan",
       },
     },
     {
-      label: "📦 Equipment Bank Update",
-      icon: Heart,
-      accent: "text-purple-700 bg-purple-50 border-purple-200",
+      label: "📢 General Announcement",
+      icon: Sparkles,
+      accent: "text-blue-700 bg-blue-50 border-blue-200",
       data: {
-        title: "📦 10 New Oxygen Concentrators Added to Seva Bank",
-        body: "Free medical equipment loan service is available 24/7 at Raman Reti Center for needy patients.",
-        type: "EQUIPMENT_UPDATE",
+        title: "📢 Prayas Pariwaar Seva Update",
+        body: "Thank you to all donors and volunteers for supporting our ongoing community programs across Mathura district.",
+        type: "GENERAL",
         targetBloodGroup: "ALL",
         targetCity: "ALL",
       },
@@ -119,7 +120,7 @@ export default function AdminNotificationsPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/notifications", {
+      const res = await apiFetch("/api/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ImageUpload from "@/components/ImageUpload";
+import { apiFetch } from "@/lib/api";
 import {
   Stethoscope,
   Plus,
@@ -53,7 +54,7 @@ export default function AdminEquipmentPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/equipment");
+      const res = await apiFetch("/api/equipment");
       const json = await res.json();
       if (json.success) {
         setEquipmentList(json.data);
@@ -82,7 +83,7 @@ export default function AdminEquipmentPage() {
     setSuccessMsg(null);
 
     try {
-      const res = await fetch("/api/equipment", {
+      const res = await apiFetch("/api/equipment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newDevice),
@@ -115,7 +116,7 @@ export default function AdminEquipmentPage() {
   const updateRequestStatus = async (requestId: string, newStatus: string) => {
     setActionLoading(requestId);
     try {
-      const res = await fetch(`/api/equipment/requests/${requestId}`, {
+      const res = await apiFetch(`/api/equipment/requests/${requestId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -136,7 +137,7 @@ export default function AdminEquipmentPage() {
   const updateDeviceStatus = async (deviceId: string, newStatus: string) => {
     setActionLoading(deviceId);
     try {
-      const res = await fetch(`/api/equipment/${deviceId}`, {
+      const res = await apiFetch(`/api/equipment/${deviceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -157,7 +158,7 @@ export default function AdminEquipmentPage() {
     if (!confirm("Are you sure you want to remove this medical equipment asset?")) return;
     setActionLoading(deviceId);
     try {
-      const res = await fetch(`/api/equipment/${deviceId}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/equipment/${deviceId}`, { method: "DELETE" });
       if (res.ok) {
         setEquipmentList((prev) => prev.filter((eq) => eq.id !== deviceId));
       }
@@ -172,7 +173,7 @@ export default function AdminEquipmentPage() {
     if (!confirm("Are you sure you want to remove this patient borrowing request?")) return;
     setActionLoading(requestId);
     try {
-      const res = await fetch(`/api/equipment/requests/${requestId}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/equipment/requests/${requestId}`, { method: "DELETE" });
       if (res.ok) {
         setRequestsList((prev) => prev.filter((r) => r.id !== requestId));
       }

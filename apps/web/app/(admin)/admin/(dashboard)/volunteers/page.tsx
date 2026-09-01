@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api";
 import {
   Users,
   PhoneCall,
@@ -43,7 +44,7 @@ export default function AdminVolunteersPage() {
   const fetchVolunteers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/volunteers");
+      const res = await apiFetch("/api/volunteers");
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setVolunteers(json.data);
@@ -60,7 +61,7 @@ export default function AdminVolunteersPage() {
   const updateStatus = async (id: string, newStatus: string) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/volunteers/${id}`, {
+      const res = await apiFetch(`/api/volunteers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -86,7 +87,7 @@ export default function AdminVolunteersPage() {
 
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/volunteers/${id}`, {
+      const res = await apiFetch(`/api/volunteers/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

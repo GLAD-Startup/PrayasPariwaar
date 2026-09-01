@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Droplet, Phone, MapPin, Clock, ShieldCheck, CheckCircle2, AlertCircle, Heart } from "lucide-react";
 import { BloodGroupDisplayMap } from "@prayas/utils";
+import { apiFetch } from "@/lib/api";
 
 interface BloodRequestItem {
   id: string;
@@ -63,7 +64,7 @@ export default function BloodDonationPage() {
       const url = filterGroup === "ALL"
         ? "/api/blood-requests?status=PENDING"
         : `/api/blood-requests?status=PENDING&bloodGroup=${filterGroup}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       const data = await res.json();
       if (data.success) {
         setRequests(data.data);
@@ -82,7 +83,7 @@ export default function BloodDonationPage() {
     setRequestSuccess(null);
 
     try {
-      const res = await fetch("/api/blood-requests", {
+      const res = await apiFetch("/api/blood-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,7 +131,7 @@ export default function BloodDonationPage() {
         city: donorForm.city,
       };
 
-      const res = await fetch("/api/blood-donors", {
+      const res = await apiFetch("/api/blood-donors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

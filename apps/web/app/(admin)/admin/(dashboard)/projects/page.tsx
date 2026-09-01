@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
+import { apiFetch } from "@/lib/api";
 import {
   FolderKanban,
   Plus,
@@ -74,7 +75,7 @@ export default function AdminProjectsPage() {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/projects");
+      const res = await apiFetch("/api/projects");
       const json = await res.json();
       if (json.success) {
         setProjects(json.data);
@@ -116,7 +117,7 @@ export default function AdminProjectsPage() {
         metaDescription: formData.metaDescription || formData.description.substring(0, 150),
       };
 
-      const res = await fetch("/api/projects", {
+      const res = await apiFetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -185,7 +186,7 @@ export default function AdminProjectsPage() {
         imageUrls: editFormData.galleryImages,
       };
 
-      const res = await fetch(`/api/projects/${editingProject.id}`, {
+      const res = await apiFetch(`/api/projects/${editingProject.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -209,7 +210,7 @@ export default function AdminProjectsPage() {
   const updateProjectStatus = async (id: string, newStatus: string) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/projects/${id}`, {
+      const res = await apiFetch(`/api/projects/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -232,7 +233,7 @@ export default function AdminProjectsPage() {
 
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/projects/${id}`, {
+      const res = await apiFetch(`/api/projects/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

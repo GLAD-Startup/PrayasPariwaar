@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 import {
   Users,
   CheckCircle2,
@@ -87,7 +88,7 @@ export default function VolunteerPage() {
     setAlreadyRegisteredMessage(null);
 
     try {
-      const res = await fetch("/api/volunteers", {
+      const res = await apiFetch("/api/volunteers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

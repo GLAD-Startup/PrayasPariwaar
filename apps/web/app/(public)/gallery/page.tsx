@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api";
 import {
   Image as ImageIcon,
   Layers,
@@ -111,7 +112,7 @@ export default function PublicGalleryPage() {
   const [activePhoto, setActivePhoto] = useState<any | null>(null);
 
   useEffect(() => {
-    fetch("/api/gallery")
+    apiFetch("/api/gallery")
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) {
