@@ -11,22 +11,26 @@ export async function GET(req: Request) {
     const checkPhone = searchParams.get("phone") || searchParams.get("checkPhone");
     const isMe = searchParams.get("me") === "true";
 
-    const authUser = await getAuthUser(req);
-
-    // 1. Specific applicant status lookup (User/Self-service)
-    if (checkEmail || checkPhone || isMe) {
-      const emailQuery = checkEmail?.toLowerCase().trim() || (isMe && authUser?.email ? authUser.email.toLowerCase().trim() : undefined);
+    // 1. Specific applicant status lookup (User/Self-service by Email or Phone)
+    if (checkEmail || checkPhone) {
+      const emailQuery = checkEmail?.toLowerCase().trim();
       const phoneQuery = checkPhone?.trim().replace(/[\s-]/g, "");
       const searchPhone = phoneQuery && phoneQuery.length >= 10 ? phoneQuery.slice(-10) : phoneQuery;
 
+      const whereOr: any[] = [];
+      if (emailQuery) whereOr.push({ email: emailQuery });
+      if (searchPhone) whereOr.push({ phone: { contains: searchPhone } });
+
+      if (whereOr.length === 0) {
+        return NextResponse.json({
+          success: true,
+          registered: false,
+          data: null,
+        });
+      }
+
       const volunteer = await prisma.volunteer.findFirst({
-        where: {
-          OR: [
-            ...(emailQuery ? [{ email: emailQuery }] : []),
-            ...(searchPhone ? [{ phone: { contains: searchPhone } }] : []),
-            ...(authUser ? [{ userId: authUser.userId }] : []),
-          ],
-        },
+        where: { OR: whereOr },
         orderBy: { createdAt: "desc" },
       });
 
@@ -45,11 +49,28 @@ export async function GET(req: Request) {
       });
     }
 
-    // 2. Full roster list (Admin/Editor only)
-    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    const authUser = await getAuthUser(req);
+
+    // 2. Lookup for logged-in user with "me=true"
+    if (isMe && authUser) {
+      const volunteer = await prisma.volunteer.findFirst({
+        where: {
+          OR: [
+            { email: authUser.email.toLowerCase().trim() },
+            { userId: authUser.userId },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return NextResponse.json({
+        success: true,
+        registered: !!volunteer,
+        data: volunteer || null,
+      });
     }
 
+    // 3. Full roster list (Admin/Editor or dashboard request)
     const volunteers = await prisma.volunteer.findMany({
       include: {
         user: {
@@ -114,23 +135,66 @@ export async function POST(req: Request) {
     });
 
     if (existing) {
+      // If already registered, update existing record with new details instead of failing
+      const finalAreas: string[] = Array.isArray(areasOfInterest) && areasOfInterest.length > 0
+        ? areasOfInterest
+        : body.areaOfInterest ? [body.areaOfInterest] : ["Free Education"];
+
+      const updated = await prisma.volunteer.update({
+        where: { id: existing.id },
+        data: {
+          name,
+          phone: phone.trim(),
+          dob: dob ? new Date(dob) : existing.dob,
+          gender: gender || existing.gender,
+          address: address || existing.address,
+          city: city || existing.city,
+          state: state || existing.state,
+          pincode: pincode || existing.pincode,
+          areasOfInterest: finalAreas,
+          skills: skills || existing.skills,
+          availability: availability || existing.availability,
+          previousExperience: previousExperience || existing.previousExperience,
+        },
+      });
+
       return NextResponse.json(
         {
-          success: false,
+          success: true,
           alreadyRegistered: true,
-          error: `You are already registered under ${existing.email} (Status: ${existing.status}). Our coordination desk has your contact information on record. Please call +91 94122 79000 if you wish to update your seva preferences.`,
-          data: existing,
+          message: "Your existing volunteer profile has been updated.",
+          data: updated,
         },
-        { status: 409 }
+        { status: 200 }
       );
     }
 
     const authUser = await getAuthUser(req);
+    let validUserId: string | null = null;
+    if (authUser?.userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: authUser.userId },
+        select: { id: true },
+      });
+      if (userExists) {
+        validUserId = userExists.id;
+      }
+    }
+
+    if (!validUserId) {
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: { id: true },
+      });
+      if (userByEmail) {
+        validUserId = userByEmail.id;
+      }
+    }
 
     // Ensure areasOfInterest has array
     const finalAreas: string[] = Array.isArray(areasOfInterest) && areasOfInterest.length > 0
       ? areasOfInterest
-      : body.areaOfInterest ? [body.areaOfInterest] : ["Education"];
+      : body.areaOfInterest ? [body.areaOfInterest] : ["Free Education"];
 
     const volunteer = await prisma.volunteer.create({
       data: {
@@ -147,7 +211,7 @@ export async function POST(req: Request) {
         skills: skills || null,
         availability: availability || null,
         previousExperience: previousExperience || null,
-        userId: authUser?.userId || null,
+        userId: validUserId,
         status: "PENDING",
       },
     });
@@ -155,7 +219,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Thank you for joining our volunteer taskforce! Our volunteer coordinator will reach out to you shortly.",
+        message: "Thank you for joining our volunteer taskforce! Your application has been submitted to the admin desk.",
         data: volunteer,
       },
       { status: 201 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "521666872202",
+    "project_id": "prayas-samiti",
+    "storage_bucket": "prayas-samiti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521666872202:android:fa732ccb9a75abd20afe73",
+        "android_client_info": {
+          "package_name": "org.prayassanstha.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHS6Zbq-PuYyJCTm5e6metqadTfUEw-Dc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -56,6 +56,7 @@ export async function POST(req: Request) {
         role: user.role,
         bloodGroup: user.bloodGroup,
         phone: user.phone,
+        avatarUrl: user.avatarUrl,
       },
       accessToken,
       refreshToken,

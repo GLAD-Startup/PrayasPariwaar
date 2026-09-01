@@ -13,10 +13,20 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 
 const { width } = Dimensions.get("window");
+
+interface StreamAction {
+  title: string;
+  subtitle: string;
+  icon: string;
+  route: string;
+  bgColor: string;
+  iconColor: string;
+  arrowColor: string;
+}
 
 interface StreamDetailConfig {
   id: string;
@@ -30,8 +40,7 @@ interface StreamDetailConfig {
   aboutText: string;
   whatWeDo: { title: string; subtitle: string; icon: string; iconType: "ionicons" | "material" }[];
   gallery: any[];
-  updates: { id: string; title: string; date: string; image: any }[];
-  actions: { title: string; subtitle: string; icon: string; bgColor: string; iconColor: string; arrowColor: string }[];
+  actions: StreamAction[];
 }
 
 const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
@@ -39,7 +48,7 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
     id: "education",
     title: "Free Education",
     subtitle: "Providing quality education to underprivileged children and building a brighter future.",
-    heroImage: require("../../assets/onboarding/education.jpg"),
+    heroImage: require("../../assets/images/hero-education-vrindavan.jpg"),
     iconName: "school-outline",
     iconType: "ionicons",
     color: "#166534",
@@ -58,36 +67,46 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Career Guidance", subtitle: "Mentorship and career counselling", icon: "person-outline", iconType: "ionicons" },
     ],
     gallery: [
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/gallery_2.jpg"),
-      require("../../assets/onboarding/plantation.jpg"),
-    ],
-    updates: [
-      {
-        id: "up-1",
-        title: "New Learning Center Inaugurated in Rohini Village",
-        date: "12 May 2024",
-        image: require("../../assets/onboarding/gallery_1.jpg"),
-      },
-      {
-        id: "up-2",
-        title: "Annual Exam Success: 98% Pass Rate Achieved",
-        date: "05 May 2024",
-        image: require("../../assets/onboarding/gallery_2.jpg"),
-      },
+      require("../../assets/images/hero-education-vrindavan.jpg"),
+      require("../../assets/images/banyan-study-vrindavan.jpg"),
+      require("../../assets/images/child-hope-vrindavan.jpg"),
+      require("../../assets/images/child-hero-portrait.jpg"),
     ],
     actions: [
-      { title: "Sponsor a Student", subtitle: "Support a child's education", icon: "school-outline", bgColor: "#F0FDF4", iconColor: "#166534", arrowColor: "#166534" },
-      { title: "Volunteer as Teacher", subtitle: "Share your knowledge and inspire", icon: "person-outline", bgColor: "#EFF6FF", iconColor: "#1D4ED8", arrowColor: "#1D4ED8" },
-      { title: "Donate Now", subtitle: "Help us educate more children", icon: "heart-outline", bgColor: "#FFFBEB", iconColor: "#D97706", arrowColor: "#D97706" },
+      {
+        title: "Sponsor a Student",
+        subtitle: "Fund uniforms, school kits & tuition for a rural child",
+        icon: "school-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#F0FDF4",
+        iconColor: "#166534",
+        arrowColor: "#166534",
+      },
+      {
+        title: "Volunteer as Teacher",
+        subtitle: "Share your knowledge with evening study batches in Vrindavan",
+        icon: "person-add-outline",
+        route: "/volunteer-form",
+        bgColor: "#EFF6FF",
+        iconColor: "#1D4ED8",
+        arrowColor: "#1D4ED8",
+      },
+      {
+        title: "Donate Study Kits",
+        subtitle: "Contribute for textbooks, stationery & learning tools",
+        icon: "heart-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#FFFBEB",
+        iconColor: "#D97706",
+        arrowColor: "#D97706",
+      },
     ],
   },
   "blood-donation": {
     id: "blood-donation",
     title: "Blood Donation",
     subtitle: "Organizing voluntary blood donation camps and saving lives through 24/7 rapid hospital dispatch.",
-    heroImage: require("../../assets/onboarding/blood.jpg"),
+    heroImage: require("../../assets/images/medical-blood-seva.jpg"),
     iconName: "water-outline",
     iconType: "ionicons",
     color: "#DC2626",
@@ -106,36 +125,45 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Rare Groups", subtitle: "Specialized registry for rare blood types", icon: "heart-outline", iconType: "ionicons" },
     ],
     gallery: [
-      require("../../assets/onboarding/blood.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/jeev_jal.jpg"),
-    ],
-    updates: [
-      {
-        id: "up-b1",
-        title: "Successful Blood Donation Camp at City Hospital",
-        date: "10 May 2024",
-        image: require("../../assets/onboarding/blood.jpg"),
-      },
-      {
-        id: "up-b2",
-        title: "50 Units Donated for Thalassemia Child Support",
-        date: "02 May 2024",
-        image: require("../../assets/onboarding/blood.jpg"),
-      },
+      require("../../assets/images/medical-blood-seva.jpg"),
+      require("../../assets/images/health-camp-vrindavan.jpg"),
+      require("../../assets/images/hero-education-vrindavan.jpg"),
     ],
     actions: [
-      { title: "Register as Donor", subtitle: "Join our rapid response network", icon: "water-outline", bgColor: "#FEF2F2", iconColor: "#DC2626", arrowColor: "#DC2626" },
-      { title: "Request Blood", subtitle: "Broadcast urgent requirement", icon: "alert-circle-outline", bgColor: "#FFFBEB", iconColor: "#D97706", arrowColor: "#D97706" },
-      { title: "Host a Camp", subtitle: "Partner with our medical team", icon: "business-outline", bgColor: "#F0FDF4", iconColor: "#166534", arrowColor: "#166534" },
+      {
+        title: "Register as Blood Donor",
+        subtitle: "Join 2,400+ voluntary donor rapid response network",
+        icon: "water-outline",
+        route: "/blood-donor-registration",
+        bgColor: "#FEF2F2",
+        iconColor: "#DC2626",
+        arrowColor: "#DC2626",
+      },
+      {
+        title: "Request Emergency Blood",
+        subtitle: "Broadcast urgent requirement to matched donors in Mathura",
+        icon: "alert-circle-outline",
+        route: "/blood-request",
+        bgColor: "#FFFBEB",
+        iconColor: "#D97706",
+        arrowColor: "#D97706",
+      },
+      {
+        title: "Donate for Blood Camps",
+        subtitle: "Help fund test kits, donor refreshments & 24/7 coordination",
+        icon: "heart-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#F0FDF4",
+        iconColor: "#166534",
+        arrowColor: "#166534",
+      },
     ],
   },
   plantation: {
     id: "plantation",
     title: "Tree Plantation",
     subtitle: "Planting native trees for a greener tomorrow and restoring sacred green groves along Braj.",
-    heroImage: require("../../assets/onboarding/plantation.jpg"),
+    heroImage: require("../../assets/images/vrindavan-plantation.jpg"),
     iconName: "sprout-outline",
     iconType: "material",
     color: "#15803D",
@@ -154,29 +182,38 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "School Nurseries", subtitle: "Educating students about eco-conservation", icon: "school-outline", iconType: "ionicons" },
     ],
     gallery: [
-      require("../../assets/onboarding/plantation.jpg"),
+      require("../../assets/images/vrindavan-plantation.jpg"),
+      require("../../assets/onboarding/banner_plantation.jpg"),
       require("../../assets/onboarding/jeev_jal.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-    ],
-    updates: [
-      {
-        id: "up-p1",
-        title: "Tree Plantation Drive at Green Valley Park",
-        date: "08 May 2024",
-        image: require("../../assets/onboarding/plantation.jpg"),
-      },
-      {
-        id: "up-p2",
-        title: "1,000 Neem Saplings Planted on World Earth Day",
-        date: "22 Apr 2024",
-        image: require("../../assets/onboarding/plantation.jpg"),
-      },
     ],
     actions: [
-      { title: "Adopt a Tree", subtitle: "Fund lifelong care for a sapling", icon: "leaf-outline", bgColor: "#F0FDF4", iconColor: "#15803D", arrowColor: "#15803D" },
-      { title: "Join Weekend Drive", subtitle: "Participate in local planting events", icon: "people-outline", bgColor: "#EFF6FF", iconColor: "#1D4ED8", arrowColor: "#1D4ED8" },
-      { title: "Donate for Green Braj", subtitle: "Help plant 5,000 more trees", icon: "heart-outline", bgColor: "#FFFBEB", iconColor: "#D97706", arrowColor: "#D97706" },
+      {
+        title: "Adopt a Sacred Tree",
+        subtitle: "Fund planting & 3-year tree guard maintenance",
+        icon: "leaf-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#F0FDF4",
+        iconColor: "#15803D",
+        arrowColor: "#15803D",
+      },
+      {
+        title: "Join Plantation Drive",
+        subtitle: "Plant native Neem & Peepal saplings along Parikrama Marg",
+        icon: "people-outline",
+        route: "/volunteer-form",
+        bgColor: "#EFF6FF",
+        iconColor: "#1D4ED8",
+        arrowColor: "#1D4ED8",
+      },
+      {
+        title: "Donate for Green Braj",
+        subtitle: "Help plant 5,000 more native trees across Mathura",
+        icon: "heart-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#FFFBEB",
+        iconColor: "#D97706",
+        arrowColor: "#D97706",
+      },
     ],
   },
   "jeev-jal": {
@@ -203,35 +240,43 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
     ],
     gallery: [
       require("../../assets/onboarding/jeev_jal.jpg"),
-      require("../../assets/onboarding/plantation.jpg"),
-      require("../../assets/onboarding/gallery_1.jpg"),
-      require("../../assets/onboarding/blood.jpg"),
-    ],
-    updates: [
-      {
-        id: "up-j1",
-        title: "Summer Jal Seva Campaign: 500 Bowls Set Up",
-        date: "01 May 2024",
-        image: require("../../assets/onboarding/jeev_jal.jpg"),
-      },
-      {
-        id: "up-j2",
-        title: "New Automated Cattle Water Station Inaugurated",
-        date: "25 Apr 2024",
-        image: require("../../assets/onboarding/jeev_jal.jpg"),
-      },
+      require("../../assets/images/vrindavan-plantation.jpg"),
     ],
     actions: [
-      { title: "Request Free Bowl", subtitle: "Install a bird water pot at your home", icon: "water-outline", bgColor: "#EFF6FF", iconColor: "#1D4ED8", arrowColor: "#1D4ED8" },
-      { title: "Join Jal Taskforce", subtitle: "Help refill public water bowls", icon: "people-outline", bgColor: "#F0FDF4", iconColor: "#166534", arrowColor: "#166534" },
-      { title: "Sponsor Water Station", subtitle: "Build cattle drinking troughs", icon: "heart-outline", bgColor: "#FFFBEB", iconColor: "#D97706", arrowColor: "#D97706" },
+      {
+        title: "Join Jal Taskforce",
+        subtitle: "Volunteer to refill public bird bowls & gaushala tanks",
+        icon: "people-outline",
+        route: "/volunteer-form",
+        bgColor: "#F0FDF4",
+        iconColor: "#166534",
+        arrowColor: "#166534",
+      },
+      {
+        title: "Sponsor Water Feeders",
+        subtitle: "Sponsor 50 terracotta bowls & clean cattle drinking troughs",
+        icon: "water-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#EFF6FF",
+        iconColor: "#1D4ED8",
+        arrowColor: "#1D4ED8",
+      },
+      {
+        title: "Donate for Summer Jal Seva",
+        subtitle: "Ensure continuous clean drinking water in peak summer",
+        icon: "heart-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#FFFBEB",
+        iconColor: "#D97706",
+        arrowColor: "#D97706",
+      },
     ],
   },
   vocational: {
     id: "vocational",
     title: "Vocational Training",
     subtitle: "Equipping youth with industrial skills, medical equipment training, and self-reliance.",
-    heroImage: require("../../assets/onboarding/equipment.jpg"),
+    heroImage: require("../../assets/images/youth-skills-vrindavan.jpg"),
     iconName: "cog-outline",
     iconType: "material",
     color: "#7E22CE",
@@ -250,29 +295,38 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Job Placement", subtitle: "Direct placement with regional employers", icon: "briefcase-outline", iconType: "ionicons" },
     ],
     gallery: [
-      require("../../assets/onboarding/equipment.jpg"),
-      require("../../assets/onboarding/education.jpg"),
-      require("../../assets/onboarding/gallery_2.jpg"),
-      require("../../assets/onboarding/plantation.jpg"),
-    ],
-    updates: [
-      {
-        id: "up-v1",
-        title: "Graduation Day: 45 Youth Receive Certificates",
-        date: "04 May 2024",
-        image: require("../../assets/onboarding/equipment.jpg"),
-      },
-      {
-        id: "up-v2",
-        title: "Medical Equipment Repair Workshop Launched",
-        date: "28 Apr 2024",
-        image: require("../../assets/onboarding/equipment.jpg"),
-      },
+      require("../../assets/images/youth-skills-vrindavan.jpg"),
+      require("../../assets/onboarding/tailoring.jpg"),
+      require("../../assets/images/banyan-study-vrindavan.jpg"),
     ],
     actions: [
-      { title: "Enroll as Student", subtitle: "Join upcoming free batch", icon: "school-outline", bgColor: "#FAF5FF", iconColor: "#7E22CE", arrowColor: "#7E22CE" },
-      { title: "Volunteer as Trainer", subtitle: "Teach technical skills to youth", icon: "construct-outline", bgColor: "#EFF6FF", iconColor: "#1D4ED8", arrowColor: "#1D4ED8" },
-      { title: "Sponsor Toolkits", subtitle: "Gift starter toolkits to graduates", icon: "heart-outline", bgColor: "#FFFBEB", iconColor: "#D97706", arrowColor: "#D97706" },
+      {
+        title: "Enroll for Free Training",
+        subtitle: "Join upcoming technical repair or women tailoring batch",
+        icon: "school-outline",
+        route: "/volunteer-form",
+        bgColor: "#FAF5FF",
+        iconColor: "#7E22CE",
+        arrowColor: "#7E22CE",
+      },
+      {
+        title: "Volunteer as Skill Trainer",
+        subtitle: "Teach technical skills or digital literacy to youth",
+        icon: "construct-outline",
+        route: "/volunteer-form",
+        bgColor: "#EFF6FF",
+        iconColor: "#1D4ED8",
+        arrowColor: "#1D4ED8",
+      },
+      {
+        title: "Sponsor Starter Toolkits",
+        subtitle: "Gift sewing machines & toolkits to certified graduates",
+        icon: "heart-outline",
+        route: "/(tabs)/donate",
+        bgColor: "#FFFBEB",
+        iconColor: "#D97706",
+        arrowColor: "#D97706",
+      },
     ],
   },
 };
@@ -309,19 +363,13 @@ export default function SevaDetailScreen() {
               setBookmarked(!bookmarked);
               Alert.alert(bookmarked ? "Removed from Favorites" : "Added to Favorites", `You will receive updates for ${stream.title}.`);
             }}
+            activeOpacity={0.8}
           >
             <Ionicons
               name={bookmarked ? "heart" : "heart-outline"}
-              size={22}
+              size={20}
               color={bookmarked ? "#DC2626" : "#164E2E"}
             />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.headerActionBtn}
-            onPress={() => Alert.alert("Impact Analytics", `${stream.title} has empowered thousands of lives across Mathura & Vrindavan.`)}
-          >
-            <Ionicons name="trending-up-outline" size={22} color="#164E2E" />
           </TouchableOpacity>
         </View>
       </View>
@@ -339,9 +387,9 @@ export default function SevaDetailScreen() {
           <View style={styles.heroContent}>
             <View style={styles.heroIconBadge}>
               {stream.iconType === "ionicons" ? (
-                <Ionicons name={stream.iconName as any} size={24} color="#166534" />
+                <Ionicons name={stream.iconName as any} size={22} color="#166534" />
               ) : (
-                <MaterialCommunityIcons name={stream.iconName as any} size={24} color="#166534" />
+                <MaterialCommunityIcons name={stream.iconName as any} size={22} color="#166534" />
               )}
             </View>
 
@@ -355,7 +403,7 @@ export default function SevaDetailScreen() {
           {stream.metrics.map((m, i) => (
             <View key={i} style={styles.metricCard}>
               <View style={styles.metricIconCircle}>
-                <Ionicons name={m.icon as any} size={16} color="#166534" />
+                <Ionicons name={m.icon as any} size={15} color="#166534" />
               </View>
               <Text style={styles.metricValue}>{m.value}</Text>
               <Text style={styles.metricLabel}>{m.label}</Text>
@@ -368,7 +416,7 @@ export default function SevaDetailScreen() {
           <View style={styles.aboutHeaderRow}>
             <Text style={styles.sectionHeading}>About This Initiative</Text>
             <View style={styles.aboutIdeaCircle}>
-              <MaterialCommunityIcons name="lightbulb-on-outline" size={22} color="#16A34A" />
+              <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color="#16A34A" />
             </View>
           </View>
           <Text style={styles.aboutText}>{stream.aboutText}</Text>
@@ -381,9 +429,9 @@ export default function SevaDetailScreen() {
             <View key={i} style={styles.whatWeDoCard}>
               <View style={styles.whatWeDoIconCircle}>
                 {item.iconType === "ionicons" ? (
-                  <Ionicons name={item.icon as any} size={22} color="#166534" />
+                  <Ionicons name={item.icon as any} size={20} color="#166534" />
                 ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={22} color="#166534" />
+                  <MaterialCommunityIcons name={item.icon as any} size={20} color="#166534" />
                 )}
               </View>
               <Text style={styles.whatWeDoTitle}>{item.title}</Text>
@@ -395,7 +443,7 @@ export default function SevaDetailScreen() {
         {/* Photo Gallery */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionHeading}>Photo Gallery</Text>
-          <TouchableOpacity onPress={() => router.push("/gallery")}>
+          <TouchableOpacity onPress={() => router.push("/gallery")} activeOpacity={0.7}>
             <Text style={styles.viewAllText}>View All ›</Text>
           </TouchableOpacity>
         </View>
@@ -408,51 +456,25 @@ export default function SevaDetailScreen() {
           ))}
         </ScrollView>
 
-        {/* Latest Updates */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Latest Updates</Text>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/volunteer")}>
-            <Text style={styles.viewAllText}>View All ›</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.updatesContainer}>
-          {stream.updates.map((up) => (
-            <View key={up.id} style={styles.updateCard}>
-              <Image source={up.image} style={styles.updateImage} resizeMode="cover" />
-              <View style={styles.updateInfo}>
-                <View style={styles.updateTagBadge}>
-                  <Text style={styles.updateTagText}>{stream.title}</Text>
-                </View>
-                <Text style={styles.updateTitle} numberOfLines={2}>{up.title}</Text>
-                <View style={styles.updateDateRow}>
-                  <Ionicons name="calendar-outline" size={12} color="#94A3B8" style={{ marginRight: 4 }} />
-                  <Text style={styles.updateDateText}>{up.date}</Text>
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Get Involved Action Cards */}
+        {/* Get Involved Action Cards (Properly Implemented for Each Pillar) */}
         <Text style={styles.sectionHeading}>Get Involved</Text>
         <View style={styles.actionsList}>
           {stream.actions.map((act, i) => (
             <TouchableOpacity
               key={i}
               style={[styles.actionRowCard, { backgroundColor: act.bgColor }]}
-              onPress={() => router.push(act.title.toLowerCase().includes("donate") ? "/(tabs)/donate" : "/(tabs)/volunteer")}
+              onPress={() => router.push(act.route as any)}
               activeOpacity={0.88}
             >
               <View style={[styles.actionRowIconCircle, { borderColor: act.iconColor + "30" }]}>
-                <Ionicons name={act.icon as any} size={20} color={act.iconColor} />
+                <Ionicons name={act.icon as any} size={18} color={act.iconColor} />
               </View>
               <View style={styles.actionRowContent}>
                 <Text style={[styles.actionRowTitle, { color: act.iconColor }]}>{act.title}</Text>
                 <Text style={styles.actionRowSubtitle}>{act.subtitle}</Text>
               </View>
               <View style={[styles.actionRowArrow, { backgroundColor: act.arrowColor }]}>
-                <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+                <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
           ))}
@@ -465,8 +487,8 @@ export default function SevaDetailScreen() {
             onPress={() => Alert.alert("Programs Schedule", "Upcoming seva drives are organized every Sunday in Vrindavan.")}
             activeOpacity={0.85}
           >
-            <Ionicons name="calendar-outline" size={18} color="#166534" style={{ marginRight: 6 }} />
-            <Text style={styles.upcomingProgramsText}>Upcoming Programs</Text>
+            <Ionicons name="calendar-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
+            <Text style={styles.upcomingProgramsText}>Upcoming Drives</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -474,7 +496,7 @@ export default function SevaDetailScreen() {
             onPress={() => setSupportModalVisible(true)}
             activeOpacity={0.88}
           >
-            <MaterialCommunityIcons name="hand-heart-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <MaterialCommunityIcons name="hand-heart-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={styles.supportInitiativeText}>Support Initiative</Text>
           </TouchableOpacity>
         </View>
@@ -498,8 +520,9 @@ export default function SevaDetailScreen() {
                 style={styles.modalActionBtn}
                 onPress={() => {
                   setSupportModalVisible(false);
-                  router.push("/(tabs)/volunteer");
+                  router.push("/volunteer-form");
                 }}
+                activeOpacity={0.88}
               >
                 <Text style={styles.modalActionBtnText}>🤝 Join as Volunteer</Text>
               </TouchableOpacity>
@@ -508,8 +531,9 @@ export default function SevaDetailScreen() {
                 style={[styles.modalActionBtn, { backgroundColor: "#164E2E", marginTop: 10 }]}
                 onPress={() => {
                   setSupportModalVisible(false);
-                  router.push("/(tabs)/volunteer");
+                  router.push("/(tabs)/donate");
                 }}
+                activeOpacity={0.88}
               >
                 <Text style={styles.modalActionBtnText}>💚 Make a Contribution</Text>
               </TouchableOpacity>
@@ -528,26 +552,28 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F1F5F9",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "800",
     color: "#164E2E",
     letterSpacing: -0.3,
@@ -558,24 +584,25 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   headerActionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F0FDF4",
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 30,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 36,
   },
   heroCard: {
-    height: 200,
-    borderRadius: 24,
+    height: 185,
+    borderRadius: 14,
     overflow: "hidden",
     position: "relative",
     backgroundColor: "#0F172A",
-    marginBottom: 16,
+    marginBottom: 14,
     ...Shadows.card,
   },
   heroImage: {
@@ -592,57 +619,57 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 18,
+    padding: 16,
     justifyContent: "space-between",
   },
   heroIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.soft,
   },
   heroTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "800",
     color: "#FFFFFF",
     letterSpacing: -0.2,
   },
   heroSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#E2E8F0",
-    lineHeight: 16,
+    lineHeight: 15,
     maxWidth: 270,
   },
   metricsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 18,
+    marginBottom: 14,
   },
   metricCard: {
-    width: (width - 40 - 24) / 4,
+    width: (width - 32 - 18) / 4,
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E2E8F0",
     ...Shadows.soft,
   },
   metricIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   metricValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     color: "#164E2E",
   },
@@ -656,66 +683,66 @@ const styles = StyleSheet.create({
   },
   aboutCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 16,
-    marginBottom: 18,
+    padding: 14,
+    marginBottom: 14,
     ...Shadows.soft,
   },
   aboutHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   aboutIdeaCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
   },
   sectionHeading: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
     color: "#0F172A",
-    marginBottom: 10,
+    marginBottom: 8,
     letterSpacing: -0.2,
   },
   aboutText: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#475569",
-    lineHeight: 19,
+    lineHeight: 17,
   },
   whatWeDoGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 18,
-    gap: 10,
+    marginBottom: 14,
+    gap: 8,
   },
   whatWeDoCard: {
-    width: (width - 50) / 2,
+    width: (width - 40) / 2,
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 14,
+    padding: 12,
     ...Shadows.soft,
   },
   whatWeDoIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   whatWeDoTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     color: "#0F172A",
     marginBottom: 2,
@@ -723,105 +750,55 @@ const styles = StyleSheet.create({
   whatWeDoSubtitle: {
     fontSize: 10,
     color: "#64748B",
-    lineHeight: 14,
+    lineHeight: 13,
   },
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   viewAllText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: "#166534",
   },
   galleryScroll: {
-    gap: 10,
-    marginBottom: 18,
+    gap: 8,
+    marginBottom: 16,
   },
   galleryThumb: {
-    width: 100,
-    height: 80,
-    borderRadius: 14,
+    width: 95,
+    height: 75,
+    borderRadius: 10,
     overflow: "hidden",
   },
   galleryImage: {
     width: "100%",
     height: "100%",
   },
-  updatesContainer: {
-    gap: 10,
-    marginBottom: 18,
-  },
-  updateCard: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    overflow: "hidden",
-    ...Shadows.soft,
-  },
-  updateImage: {
-    width: 90,
-    height: 80,
-  },
-  updateInfo: {
-    flex: 1,
-    padding: 10,
-    justifyContent: "center",
-  },
-  updateTagBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#F0FDF4",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  updateTagText: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: "#166534",
-  },
-  updateTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0F172A",
-    lineHeight: 16,
-  },
-  updateDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  updateDateText: {
-    fontSize: 10,
-    color: "#94A3B8",
-  },
   actionsList: {
-    gap: 10,
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 18,
   },
   actionRowCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    borderRadius: 16,
+    padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     ...Shadows.soft,
   },
   actionRowIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    marginRight: 12,
+    marginRight: 10,
   },
   actionRowContent: {
     flex: 1,
@@ -831,27 +808,28 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   actionRowSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#64748B",
     marginTop: 1,
+    lineHeight: 13,
   },
   actionRowArrow: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
   },
   bottomCTAsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 6,
+    gap: 8,
+    marginTop: 4,
   },
   upcomingProgramsBtn: {
     flex: 1,
-    height: 50,
+    height: 44,
     backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: "#166534",
     flexDirection: "row",
@@ -859,22 +837,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   upcomingProgramsText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
     color: "#166534",
   },
   supportInitiativeBtn: {
     flex: 1,
-    height: 50,
+    height: 44,
     backgroundColor: "#166534",
-    borderRadius: 14,
+    borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.primaryBtn,
   },
   supportInitiativeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
     color: "#FFFFFF",
   },
@@ -885,37 +863,37 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: "#164E2E",
   },
   modalDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#475569",
-    lineHeight: 19,
-    marginBottom: 20,
+    lineHeight: 18,
+    marginBottom: 16,
   },
   modalActionBtn: {
-    height: 48,
+    height: 44,
     backgroundColor: "#166534",
-    borderRadius: 14,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
   modalActionBtnText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
 });

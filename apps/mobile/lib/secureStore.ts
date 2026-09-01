@@ -67,6 +67,8 @@ export async function clearAuthSession(): Promise<void> {
     deleteItem(ACCESS_TOKEN_KEY),
     deleteItem(REFRESH_TOKEN_KEY),
     deleteItem(USER_DATA_KEY),
+    deleteItem("prayas_my_volunteer_record"),
+    deleteItem("prayas_user_avatar"),
   ]);
 }
 

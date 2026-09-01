@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,137 +20,285 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
 
-const EQUIPMENT_ITEMS = [
-  "Oxygen Concentrator (10L)",
-  "Oxygen Concentrator (5L)",
-  "BiPAP / CPAP Machine",
-  "Adjustable ICU Hospital Bed",
-  "Foldable Wheelchair",
-  "Electric Suction Machine",
-  "Walking Walker with Wheels",
-  "Digital Pulse Oximeter",
+const { width } = Dimensions.get("window");
+
+interface EquipmentItem {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  status?: string;
+  quantity?: number;
+}
+
+const DEFAULT_EQUIPMENT_ITEMS: EquipmentItem[] = [
+  {
+    id: "eq-1",
+    name: "10L High-Flow Medical Oxygen Concentrator",
+    category: "Respiratory Support",
+    description: "Medical-grade 10-liter continuous oxygen concentrator with dual flow output.",
+  },
+  {
+    id: "eq-2",
+    name: "Foldable Lightweight Hospital Wheelchair",
+    category: "Mobility Assistance",
+    description: "Heavy-duty chrome frame wheelchair with cushioned armrests and footrests.",
+  },
+  {
+    id: "eq-3",
+    name: "2-Function Adjustable Hospital Fowler Bed",
+    category: "Patient Beds & Care",
+    description: "Manual crank-operated 2-function hospital bed with headrest and leg-rest elevation.",
+  },
+  {
+    id: "eq-4",
+    name: "Anti-Bedsore Alternating Pressure Air Mattress",
+    category: "Patient Beds & Care",
+    description: "Bubble air mattress with ultra-quiet pump to prevent bedsores in bedridden patients.",
+  },
+  {
+    id: "eq-5",
+    name: "Adjustable Aluminum Walking Frame (Walker)",
+    category: "Mobility Assistance",
+    description: "Sturdy, lightweight adjustable height walking frame with non-slip rubber tips.",
+  },
+  {
+    id: "eq-6",
+    name: "Heavy-Duty Compressor Nebulizer Machine",
+    category: "Respiratory Support",
+    description: "High-efficiency medication nebulizer for respiratory and asthma patients.",
+  },
+  {
+    id: "eq-7",
+    name: "BiPAP / CPAP Respiratory Machine",
+    category: "Respiratory Support",
+    description: "Non-invasive dual-pressure ventilator for home respiratory support.",
+  },
+];
+
+const PURPOSE_SUGGESTIONS = [
+  "Post-hospitalization recovery",
+  "Pneumonia & respiratory oxygen support",
+  "Post-orthopedic surgery mobility",
+  "Elderly bedridden home care",
+  "Chronic asthma treatment",
+];
+
+const DURATION_OPTIONS = [
+  { label: "7 Days", value: 7 },
+  { label: "15 Days", value: 15 },
+  { label: "30 Days", value: 30 },
+  { label: "60 Days", value: 60 },
 ];
 
 interface ActiveLoan {
   id: string;
+  equipmentId?: string;
   equipmentName: string;
+  category?: string;
   patientName: string;
+  requesterName: string;
+  contactPhone: string;
   address: string;
+  city?: string;
+  purpose?: string;
   issueDate: string;
   returnDate: string;
-  status: "Active at Home" | "Dispatched" | "Under Review";
+  status: "PENDING" | "APPROVED" | "ACTIVE" | "RETURNED" | "REJECTED";
   statusStep: number;
 }
-
-const INITIAL_LOANS: ActiveLoan[] = [
-  {
-    id: "loan-1",
-    equipmentName: "Oxygen Concentrator (10L High-Flow)",
-    patientName: "Kamlesh Devi",
-    address: "Krishna Nagar, Mathura",
-    issueDate: "15 May 2024",
-    returnDate: "30 May 2024",
-    status: "Active at Home",
-    statusStep: 3,
-  },
-  {
-    id: "loan-2",
-    equipmentName: "Foldable Wheelchair",
-    patientName: "Gopal Krishna",
-    address: "Raman Reti, Vrindavan",
-    issueDate: "20 May 2024",
-    returnDate: "05 Jun 2024",
-    status: "Dispatched",
-    statusStep: 2,
-  },
-];
 
 export default function MedicalRequestScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"request" | "status">("request");
 
-  // Form state
-  const [equipmentType, setEquipmentType] = useState("Oxygen Concentrator (10L)");
-  const [patientName, setPatientName] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [duration, setDuration] = useState("15 Days");
+  // Equipment List & Selection
+  const [inventory, setInventory] = useState<EquipmentItem[]>(DEFAULT_EQUIPMENT_ITEMS);
+  const [selectedItem, setSelectedItem] = useState<EquipmentItem>(DEFAULT_EQUIPMENT_ITEMS[0]);
   const [equipModalVisible, setEquipModalVisible] = useState(false);
-  const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>(INITIAL_LOANS);
+  // Form State
+  const [patientName, setPatientName] = useState("");
+  const [requesterName, setRequesterName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("Vrindavan");
+  const [requestedDays, setRequestedDays] = useState<number>(15);
+  const [purpose, setPurpose] = useState(PURPOSE_SUGGESTIONS[0]);
+
+  // Loading & Modals
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [lastSubmittedId, setLastSubmittedId] = useState<string>("");
+
+  // Active Loans List
+  const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([]);
+  const [loadingLoans, setLoadingLoans] = useState(false);
 
   useEffect(() => {
+    loadEquipmentInventory();
     loadEquipmentLoans();
-  }, [activeTab]);
+  }, []);
 
-  const loadEquipmentLoans = async () => {
+  const loadEquipmentInventory = async () => {
     try {
       const res = await api.get<any>("/equipment");
       if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        const mapped: ActiveLoan[] = res.data.data.map((item: any) => ({
-          id: item.id,
-          equipmentName: item.equipmentName || item.type || "Medical Equipment",
-          patientName: item.patientName || "Beneficiary",
-          address: item.deliveryAddress || "Mathura District",
-          issueDate: item.issuedAt ? new Date(item.issuedAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Active",
-          returnDate: item.expectedReturn ? new Date(item.expectedReturn).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "In 15 Days",
-          status: item.status === "ACTIVE" ? "Active at Home" : item.status === "DISPATCHED" ? "Dispatched" : "Under Review",
-          statusStep: item.status === "ACTIVE" ? 3 : item.status === "DISPATCHED" ? 2 : 1,
-        }));
-        setActiveLoans(mapped);
+        setInventory(res.data.data);
+        if (res.data.data[0]) {
+          setSelectedItem(res.data.data[0]);
+        }
       }
     } catch (e) {
-      console.warn("Failed to load equipment loans:", e);
+      console.warn("Failed to load live equipment inventory, using defaults:", e);
     }
   };
 
+  const loadEquipmentLoans = async () => {
+    setLoadingLoans(true);
+    try {
+      const res = await api.get<any>("/equipment/requests");
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const mapped: ActiveLoan[] = res.data.data.map((req: any) => {
+          let step = 1;
+          if (req.status === "APPROVED") step = 2;
+          if (req.status === "ACTIVE") step = 3;
+          if (req.status === "RETURNED") step = 4;
+
+          const createdDate = req.createdAt
+            ? new Date(req.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+            : "Recent";
+
+          let returnText = `In ${req.requestedDays || 15} Days`;
+          if (req.returnDueDate) {
+            returnText = new Date(req.returnDueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
+          }
+
+          return {
+            id: req.id,
+            equipmentId: req.equipmentId,
+            equipmentName: req.equipment?.name || req.equipmentName || "Medical Device",
+            category: req.equipment?.category || "Medical Aid",
+            patientName: req.patientName || req.requesterName || "Beneficiary",
+            requesterName: req.requesterName || "Attendant",
+            contactPhone: req.contactPhone || "",
+            address: req.deliveryAddress || "Mathura District",
+            city: req.city || "Mathura",
+            purpose: req.purpose || "Medical homecare",
+            issueDate: req.issueDate ? new Date(req.issueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : createdDate,
+            returnDate: returnText,
+            status: req.status || "PENDING",
+            statusStep: step,
+          };
+        });
+
+        setActiveLoans(mapped);
+      }
+    } catch (e) {
+      console.warn("Failed to load live equipment requests:", e);
+    } finally {
+      setLoadingLoans(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadEquipmentInventory(), loadEquipmentLoans()]);
+    setRefreshing(false);
+  };
+
   const handleRequestSubmit = async () => {
-    if (!patientName.trim() || !address.trim() || !phone.trim()) {
-      Alert.alert("Incomplete Details", "Please fill in patient name, delivery address, and contact number.");
+    if (!patientName.trim()) {
+      Alert.alert("Required Field", "Please enter the patient's full name.");
+      return;
+    }
+    if (!phone.trim() || phone.trim().length < 8) {
+      Alert.alert("Required Field", "Please enter a valid 10-digit contact phone number.");
+      return;
+    }
+    if (!address.trim()) {
+      Alert.alert("Required Field", "Please enter the delivery address in Mathura or Vrindavan.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await api.post("/equipment", {
-        patientName,
-        equipmentType,
-        deliveryAddress: address,
-        contactPhone: phone,
-        duration,
-      });
-
-      const newLoan: ActiveLoan = {
-        id: `loan-${Date.now()}`,
-        equipmentName: equipmentType,
-        patientName,
-        address,
-        issueDate: "Today",
-        returnDate: `In ${duration}`,
-        status: "Under Review",
-        statusStep: 1,
+      const payload = {
+        equipmentId: selectedItem.id,
+        equipmentName: selectedItem.name,
+        equipmentType: selectedItem.name,
+        patientName: patientName.trim(),
+        requesterName: requesterName.trim() || patientName.trim(),
+        contactPhone: phone.trim(),
+        deliveryAddress: address.trim(),
+        city: city.trim() || "Vrindavan",
+        purpose: purpose.trim() || "Home medical recovery support",
+        requestedDays: requestedDays,
       };
 
-      setActiveLoans([newLoan, ...activeLoans]);
-      setSuccessModalVisible(true);
-    } catch (e) {
-      console.error(e);
-      const newLoan: ActiveLoan = {
-        id: `loan-${Date.now()}`,
-        equipmentName: equipmentType,
-        patientName,
-        address,
-        issueDate: "Today",
-        returnDate: `In ${duration}`,
-        status: "Under Review",
-        statusStep: 1,
-      };
-      setActiveLoans([newLoan, ...activeLoans]);
-      setSuccessModalVisible(true);
+      const res = await api.post<any>("/equipment/requests", payload);
+
+      if (res.data?.success && res.data.data) {
+        const newRecord = res.data.data;
+        setLastSubmittedId(newRecord.id || `REQ-${Date.now().toString().slice(-4)}`);
+
+        // Refresh active loans list
+        await loadEquipmentLoans();
+
+        // Clear form
+        setPatientName("");
+        setRequesterName("");
+        setPhone("");
+        setAddress("");
+
+        setSuccessModalVisible(true);
+      } else {
+        throw new Error(res.data?.error || "Submission failed");
+      }
+    } catch (error: any) {
+      console.error("Submit loan error:", error);
+      Alert.alert(
+        "Notice",
+        "Your loan request could not be saved to the server right now. Our helpline has been informed: +91 94122 79001."
+      );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCallEmergency = () => {
+    Linking.openURL("tel:+919412279001").catch(() => {
+      Alert.alert("Helpline", "Prayas Seva Coordination Desk: +91 94122 79001");
+    });
+  };
+
+  const getEquipmentIcon = (category?: string, name?: string) => {
+    const text = (category + " " + name).toLowerCase();
+    if (text.includes("oxygen") || text.includes("bipap") || text.includes("nebulizer")) {
+      return <Ionicons name="fitness-outline" size={20} color="#0D9488" />;
+    }
+    if (text.includes("wheelchair") || text.includes("walker")) {
+      return <Ionicons name="body-outline" size={20} color="#166534" />;
+    }
+    if (text.includes("bed") || text.includes("mattress")) {
+      return <MaterialCommunityIcons name="bed-outline" size={22} color="#1D4ED8" />;
+    }
+    return <Ionicons name="medkit-outline" size={20} color="#166534" />;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return { label: "Active at Home", bg: "#DCFCE7", text: "#166534", icon: "checkmark-circle" };
+      case "APPROVED":
+        return { label: "Approved & Dispatched", bg: "#EFF6FF", text: "#1D4ED8", icon: "bicycle" };
+      case "RETURNED":
+        return { label: "Returned & Sanitized", bg: "#F1F5F9", text: "#475569", icon: "shield-checkmark" };
+      case "REJECTED":
+        return { label: "Closed", bg: "#FEE2E2", text: "#DC2626", icon: "close-circle" };
+      default:
+        return { label: "Under Review", bg: "#FEF3C7", text: "#D97706", icon: "time-outline" };
     }
   };
 
@@ -167,14 +316,17 @@ export default function MedicalRequestScreen() {
           <Ionicons name="arrow-back" size={22} color="#164E2E" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Equipment Bank</Text>
+        <View style={styles.headerTitleCol}>
+          <Text style={styles.headerTitle}>Medical Equipment Bank</Text>
+          <Text style={styles.headerSubtitle}>Free Home Loans • Zero Rental Charges</Text>
+        </View>
 
         <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => Linking.openURL("tel:+919676543210")}
+          style={styles.headerActionBtn}
+          onPress={handleCallEmergency}
           activeOpacity={0.8}
         >
-          <Ionicons name="call-outline" size={22} color="#166534" />
+          <Ionicons name="call" size={18} color="#0D9488" />
         </TouchableOpacity>
       </View>
 
@@ -183,9 +335,10 @@ export default function MedicalRequestScreen() {
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === "request" && styles.tabBtnActive]}
           onPress={() => setActiveTab("request")}
+          activeOpacity={0.85}
         >
           <Ionicons
-            name="medkit-outline"
+            name="add-circle-outline"
             size={16}
             color={activeTab === "request" ? "#FFFFFF" : "#64748B"}
             style={{ marginRight: 6 }}
@@ -197,7 +350,11 @@ export default function MedicalRequestScreen() {
 
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === "status" && styles.tabBtnActive]}
-          onPress={() => setActiveTab("status")}
+          onPress={() => {
+            setActiveTab("status");
+            loadEquipmentLoans();
+          }}
+          activeOpacity={0.85}
         >
           <Ionicons
             name="list-outline"
@@ -214,55 +371,82 @@ export default function MedicalRequestScreen() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         {activeTab === "request" ? (
-          /* TAB 1: REQUEST EQUIPMENT FORM */
+          /* ===================== TAB 1: REQUEST EQUIPMENT FORM ===================== */
           <View>
+            {/* Top Seva Guarantee Banner */}
             <View style={styles.bannerAlert}>
-              <Ionicons name="gift-outline" size={22} color="#166534" style={{ marginRight: 8 }} />
+              <View style={styles.bannerIconCircle}>
+                <MaterialCommunityIcons name="shield-check" size={20} color="#0F766E" />
+              </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.bannerAlertTitle}>100% Free Community Loan</Text>
+                <Text style={styles.bannerAlertTitle}>100% Free Community Seva</Text>
                 <Text style={styles.bannerAlertSubtitle}>
-                  Zero rental fees. Free home delivery available for critical emergency cases in Mathura & Vrindavan.
+                  Zero security deposit or rental fees. Prompt doorstep delivery for emergency patient care across Mathura, Vrindavan & Govardhan.
                 </Text>
               </View>
             </View>
 
-            <Text style={styles.label}>Select Equipment Item</Text>
+            {/* Field: Equipment Picker */}
+            <Text style={styles.fieldLabel}>Select Medical Equipment *</Text>
             <TouchableOpacity
-              style={styles.dropdownBtn}
+              style={styles.dropdownCard}
               onPress={() => setEquipModalVisible(true)}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
-              <Text style={styles.dropdownValue}>{equipmentType}</Text>
-              <Ionicons name="chevron-down" size={16} color="#64748B" />
+              <View style={styles.dropdownLeft}>
+                <View style={styles.dropdownIconBox}>
+                  {getEquipmentIcon(selectedItem.category, selectedItem.name)}
+                </View>
+                <View style={styles.dropdownTextCol}>
+                  <Text style={styles.dropdownTitle} numberOfLines={1}>
+                    {selectedItem.name}
+                  </Text>
+                  <Text style={styles.dropdownCategory}>
+                    {selectedItem.category || "Respiratory / Mobility Support"}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-down" size={18} color="#64748B" />
             </TouchableOpacity>
 
-            <Text style={styles.label}>Patient Full Name</Text>
+            {/* Field: Patient Name */}
+            <Text style={styles.fieldLabel}>Patient Full Name *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter patient full name"
+              placeholder="e.g. Smt. Kamlesh Sharma"
               placeholderTextColor="#94A3B8"
               value={patientName}
               onChangeText={setPatientName}
             />
 
-            <Text style={styles.label}>Delivery Address & City</Text>
+            {/* Field: Attendant / Requester Name */}
+            <Text style={styles.fieldLabel}>Attendant / Caregiver Name (Optional)</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. 12, Krishna Nagar, Mathura"
+              placeholder="e.g. Rajesh Sharma (Son / Family)"
               placeholderTextColor="#94A3B8"
-              value={address}
-              onChangeText={setAddress}
+              value={requesterName}
+              onChangeText={setRequesterName}
             />
 
-            <View style={styles.row}>
-              <View style={styles.col}>
-                <Text style={styles.label}>Contact Phone</Text>
+            {/* Field: Contact Phone & City */}
+            <View style={styles.inputRow}>
+              <View style={styles.inputCol}>
+                <Text style={styles.fieldLabel}>Contact Phone *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="10-digit number"
+                  placeholder="10-digit mobile"
                   placeholderTextColor="#94A3B8"
                   keyboardType="phone-pad"
                   value={phone}
@@ -270,179 +454,308 @@ export default function MedicalRequestScreen() {
                 />
               </View>
 
-              <View style={styles.col}>
-                <Text style={styles.label}>Duration Needed</Text>
-                <View style={styles.durationRow}>
-                  {["7 Days", "15 Days", "1 Month"].map((d) => (
-                    <TouchableOpacity
-                      key={d}
-                      style={[styles.durationChip, duration === d && styles.durationChipActive]}
-                      onPress={() => setDuration(d)}
-                    >
-                      <Text
-                        style={[
-                          styles.durationChipText,
-                          duration === d && styles.durationChipTextActive,
-                        ]}
-                      >
-                        {d}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+              <View style={styles.inputCol}>
+                <Text style={styles.fieldLabel}>City / Area *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Vrindavan"
+                  placeholderTextColor="#94A3B8"
+                  value={city}
+                  onChangeText={setCity}
+                />
               </View>
             </View>
 
+            {/* Field: Delivery Address */}
+            <Text style={styles.fieldLabel}>Delivery Address *</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="House/Plot number, Street, Landmark in Mathura / Vrindavan"
+              placeholderTextColor="#94A3B8"
+              multiline
+              numberOfLines={2}
+              value={address}
+              onChangeText={setAddress}
+            />
+
+            {/* Field: Duration Needed */}
+            <Text style={styles.fieldLabel}>Initial Duration Needed</Text>
+            <View style={styles.durationGrid}>
+              {DURATION_OPTIONS.map((opt) => {
+                const isSelected = requestedDays === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.durationChip, isSelected && styles.durationChipActive]}
+                    onPress={() => setRequestedDays(opt.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.durationChipText, isSelected && styles.durationChipTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Field: Purpose / Condition */}
+            <Text style={styles.fieldLabel}>Medical Purpose / Patient Condition</Text>
+            <View style={styles.purposeChipsWrap}>
+              {PURPOSE_SUGGESTIONS.map((sug) => {
+                const isSelected = purpose === sug;
+                return (
+                  <TouchableOpacity
+                    key={sug}
+                    style={[styles.purposeChip, isSelected && styles.purposeChipActive]}
+                    onPress={() => setPurpose(sug)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.purposeChipText, isSelected && styles.purposeChipTextActive]}>
+                      {sug}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Submit Button */}
             <TouchableOpacity
-              style={styles.submitBtn}
+              style={[styles.submitBtn, isSubmitting && { opacity: 0.7 }]}
               onPress={handleRequestSubmit}
+              disabled={isSubmitting}
               activeOpacity={0.88}
             >
-              <Ionicons name="send" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.submitBtnText}>Submit Equipment Request</Text>
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.submitBtnText}>Submit Equipment Request</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         ) : (
-          /* TAB 2: ACTIVE LOANS & TRACKER */
+          /* ===================== TAB 2: ACTIVE LOANS & TRACKER ===================== */
           <View style={styles.loansContainer}>
-            {activeLoans.map((loan) => (
-              <View key={loan.id} style={styles.loanCard}>
-                <View style={styles.loanHeader}>
-                  <View style={styles.loanIconBox}>
-                    <Ionicons name="medkit" size={20} color="#166534" />
-                  </View>
-                  <View style={styles.loanHeaderInfo}>
-                    <Text style={styles.loanEquipTitle}>{loan.equipmentName}</Text>
-                    <Text style={styles.loanPatient}>Patient: {loan.patientName}</Text>
-                  </View>
-                </View>
-
-                {/* Status Stepper */}
-                <View style={styles.stepperContainer}>
-                  <View style={styles.stepRow}>
-                    <View
-                      style={[
-                        styles.stepDot,
-                        loan.statusStep >= 1 ? styles.stepDotCompleted : styles.stepDotPending,
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.stepLine,
-                        loan.statusStep >= 2 ? styles.stepLineCompleted : styles.stepLinePending,
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.stepDot,
-                        loan.statusStep >= 2 ? styles.stepDotCompleted : styles.stepDotPending,
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.stepLine,
-                        loan.statusStep >= 3 ? styles.stepLineCompleted : styles.stepLinePending,
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.stepDot,
-                        loan.statusStep >= 3 ? styles.stepDotCompleted : styles.stepDotPending,
-                      ]}
-                    />
-                  </View>
-
-                  <View style={styles.stepLabelsRow}>
-                    <Text style={styles.stepLabel}>Submitted</Text>
-                    <Text style={styles.stepLabel}>Dispatched</Text>
-                    <Text style={styles.stepLabel}>Active at Home</Text>
-                  </View>
-                </View>
-
-                <View style={styles.loanMetaBox}>
-                  <Text style={styles.loanMetaText}>📍 {loan.address}</Text>
-                  <Text style={styles.loanMetaText}>
-                    📅 Issued: {loan.issueDate} • Return Due: {loan.returnDate}
-                  </Text>
-                </View>
-
-                <View style={styles.loanActionsRow}>
-                  <TouchableOpacity
-                    style={styles.loanActionBtnOutline}
-                    onPress={() => Alert.alert("Extend Loan", "Loan extension request submitted. Our coordinator will contact you.")}
-                  >
-                    <Text style={styles.loanActionBtnOutlineText}>Extend Loan</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.loanActionBtnSolid}
-                    onPress={() => Alert.alert("Schedule Pickup", "A volunteer driver will pick up the cleaned equipment.")}
-                  >
-                    <Text style={styles.loanActionBtnSolidText}>Schedule Return</Text>
-                  </TouchableOpacity>
-                </View>
+            {loadingLoans && activeLoans.length === 0 ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator size="large" color="#166534" />
+                <Text style={styles.loadingText}>Fetching active loans from Seva Bank...</Text>
               </View>
-            ))}
+            ) : activeLoans.length === 0 ? (
+              <View style={styles.emptyStateBox}>
+                <View style={styles.emptyIconCircle}>
+                  <MaterialCommunityIcons name="clipboard-text-search-outline" size={36} color="#94A3B8" />
+                </View>
+                <Text style={styles.emptyTitle}>No Active Equipment Loans</Text>
+                <Text style={styles.emptySubtitle}>
+                  You haven't requested any medical devices yet. Submit a request to borrow free oxygen concentrators, hospital beds, or wheelchairs.
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyActionBtn}
+                  onPress={() => setActiveTab("request")}
+                  activeOpacity={0.88}
+                >
+                  <Text style={styles.emptyActionBtnText}>Request Equipment Now →</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              activeLoans.map((loan) => {
+                const badge = getStatusBadge(loan.status);
+                return (
+                  <View key={loan.id} style={styles.loanCard}>
+                    {/* Top Row: Device Name & Status */}
+                    <View style={styles.loanHeader}>
+                      <View style={styles.loanIconBox}>
+                        {getEquipmentIcon(loan.category, loan.equipmentName)}
+                      </View>
+                      <View style={styles.loanHeaderInfo}>
+                        <Text style={styles.loanEquipTitle}>{loan.equipmentName}</Text>
+                        <Text style={styles.loanPatient}>
+                          👤 Patient: <Text style={{ fontWeight: "800", color: "#0F172A" }}>{loan.patientName}</Text>
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Status Badge */}
+                    <View style={[styles.loanStatusPill, { backgroundColor: badge.bg }]}>
+                      <Ionicons name={badge.icon as any} size={13} color={badge.text} style={{ marginRight: 4 }} />
+                      <Text style={[styles.loanStatusPillText, { color: badge.text }]}>{badge.label}</Text>
+                    </View>
+
+                    {/* 4-Stage Visual Progress Stepper */}
+                    <View style={styles.stepperContainer}>
+                      <View style={styles.stepRow}>
+                        <View style={[styles.stepDot, loan.statusStep >= 1 ? styles.stepDotActive : styles.stepDotPending]} />
+                        <View style={[styles.stepLine, loan.statusStep >= 2 ? styles.stepLineActive : styles.stepLinePending]} />
+                        <View style={[styles.stepDot, loan.statusStep >= 2 ? styles.stepDotActive : styles.stepDotPending]} />
+                        <View style={[styles.stepLine, loan.statusStep >= 3 ? styles.stepLineActive : styles.stepLinePending]} />
+                        <View style={[styles.stepDot, loan.statusStep >= 3 ? styles.stepDotActive : styles.stepDotPending]} />
+                        <View style={[styles.stepLine, loan.statusStep >= 4 ? styles.stepLineActive : styles.stepLinePending]} />
+                        <View style={[styles.stepDot, loan.statusStep >= 4 ? styles.stepDotActive : styles.stepDotPending]} />
+                      </View>
+
+                      <View style={styles.stepLabelsRow}>
+                        <Text style={[styles.stepLabel, loan.statusStep >= 1 && styles.stepLabelActive]}>Submitted</Text>
+                        <Text style={[styles.stepLabel, loan.statusStep >= 2 && styles.stepLabelActive]}>Verified</Text>
+                        <Text style={[styles.stepLabel, loan.statusStep >= 3 && styles.stepLabelActive]}>Active</Text>
+                        <Text style={[styles.stepLabel, loan.statusStep >= 4 && styles.stepLabelActive]}>Returned</Text>
+                      </View>
+                    </View>
+
+                    {/* Metadata Box */}
+                    <View style={styles.loanMetaBox}>
+                      <View style={styles.loanMetaRow}>
+                        <Ionicons name="location-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
+                        <Text style={styles.loanMetaText} numberOfLines={1}>
+                          {loan.address}, {loan.city}
+                        </Text>
+                      </View>
+                      <View style={styles.loanMetaRow}>
+                        <Ionicons name="calendar-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
+                        <Text style={styles.loanMetaText}>
+                          Issued: <Text style={{ fontWeight: "700" }}>{loan.issueDate}</Text> • Return Due:{" "}
+                          <Text style={{ fontWeight: "700", color: "#166534" }}>{loan.returnDate}</Text>
+                        </Text>
+                      </View>
+                      {loan.purpose ? (
+                        <View style={styles.loanMetaRow}>
+                          <Ionicons name="clipboard-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
+                          <Text style={styles.loanMetaText} numberOfLines={1}>
+                            Note: {loan.purpose}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* Action Buttons */}
+                    <View style={styles.loanActionsRow}>
+                      <TouchableOpacity
+                        style={styles.loanActionBtnOutline}
+                        onPress={() =>
+                          Alert.alert(
+                            "Request Extension",
+                            `Would you like to extend loan for ${loan.equipmentName}? Our Seva desk will confirm +15 days extension.`,
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              {
+                                text: "Confirm Extension",
+                                onPress: () => Alert.alert("Extension Requested", "Our coordinator will verify and confirm shortly."),
+                              },
+                            ]
+                          )
+                        }
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="refresh-outline" size={13} color="#166534" style={{ marginRight: 4 }} />
+                        <Text style={styles.loanActionBtnOutlineText}>Extend Loan</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.loanActionBtnSolid}
+                        onPress={() =>
+                          Alert.alert(
+                            "Schedule Return Pickup",
+                            `Schedule a volunteer driver to pick up ${loan.equipmentName} from ${loan.address}?`,
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              {
+                                text: "Schedule Pickup",
+                                onPress: () => Alert.alert("Pickup Scheduled", "Our logistics team will contact you for pickup time."),
+                              },
+                            ]
+                          )
+                        }
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="car-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                        <Text style={styles.loanActionBtnSolidText}>Return Pickup</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
 
-        {/* Equipment Item Picker Modal */}
+        {/* ===================== EQUIPMENT SELECTOR MODAL ===================== */}
         <Modal visible={equipModalVisible} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Medical Equipment</Text>
-                <TouchableOpacity onPress={() => setEquipModalVisible(false)}>
+                <View>
+                  <Text style={styles.modalTitle}>Select Medical Equipment</Text>
+                  <Text style={styles.modalSubtitle}>All items sanitized & tested for immediate home care</Text>
+                </View>
+                <TouchableOpacity onPress={() => setEquipModalVisible(false)} activeOpacity={0.8}>
                   <Ionicons name="close-circle" size={24} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
-              {EQUIPMENT_ITEMS.map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={[
-                    styles.equipOption,
-                    equipmentType === item && styles.equipOptionActive,
-                  ]}
-                  onPress={() => {
-                    setEquipmentType(item);
-                    setEquipModalVisible(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.equipOptionText,
-                      equipmentType === item && styles.equipOptionTextActive,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                  {equipmentType === item && <Ionicons name="checkmark" size={18} color="#166534" />}
-                </TouchableOpacity>
-              ))}
+              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+                {inventory.map((item) => {
+                  const isSelected = selectedItem.id === item.id;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.equipOption, isSelected && styles.equipOptionActive]}
+                      onPress={() => {
+                        setSelectedItem(item);
+                        setEquipModalVisible(false);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <View style={styles.equipOptionLeft}>
+                        <View style={[styles.equipOptionIconBox, isSelected && { backgroundColor: "#DCFCE7" }]}>
+                          {getEquipmentIcon(item.category, item.name)}
+                        </View>
+                        <View style={styles.equipOptionTextCol}>
+                          <Text style={[styles.equipOptionTitle, isSelected && styles.equipOptionTitleActive]}>
+                            {item.name}
+                          </Text>
+                          <Text style={styles.equipOptionCategory}>{item.category || "Medical Equipment"}</Text>
+                        </View>
+                      </View>
+                      {isSelected ? (
+                        <Ionicons name="checkmark-circle" size={20} color="#166534" />
+                      ) : (
+                        <Ionicons name="radio-button-off" size={18} color="#CBD5E1" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
           </View>
         </Modal>
 
-        {/* Success Modal */}
+        {/* ===================== SUCCESS CONFIRMATION MODAL ===================== */}
         <Modal visible={successModalVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { alignItems: "center", paddingVertical: 28 }]}>
+            <View style={[styles.modalContent, { alignItems: "center", paddingVertical: 24 }]}>
               <View style={styles.successIconCircle}>
                 <Ionicons name="checkmark-done" size={32} color="#166534" />
               </View>
               <Text style={styles.successHeading}>Request Received!</Text>
               <Text style={styles.successDesc}>
-                Your request for {equipmentType} has been assigned to our Seva coordinator.
-                We will dispatch the sanitized unit to your address promptly.
+                Your loan request for <Text style={{ fontWeight: "800", color: "#0F172A" }}>{selectedItem.name}</Text> has been registered under reference #{lastSubmittedId.slice(-6).toUpperCase()}.
               </Text>
 
+              <View style={styles.successDetailsBox}>
+                <Text style={styles.successDetailText}>📍 Destination: {address || "Mathura / Vrindavan"}</Text>
+                <Text style={styles.successDetailText}>⏱️ Coordination: Within 2 Hours</Text>
+                <Text style={styles.successDetailText}>📞 Seva Desk: +91 94122 79001</Text>
+              </View>
+
               <TouchableOpacity
-                style={[styles.submitBtn, { width: "100%", marginTop: 20 }]}
+                style={[styles.submitBtn, { width: "100%", marginTop: 8 }]}
                 onPress={() => {
                   setSuccessModalVisible(false);
                   setActiveTab("status");
                 }}
+                activeOpacity={0.88}
               >
                 <Text style={styles.submitBtnText}>Track Active Loan →</Text>
               </TouchableOpacity>
@@ -461,35 +774,57 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerBtn: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+  headerTitleCol: {
+    flex: 1,
+    marginHorizontal: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "800",
     color: "#164E2E",
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
+  },
+  headerSubtitle: {
+    fontSize: 10,
+    color: "#64748B",
+    fontWeight: "600",
+    marginTop: 1,
+  },
+  headerActionBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#99F6E4",
   },
   tabBarWrapper: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 12,
-    marginHorizontal: 20,
+    backgroundColor: "#E2E8F0",
+    borderRadius: 10,
+    marginHorizontal: 16,
     marginTop: 12,
     padding: 3,
   },
@@ -499,7 +834,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   tabBtnActive: {
     backgroundColor: "#166534",
@@ -508,91 +843,128 @@ const styles = StyleSheet.create({
   tabBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#64748B",
+    color: "#475569",
   },
   tabBtnTextActive: {
     color: "#FFFFFF",
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 34,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 36,
   },
   bannerAlert: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
-    borderRadius: 12,
+    backgroundColor: "#F0FDFA",
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#99F6E4",
     padding: 12,
-    marginBottom: 16,
+    marginBottom: 14,
+  },
+  bannerIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "#CCFBF1",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
   bannerAlertTitle: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#166534",
+    color: "#0F766E",
   },
   bannerAlertSubtitle: {
     fontSize: 10,
-    color: "#475569",
+    color: "#334155",
     lineHeight: 14,
     marginTop: 2,
   },
-  label: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#334155",
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#1E293B",
     marginBottom: 4,
-    marginTop: 4,
+    marginTop: 6,
   },
-  input: {
-    height: 44,
-    backgroundColor: "#F8FAFC",
+  dropdownCard: {
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#CBD5E1",
     borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 13,
-    color: "#0F172A",
-    marginBottom: 12,
-  },
-  dropdownBtn: {
-    height: 44,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    padding: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 10,
+    ...Shadows.soft,
   },
-  dropdownValue: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  row: {
+  dropdownLeft: {
     flexDirection: "row",
-    gap: 12,
+    alignItems: "center",
+    flex: 1,
+    marginRight: 8,
   },
-  col: {
+  dropdownIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "#F0FDFA",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  dropdownTextCol: {
     flex: 1,
   },
-  durationRow: {
+  dropdownTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  dropdownCategory: {
+    fontSize: 10,
+    color: "#0D9488",
+    fontWeight: "600",
+  },
+  input: {
+    height: 42,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 12,
+    color: "#0F172A",
+    marginBottom: 10,
+  },
+  textArea: {
+    height: 60,
+    textAlignVertical: "top",
+    paddingTop: 8,
+  },
+  inputRow: {
     flexDirection: "row",
-    gap: 4,
-    marginBottom: 12,
+    gap: 10,
+  },
+  inputCol: {
+    flex: 1,
+  },
+  durationGrid: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 10,
   },
   durationChip: {
     flex: 1,
-    height: 44,
+    height: 38,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#F8FAFC",
+    borderColor: "#CBD5E1",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -601,51 +973,132 @@ const styles = StyleSheet.create({
     borderColor: "#166534",
   },
   durationChipText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: "#334155",
   },
   durationChipTextActive: {
     color: "#FFFFFF",
   },
+  purposeChipsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 16,
+  },
+  purposeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    backgroundColor: "#FFFFFF",
+  },
+  purposeChipActive: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#166534",
+  },
+  purposeChipText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#475569",
+  },
+  purposeChipTextActive: {
+    color: "#166534",
+    fontWeight: "800",
+  },
   submitBtn: {
-    height: 48,
     backgroundColor: "#166534",
-    borderRadius: 12,
+    height: 46,
+    borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 6,
     ...Shadows.primaryBtn,
   },
   submitBtnText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
+
+  /* Loans Container */
   loansContainer: {
-    gap: 14,
+    paddingTop: 6,
+  },
+  loadingBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    gap: 10,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+  emptyStateBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 24,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 11,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 16,
+    marginBottom: 16,
+  },
+  emptyActionBtn: {
+    backgroundColor: "#166534",
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  emptyActionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
   },
   loanCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     padding: 14,
+    marginBottom: 12,
     ...Shadows.card,
   },
   loanHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   loanIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#F0FDF4",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#F0FDFA",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -660,24 +1113,40 @@ const styles = StyleSheet.create({
   },
   loanPatient: {
     fontSize: 11,
-    color: "#64748B",
+    color: "#475569",
     marginTop: 1,
   },
-  stepperContainer: {
-    marginVertical: 10,
+  loanStatusPill: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+  loanStatusPillText: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  stepperContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 8,
   },
   stepDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  stepDotCompleted: {
+  stepDotActive: {
     backgroundColor: "#166534",
   },
   stepDotPending: {
@@ -685,13 +1154,13 @@ const styles = StyleSheet.create({
   },
   stepLine: {
     flex: 1,
-    height: 3,
+    height: 2,
   },
-  stepLineCompleted: {
+  stepLineActive: {
     backgroundColor: "#166534",
   },
   stepLinePending: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#CBD5E1",
   },
   stepLabelsRow: {
     flexDirection: "row",
@@ -700,52 +1169,65 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 9,
-    fontWeight: "700",
-    color: "#64748B",
+    fontWeight: "600",
+    color: "#94A3B8",
+  },
+  stepLabelActive: {
+    color: "#166534",
+    fontWeight: "800",
   },
   loanMetaBox: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 10,
     gap: 4,
+    marginBottom: 12,
+  },
+  loanMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   loanMetaText: {
     fontSize: 11,
     color: "#475569",
+    flex: 1,
   },
   loanActionsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    paddingTop: 10,
   },
   loanActionBtnOutline: {
     flex: 1,
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#166534",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#166534",
+    paddingVertical: 7,
+    borderRadius: 8,
   },
   loanActionBtnOutlineText: {
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#166534",
   },
   loanActionBtnSolid: {
     flex: 1,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#166534",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#166534",
+    paddingVertical: 7,
+    borderRadius: 8,
   },
   loanActionBtnSolidText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
     color: "#FFFFFF",
   },
+
+  /* Modals */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -753,65 +1235,109 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
+    alignItems: "flex-start",
+    marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: "#164E2E",
+  },
+  modalSubtitle: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 1,
   },
   equipOption: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    marginBottom: 8,
   },
   equipOptionActive: {
+    borderColor: "#166534",
     backgroundColor: "#F0FDF4",
-    paddingHorizontal: 8,
+  },
+  equipOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginRight: 8,
+  },
+  equipOptionIconBox: {
+    width: 34,
+    height: 34,
     borderRadius: 8,
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
-  equipOptionText: {
-    fontSize: 13,
-    color: "#334155",
-    fontWeight: "600",
+  equipOptionTextCol: {
+    flex: 1,
   },
-  equipOptionTextActive: {
+  equipOptionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  equipOptionTitleActive: {
     color: "#166534",
     fontWeight: "800",
   },
+  equipOptionCategory: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 1,
+  },
   successIconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#F0FDF4",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#DCFCE7",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   successHeading: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
     color: "#164E2E",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   successDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#475569",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 17,
+    marginBottom: 14,
     paddingHorizontal: 10,
+  },
+  successDetailsBox: {
+    width: "100%",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    gap: 4,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  successDetailText: {
+    fontSize: 11,
+    color: "#334155",
+    fontWeight: "600",
   },
 });

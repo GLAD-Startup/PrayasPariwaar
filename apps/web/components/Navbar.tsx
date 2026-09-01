@@ -154,16 +154,6 @@ export default function Navbar() {
                         <span className="text-[11px] text-prayas-muted">₹500/mo covers books, fees & meals</span>
                       </div>
                     </Link>
-                    <Link
-                      href="/projects/aadhar-career-counseling"
-                      className="flex items-start gap-2.5 px-4 py-2.5 text-xs hover:bg-prayas-stone text-prayas-ink border-t border-prayas-rule"
-                    >
-                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="block font-bold">Project Aadhar</strong>
-                        <span className="text-[11px] text-prayas-muted">Youth career & digital skills</span>
-                      </div>
-                    </Link>
                   </div>
                 )}
               </div>

@@ -138,3 +138,38 @@ export function resolveImageUrl(url: any, fallback?: any): any {
   return fallback || require("../assets/onboarding/education.jpg");
 }
 
+export async function uploadFile(
+  uri: string,
+  fileName = "profile.jpg",
+  mimeType = "image/jpeg"
+): Promise<{ url?: string; error?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("file", {
+      uri,
+      name: fileName,
+      type: mimeType,
+    } as any);
+
+    const token = await getAccessToken();
+    const baseUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+    const res = await fetch(`${baseUrl}/upload`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      return { error: data?.error || "Failed to upload image" };
+    }
+    return { url: data?.url || data?.files?.[0]?.url };
+  } catch (e: any) {
+    return { error: e.message || "Upload network error" };
+  }
+}
+
+

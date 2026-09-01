@@ -12,15 +12,17 @@ import {
   StatusBar,
   Modal,
   Alert,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api, resolveImageUrl } from "../../lib/api";
+import SidebarDrawer from "../../components/SidebarDrawer";
 
 const { width } = Dimensions.get("window");
-const HERO_CARD_WIDTH = width - 40;
+const HERO_CARD_WIDTH = width - 32;
 
 interface HeroSlide {
   id: string;
@@ -35,7 +37,7 @@ interface HeroSlide {
 const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
     id: "1",
-    image: require("../../assets/onboarding/education.jpg"),
+    image: require("../../assets/images/hero-education-vrindavan.jpg"),
     titlePrefix: "Together,\nWe Can Make\n",
     titleHighlight: "a Difference",
     subtitle: "Serving society through education, health, nature and skills.",
@@ -44,7 +46,7 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: "2",
-    image: require("../../assets/onboarding/blood.jpg"),
+    image: require("../../assets/images/medical-blood-seva.jpg"),
     titlePrefix: "Every Drop Can\nSave a Life\n",
     titleHighlight: "Emergency Seva",
     subtitle: "24/7 voluntary blood donor network in Mathura & Vrindavan.",
@@ -53,7 +55,7 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: "3",
-    image: require("../../assets/onboarding/plantation.jpg"),
+    image: require("../../assets/images/vrindavan-plantation.jpg"),
     titlePrefix: "Plant a Tree,\nNurture Life\n",
     titleHighlight: "Harit Kranti",
     subtitle: "Over 10,000 native tree saplings along sacred Braj Parikrama.",
@@ -64,52 +66,57 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
 
 const SERVICE_STREAMS = [
   {
-    id: "edu",
+    id: "education",
     title: "Free\nEducation",
+    label: "Education",
     icon: "school-outline",
     iconType: "ionicons",
     bgColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
+    borderColor: "#86EFAC",
     iconColor: "#16A34A",
     route: "/seva/education",
   },
   {
-    id: "blood",
+    id: "blood-donation",
     title: "Blood\nDonation",
+    label: "Blood Seva",
     icon: "water-outline",
     iconType: "ionicons",
     bgColor: "#FEF2F2",
-    borderColor: "#FECACA",
+    borderColor: "#FCA5A5",
     iconColor: "#DC2626",
     route: "/seva/blood-donation",
   },
   {
-    id: "plant",
-    title: "Plantation",
+    id: "plantation",
+    title: "Tree\nPlantation",
+    label: "Plantation",
     icon: "sprout-outline",
     iconType: "material",
     bgColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
+    borderColor: "#86EFAC",
     iconColor: "#15803D",
     route: "/seva/plantation",
   },
   {
-    id: "jeev",
+    id: "jeev-jal",
     title: "Jeev Jal\nSeva",
+    label: "Jeev Jal",
     icon: "bird",
     iconType: "material",
     bgColor: "#EFF6FF",
-    borderColor: "#BFDBFE",
+    borderColor: "#93C5FD",
     iconColor: "#2563EB",
     route: "/seva/jeev-jal",
   },
   {
-    id: "equip",
+    id: "vocational",
     title: "Vocational\nTraining",
+    label: "Vocational",
     icon: "cog-outline",
     iconType: "material",
     bgColor: "#FAF5FF",
-    borderColor: "#E9D5FF",
+    borderColor: "#D8B4FE",
     iconColor: "#9333EA",
     route: "/seva/vocational",
   },
@@ -120,44 +127,44 @@ const LATEST_UPDATES = [
     id: "learning-center-rohini",
     tag: "Education",
     tagBg: "#16A34A",
-    title: "New Class Started for Underprivileged Children",
+    title: "Remedial Study Center Active in Raman Reti",
     date: "12 May 2024",
-    image: require("../../assets/onboarding/education.jpg"),
+    image: require("../../assets/images/banyan-study-vrindavan.jpg"),
   },
   {
     id: "blood-donation-city-hospital",
     tag: "Blood Donation",
     tagBg: "#DC2626",
-    title: "Successful Blood Donation Camp at City Hospital",
+    title: "Rapid Emergency Blood Dispatch at City Hospital",
     date: "10 May 2024",
-    image: require("../../assets/onboarding/blood.jpg"),
+    image: require("../../assets/images/medical-blood-seva.jpg"),
   },
   {
     id: "tree-plantation-green-valley",
     tag: "Plantation",
     tagBg: "#15803D",
-    title: "Tree Plantation Drive at Green Valley Park",
+    title: "Neem & Peepal Sapling Plantation Drive on Parikrama Marg",
     date: "08 May 2024",
-    image: require("../../assets/onboarding/plantation.jpg"),
+    image: require("../../assets/images/vrindavan-plantation.jpg"),
   },
   {
-    id: "vocational-training-youth",
-    tag: "Equipment",
-    tagBg: "#9333EA",
-    title: "10L Oxygen Concentrators Deployed for Free Loan",
+    id: "free-health-camp-chhatikara",
+    tag: "Healthcare",
+    tagBg: "#0284C7",
+    title: "Free Pediatric & Eye Screening Camp in Village Chhatikara",
     date: "05 May 2024",
-    image: require("../../assets/onboarding/equipment.jpg"),
+    image: require("../../assets/images/health-camp-vrindavan.jpg"),
   },
 ];
 
 export default function MobileHomeScreen() {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [eventModalVisible, setEventModalVisible] = useState(false);
   const heroListRef = useRef<FlatList>(null);
 
-  // Dynamic schema states
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES);
   const [latestUpdates, setLatestUpdates] = useState<any[]>(LATEST_UPDATES);
   const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
@@ -174,7 +181,7 @@ export default function MobileHomeScreen() {
         const liveProjects = projectsRes.data.data;
         const slides: HeroSlide[] = liveProjects.slice(0, 4).map((p: any) => ({
           id: p.id,
-          image: resolveImageUrl(p.coverImage, require("../../assets/onboarding/education.jpg")),
+          image: resolveImageUrl(p.coverImage, require("../../assets/images/hero-education-vrindavan.jpg")),
           titlePrefix: `${p.title}\n`,
           titleHighlight: p.category ? p.category.replace("_", " ") : "Seva Initiative",
           subtitle: p.description ? `${p.description.substring(0, 75)}...` : "Serving humanity in Vrindavan & Mathura.",
@@ -198,7 +205,7 @@ export default function MobileHomeScreen() {
             : "Ongoing",
           image: resolveImageUrl(
             post.images?.[0]?.url || post.coverImage,
-            require("../../assets/onboarding/education.jpg")
+            require("../../assets/images/hero-education-vrindavan.jpg")
           ),
         }));
         setLatestUpdates(updates);
@@ -223,30 +230,37 @@ export default function MobileHomeScreen() {
     setRefreshing(false);
   };
 
+  const handleCallEmergency = () => {
+    Linking.openURL("tel:+919412279001").catch(() => {
+      Alert.alert("Helpline", "Please call Prayas Seva Desk at +91 94122 79001");
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Top Header Bar */}
       <View style={styles.header}>
-        {/* Hamburger Menu */}
+        {/* Sidebar Navigation Hamburger Menu */}
         <TouchableOpacity
           style={styles.headerIconButton}
-          onPress={() => router.push("/(tabs)/profile")}
+          onPress={() => setSidebarOpen(true)}
           activeOpacity={0.8}
         >
-          <Ionicons name="menu" size={26} color="#1E293B" />
+          <Ionicons name="menu" size={24} color="#1E293B" />
         </TouchableOpacity>
 
         {/* Center Brand Logo & Title */}
         <View style={styles.headerBrandCenter}>
-          <View style={styles.headerEmblem}>
-            <Ionicons name="sunny-outline" size={20} color="#F59E0B" style={styles.headerSun} />
-            <MaterialCommunityIcons name="hand-heart" size={16} color="#166534" />
-          </View>
+          <Image
+            source={require("../../assets/images/prayas-logo-blue.png")}
+            style={styles.headerLogoImg}
+            resizeMode="contain"
+          />
           <View style={styles.headerTextCol}>
-            <Text style={styles.headerOrgName}>Prayas Pariwaar</Text>
-            <Text style={styles.headerTagline}>Serving Humanity • Vrindavan</Text>
+            <Text style={styles.headerOrgName}>PRAYAS</Text>
+            <Text style={styles.headerTagline}>A Trial to Move Ahead</Text>
           </View>
         </View>
 
@@ -257,7 +271,7 @@ export default function MobileHomeScreen() {
           activeOpacity={0.8}
         >
           <View style={styles.bellWrapper}>
-            <Ionicons name="notifications-outline" size={24} color="#1E293B" />
+            <Ionicons name="notifications-outline" size={22} color="#1E293B" />
             <View style={styles.redBadgeDot} />
           </View>
         </TouchableOpacity>
@@ -295,7 +309,6 @@ export default function MobileHomeScreen() {
                   style={styles.heroImage}
                   resizeMode="cover"
                 />
-                {/* Dark Gradient / Scrim Overlay */}
                 <View style={styles.heroOverlay} />
 
                 {/* Hero Text Content */}
@@ -306,7 +319,7 @@ export default function MobileHomeScreen() {
                   </Text>
                   <Text style={styles.heroSubtitle}>{item.subtitle}</Text>
 
-                  {/* Know More Button */}
+                  {/* CTA Button */}
                   <TouchableOpacity
                     style={styles.heroButton}
                     onPress={() => router.push(item.route as any)}
@@ -314,12 +327,12 @@ export default function MobileHomeScreen() {
                   >
                     <Text style={styles.heroButtonText}>{item.buttonText}</Text>
                     <View style={styles.heroButtonArrowCircle}>
-                      <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+                      <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
                     </View>
                   </TouchableOpacity>
                 </View>
 
-                {/* Pagination Dots at Bottom of Hero */}
+                {/* Pagination Dots */}
                 <View style={styles.heroPagination}>
                   {heroSlides.map((_, i) => (
                     <View
@@ -337,25 +350,32 @@ export default function MobileHomeScreen() {
           />
         </View>
 
-        {/* Section: Our Service Streams */}
+        {/* ===================== ENHANCED SERVICE STREAMS (COMPACT CARDS ONLY) ===================== */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Our Service Streams</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>Our Service Streams</Text>
+            <View style={styles.streamCountBadge}>
+              <Text style={styles.streamCountBadgeText}>5 Pillars</Text>
+            </View>
+          </View>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/seva")}
             style={styles.viewAllRow}
+            activeOpacity={0.7}
           >
-            <Text style={styles.viewAllText}>View All</Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+            <Text style={styles.viewAllText}>All Projects</Text>
+            <Ionicons name="chevron-forward" size={13} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
+        {/* 5 Prominent Enhanced Small Stream Cards */}
         <View style={styles.servicesGrid}>
           {SERVICE_STREAMS.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.serviceItem}
               onPress={() => router.push(item.route as any)}
-              activeOpacity={0.8}
+              activeOpacity={0.82}
             >
               <View
                 style={[
@@ -364,25 +384,28 @@ export default function MobileHomeScreen() {
                 ]}
               >
                 {item.iconType === "ionicons" ? (
-                  <Ionicons name={item.icon as any} size={24} color={item.iconColor} />
+                  <Ionicons name={item.icon as any} size={28} color={item.iconColor} />
                 ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={24} color={item.iconColor} />
+                  <MaterialCommunityIcons name={item.icon as any} size={28} color={item.iconColor} />
                 )}
               </View>
-              <Text style={styles.serviceItemLabel}>{item.title}</Text>
+              <Text style={styles.serviceItemLabel} numberOfLines={2}>
+                {item.title}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Section: Latest Updates */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Latest Updates</Text>
+          <Text style={styles.sectionTitle}>Latest Seva Dispatches</Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/blogs")}
             style={styles.viewAllRow}
+            activeOpacity={0.7}
           >
             <Text style={styles.viewAllText}>View All</Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+            <Ionicons name="chevron-forward" size={13} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -414,7 +437,7 @@ export default function MobileHomeScreen() {
                   {card.title}
                 </Text>
                 <View style={styles.updateDateRow}>
-                  <Ionicons name="calendar-outline" size={13} color="#94A3B8" style={{ marginRight: 4 }} />
+                  <Ionicons name="calendar-outline" size={12} color="#94A3B8" style={{ marginRight: 4 }} />
                   <Text style={styles.updateDateText}>{card.date}</Text>
                 </View>
               </View>
@@ -430,9 +453,10 @@ export default function MobileHomeScreen() {
               <TouchableOpacity
                 onPress={() => router.push("/gallery")}
                 style={styles.viewAllRow}
+                activeOpacity={0.7}
               >
                 <Text style={styles.viewAllText}>View All ({galleryPhotos.length})</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                <Ionicons name="chevron-forward" size={13} color={Colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -444,22 +468,22 @@ export default function MobileHomeScreen() {
               {galleryPhotos.map((photo: any) => (
                 <TouchableOpacity
                   key={photo.id}
-                  style={[styles.updateCard, { width: 140 }]}
+                  style={[styles.updateCard, { width: 145 }]}
                   onPress={() => router.push("/gallery")}
                   activeOpacity={0.88}
                 >
-                  <View style={[styles.updateImageWrapper, { height: 110 }]}>
+                  <View style={[styles.updateImageWrapper, { height: 105 }]}>
                     <Image
                       source={resolveImageUrl(photo.url)}
                       style={styles.updateImage}
                       resizeMode="cover"
                     />
-                    <View style={[styles.updatePill, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
+                    <View style={[styles.updatePill, { backgroundColor: "rgba(0,0,0,0.7)" }]}>
                       <Text style={styles.updatePillText}>{photo.category || "Seva"}</Text>
                     </View>
                   </View>
-                  <View style={[styles.updateContent, { padding: 8 }]}>
-                    <Text style={[styles.updateTitle, { fontSize: 11 }]} numberOfLines={1}>
+                  <View style={[styles.updateContent, { padding: 9 }]}>
+                    <Text style={[styles.updateTitle, { fontSize: 11, height: 32, color: "#0F172A", fontWeight: "700" }]} numberOfLines={2}>
                       {photo.title || "Seva Moment"}
                     </Text>
                   </View>
@@ -473,16 +497,16 @@ export default function MobileHomeScreen() {
         <View style={styles.eventCard}>
           <View style={styles.eventLeft}>
             <View style={styles.eventCalendarCircle}>
-              <Ionicons name="calendar-outline" size={24} color="#F59E0B" />
+              <Ionicons name="calendar-outline" size={22} color="#D97706" />
             </View>
 
             <View style={styles.eventInfo}>
               <Text style={styles.eventTag}>Upcoming Event</Text>
               <Text style={styles.eventTitle}>Mega Blood Donation Camp</Text>
-              <Text style={styles.eventTime}>26 May 2024 | 9:00 AM Onwards</Text>
+              <Text style={styles.eventTime}>Sunday, 9:00 AM – 4:00 PM</Text>
               <View style={styles.eventLocRow}>
-                <Ionicons name="location-outline" size={12} color="#64748B" style={{ marginRight: 3 }} />
-                <Text style={styles.eventLocation}>Community Hall, Civil Lines</Text>
+                <Ionicons name="location-outline" size={11} color="#64748B" style={{ marginRight: 3 }} />
+                <Text style={styles.eventLocation}>District Hospital, Mathura</Text>
               </View>
             </View>
           </View>
@@ -492,7 +516,7 @@ export default function MobileHomeScreen() {
             onPress={() => setEventModalVisible(true)}
             activeOpacity={0.88}
           >
-            <Text style={styles.eventDetailsBtnText}>View Details</Text>
+            <Text style={styles.eventDetailsBtnText}>Details</Text>
           </TouchableOpacity>
         </View>
 
@@ -505,16 +529,16 @@ export default function MobileHomeScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.actionIconCircle}>
-              <MaterialCommunityIcons name="hand-heart" size={22} color="#166534" />
+              <MaterialCommunityIcons name="hand-heart" size={20} color="#166534" />
             </View>
             <View style={styles.actionBannerContent}>
-              <Text style={[styles.actionBannerTitle, { color: "#166534" }]}>Donate</Text>
+              <Text style={[styles.actionBannerTitle, { color: "#166534" }]}>Donate Seva</Text>
               <Text style={styles.actionBannerSubtitle}>
-                Your small contribution creates a big change.
+                Support rural education, blood camps & tree plantation.
               </Text>
             </View>
             <View style={[styles.actionArrowCircle, { backgroundColor: "#166534" }]}>
-              <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+              <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
 
@@ -525,18 +549,80 @@ export default function MobileHomeScreen() {
             activeOpacity={0.85}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-              <MaterialCommunityIcons name="hand-heart-outline" size={22} color="#1D4ED8" />
+              <MaterialCommunityIcons name="account-group" size={20} color="#1D4ED8" />
             </View>
             <View style={styles.actionBannerContent}>
-              <Text style={[styles.actionBannerTitle, { color: "#1D4ED8" }]}>Volunteer</Text>
+              <Text style={[styles.actionBannerTitle, { color: "#1D4ED8" }]}>Join Seva</Text>
               <Text style={styles.actionBannerSubtitle}>
-                Be a part of our mission. Serve with us.
+                Be a part of 850+ volunteer taskforce in Braj.
               </Text>
             </View>
             <View style={[styles.actionArrowCircle, { backgroundColor: "#1D4ED8" }]}>
-              <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+              <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
+        </View>
+
+        {/* ===================== REQUEST MEDICAL EQUIPMENT BANK SECTION ===================== */}
+        <View style={styles.medicalEquipmentSection}>
+          <View style={styles.medicalEquipmentCard}>
+            {/* Top Badge & Header */}
+            <View style={styles.medicalCardTopRow}>
+              <View style={styles.medicalPillBadge}>
+                <MaterialCommunityIcons name="hospital-box" size={13} color="#0D9488" style={{ marginRight: 4 }} />
+                <Text style={styles.medicalPillBadgeText}>FREE MEDICAL AID</Text>
+              </View>
+              <View style={styles.medical24Badge}>
+                <Text style={styles.medical24BadgeText}>24/7 Helpline</Text>
+              </View>
+            </View>
+
+            <Text style={styles.medicalCardTitle}>Medical Equipment Bank</Text>
+            <Text style={styles.medicalCardSubtitle}>
+              Need medical equipment for a recovering or homebound patient in Mathura / Vrindavan? Borrow for free with zero rental charges.
+            </Text>
+
+            {/* Quick Equipment Tags */}
+            <View style={styles.equipmentTagsGrid}>
+              <View style={styles.equipmentTagItem}>
+                <Ionicons name="checkmark-circle" size={13} color="#0D9488" style={{ marginRight: 4 }} />
+                <Text style={styles.equipmentTagText}>10L Oxygen Concentrators</Text>
+              </View>
+              <View style={styles.equipmentTagItem}>
+                <Ionicons name="checkmark-circle" size={13} color="#0D9488" style={{ marginRight: 4 }} />
+                <Text style={styles.equipmentTagText}>Foldable Wheelchairs</Text>
+              </View>
+              <View style={styles.equipmentTagItem}>
+                <Ionicons name="checkmark-circle" size={13} color="#0D9488" style={{ marginRight: 4 }} />
+                <Text style={styles.equipmentTagText}>Adjustable Hospital Beds</Text>
+              </View>
+              <View style={styles.equipmentTagItem}>
+                <Ionicons name="checkmark-circle" size={13} color="#0D9488" style={{ marginRight: 4 }} />
+                <Text style={styles.equipmentTagText}>Anti-Bedsore Air Mattresses</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.medicalActionsRow}>
+              <TouchableOpacity
+                style={styles.medicalRequestBtn}
+                onPress={() => router.push("/medical-request")}
+                activeOpacity={0.88}
+              >
+                <MaterialCommunityIcons name="clipboard-pulse-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.medicalRequestBtnText}>Request Equipment</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.medicalCallBtn}
+                onPress={handleCallEmergency}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="call" size={15} color="#0D9488" style={{ marginRight: 5 }} />
+                <Text style={styles.medicalCallBtnText}>Call Desk</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Event Details Modal */}
@@ -546,7 +632,7 @@ export default function MobileHomeScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Event Information</Text>
                 <TouchableOpacity onPress={() => setEventModalVisible(false)}>
-                  <Ionicons name="close-circle" size={24} color="#64748B" />
+                  <Ionicons name="close-circle" size={22} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
@@ -558,16 +644,17 @@ export default function MobileHomeScreen() {
               <View style={styles.modalMetaBox}>
                 <Text style={styles.modalMetaItem}>📅 Date: Sunday, 26 May 2024</Text>
                 <Text style={styles.modalMetaItem}>⏰ Time: 9:00 AM – 4:00 PM</Text>
-                <Text style={styles.modalMetaItem}>📍 Venue: Community Hall, Civil Lines</Text>
-                <Text style={styles.modalMetaItem}>📞 Helpline: +91 98765 43210</Text>
+                <Text style={styles.modalMetaItem}>📍 Venue: District Hospital, Mathura</Text>
+                <Text style={styles.modalMetaItem}>📞 Helpline: +91 94122 79001</Text>
               </View>
 
               <TouchableOpacity
                 style={styles.modalRegisterBtn}
                 onPress={() => {
                   setEventModalVisible(false);
-                  router.push("/(tabs)/blood-donation");
+                  router.push("/blood-donor-registration");
                 }}
+                activeOpacity={0.88}
               >
                 <Text style={styles.modalRegisterBtnText}>Register as Donor →</Text>
               </TouchableOpacity>
@@ -575,6 +662,9 @@ export default function MobileHomeScreen() {
           </View>
         </Modal>
       </ScrollView>
+
+      {/* Navigation Sidebar Drawer */}
+      <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -586,56 +676,49 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
   headerIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F1F5F9",
   },
   headerBrandCenter: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  headerEmblem: {
+  headerLogoImg: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#FFFBEB",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-  },
-  headerSun: {
-    position: "absolute",
-    opacity: 0.6,
+    borderRadius: 8,
   },
   headerTextCol: {
     alignItems: "flex-start",
   },
   headerOrgName: {
     fontSize: 16,
-    fontWeight: "800",
-    color: "#164E2E",
-    letterSpacing: -0.2,
+    fontWeight: "900",
+    color: "#1E3A8A",
+    letterSpacing: 0.8,
   },
   headerTagline: {
     fontSize: 10,
-    color: "#6B7280",
-    fontWeight: "600",
+    color: "#1D4ED8",
+    fontWeight: "700",
   },
   bellWrapper: {
     position: "relative",
@@ -644,26 +727,26 @@ const styles = StyleSheet.create({
   },
   redBadgeDot: {
     position: "absolute",
-    top: 2,
-    right: 2,
-    width: 8,
-    height: 8,
+    top: 1,
+    right: 1,
+    width: 7,
+    height: 7,
     borderRadius: 4,
     backgroundColor: "#EF4444",
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#FFFFFF",
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
   heroSection: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
   },
   heroCard: {
-    height: 195,
-    borderRadius: 24,
+    height: 185,
+    borderRadius: 14,
     overflow: "hidden",
     position: "relative",
     backgroundColor: "#0F172A",
@@ -683,14 +766,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 18,
+    padding: 16,
     justifyContent: "space-between",
   },
   heroTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: "800",
     color: "#FFFFFF",
-    lineHeight: 23,
+    lineHeight: 22,
     letterSpacing: -0.2,
   },
   heroTitleHighlight: {
@@ -700,8 +783,8 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     fontSize: 11,
     color: "#E2E8F0",
-    marginTop: -4,
-    maxWidth: 220,
+    marginTop: -3,
+    maxWidth: 240,
     lineHeight: 15,
   },
   heroButton: {
@@ -709,55 +792,71 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 8,
     alignSelf: "flex-start",
-    gap: 6,
+    gap: 5,
     ...Shadows.soft,
   },
   heroButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
     color: "#166534",
   },
   heroButtonArrowCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: "#166534",
     alignItems: "center",
     justifyContent: "center",
   },
   heroPagination: {
     position: "absolute",
-    bottom: 12,
-    right: 18,
+    bottom: 10,
+    right: 14,
     flexDirection: "row",
-    gap: 5,
+    gap: 4,
   },
   heroDot: {
-    width: 6,
-    height: 6,
+    width: 5,
+    height: 5,
     borderRadius: 3,
     backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   heroDotActive: {
-    width: 16,
+    width: 14,
     backgroundColor: "#FFFFFF",
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginTop: 18,
-    marginBottom: 12,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
     color: "#0F172A",
     letterSpacing: -0.2,
+  },
+  streamCountBadge: {
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  streamCountBadgeText: {
+    color: "#166534",
+    fontSize: 10,
+    fontWeight: "800",
   },
   viewAllRow: {
     flexDirection: "row",
@@ -765,54 +864,58 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   viewAllText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: "#166534",
   },
+
+  /* Enhanced Service Stream Small Cards Grid */
   servicesGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
   serviceItem: {
     alignItems: "center",
-    width: (width - 40) / 5,
+    width: (width - 32) / 5,
   },
   serviceBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     marginBottom: 6,
-    ...Shadows.soft,
+    ...Shadows.card,
   },
   serviceItemLabel: {
     fontSize: 10,
-    fontWeight: "700",
-    color: "#334155",
+    fontWeight: "800",
+    color: "#1E293B",
     textAlign: "center",
     lineHeight: 13,
   },
+
+  /* Updates */
   updatesScroll: {
-    paddingLeft: 20,
-    paddingRight: 10,
+    paddingLeft: 16,
+    paddingRight: 8,
     paddingBottom: 4,
-    gap: 12,
+    gap: 10,
   },
   updateCard: {
-    width: 175,
+    width: 170,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     overflow: "hidden",
     ...Shadows.soft,
   },
   updateImageWrapper: {
-    height: 105,
+    height: 100,
     position: "relative",
   },
   updateImage: {
@@ -821,44 +924,45 @@ const styles = StyleSheet.create({
   },
   updatePill: {
     position: "absolute",
-    bottom: 8,
-    left: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    bottom: 6,
+    left: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
   updatePillText: {
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "800",
-    letterSpacing: 0.3,
   },
   updateContent: {
     padding: 10,
   },
   updateTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: "#0F172A",
-    lineHeight: 16,
-    height: 32,
+    lineHeight: 15,
+    height: 30,
   },
   updateDateRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
+    marginTop: 4,
   },
   updateDateText: {
     fontSize: 10,
     color: "#94A3B8",
     fontWeight: "600",
   },
+
+  /* Event Card */
   eventCard: {
     backgroundColor: "#FFFBEB",
-    marginHorizontal: 20,
-    marginTop: 18,
-    borderRadius: 20,
-    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 14,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     borderColor: "#FDE68A",
     flexDirection: "row",
@@ -870,75 +974,77 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    marginRight: 10,
+    marginRight: 8,
   },
   eventCalendarCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     backgroundColor: "#FEF3C7",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: 10,
   },
   eventInfo: {
     flex: 1,
   },
   eventTag: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "800",
     color: "#D97706",
     letterSpacing: 0.4,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   eventTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     color: "#1E293B",
   },
   eventTime: {
     fontSize: 10,
     color: "#64748B",
-    marginTop: 2,
+    marginTop: 1,
     fontWeight: "600",
   },
   eventLocRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2,
+    marginTop: 1,
   },
   eventLocation: {
-    fontSize: 10,
+    fontSize: 9,
     color: "#64748B",
   },
   eventDetailsBtn: {
-    backgroundColor: "#226B3E",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    backgroundColor: "#166534",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.soft,
   },
   eventDetailsBtnText: {
     color: "#FFFFFF",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "800",
   },
+
+  /* Dual Action */
   dualActionRow: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    marginTop: 16,
-    gap: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    gap: 10,
   },
   actionBannerCard: {
     flex: 1,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     flexDirection: "column",
     justifyContent: "space-between",
-    minHeight: 115,
+    minHeight: 110,
     ...Shadows.soft,
   },
   donateBannerCard: {
@@ -950,38 +1056,156 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   actionIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "#BBF7D0",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   actionBannerContent: {
     flex: 1,
   },
   actionBannerTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   actionBannerSubtitle: {
     fontSize: 10,
     color: "#64748B",
-    lineHeight: 14,
+    lineHeight: 13,
   },
   actionArrowCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "flex-end",
-    marginTop: 6,
+    marginTop: 4,
   },
+
+  /* Medical Equipment Bank Section */
+  medicalEquipmentSection: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  medicalEquipmentCard: {
+    backgroundColor: "#F0FDFA",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#99F6E4",
+    padding: 14,
+    ...Shadows.card,
+  },
+  medicalCardTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  medicalPillBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#CCFBF1",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  medicalPillBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#0F766E",
+    letterSpacing: 0.3,
+  },
+  medical24Badge: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#99F6E4",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  medical24BadgeText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#0D9488",
+  },
+  medicalCardTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#134E4A",
+    marginBottom: 3,
+  },
+  medicalCardSubtitle: {
+    fontSize: 11,
+    color: "#475569",
+    lineHeight: 15,
+    marginBottom: 10,
+  },
+  equipmentTagsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 12,
+  },
+  equipmentTagItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  equipmentTagText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#115E59",
+  },
+  medicalActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  medicalRequestBtn: {
+    flex: 1.4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0D9488",
+    paddingVertical: 10,
+    borderRadius: 8,
+    ...Shadows.soft,
+  },
+  medicalRequestBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  medicalCallBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#99F6E4",
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  medicalCallBtnText: {
+    color: "#0D9488",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  /* Modals */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -989,58 +1213,58 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: "#164E2E",
   },
   modalEventHeading: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
     color: "#0F172A",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   modalEventText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#475569",
-    lineHeight: 20,
-    marginBottom: 14,
+    lineHeight: 18,
+    marginBottom: 12,
   },
   modalMetaBox: {
     backgroundColor: "#F8FAFC",
-    borderRadius: 14,
-    padding: 14,
-    gap: 6,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 12,
+    gap: 4,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
   modalMetaItem: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#334155",
     fontWeight: "600",
   },
   modalRegisterBtn: {
     backgroundColor: "#166534",
-    height: 48,
-    borderRadius: 14,
+    height: 44,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.primaryBtn,
   },
   modalRegisterBtnText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
 });

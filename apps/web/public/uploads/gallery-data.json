@@ -5,32 +5,162 @@
       "title": "Free Education & Evening Tutoring Centers",
       "slug": "free-education-centers",
       "category": "Free Education",
-      "coverImage": "/images/youth-skills-vrindavan.jpg",
-      "description": "Evening tutoring classes and free school kit distribution in rural Vrindavan.",
-      "photoCount": 7,
+      "coverImage": "/images/hero-education-vrindavan.jpg",
+      "description": "Evening remedial tutoring classes, school kit distribution, and child literacy in rural Vrindavan.",
+      "photoCount": 4,
       "createdAt": "2026-08-31T16:30:15.077Z"
     },
     {
       "id": "alb-blood",
-      "title": "Emergency Blood Donation Seva",
+      "title": "Emergency Blood Donation & Medical Bank",
       "slug": "emergency-blood-seva",
       "category": "Blood Donation",
-      "coverImage": "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
-      "description": "24/7 volunteer donor network dispatch and hospital patient support.",
-      "photoCount": 5,
+      "coverImage": "/images/medical-blood-seva.jpg",
+      "description": "24/7 volunteer donor network dispatch, oxygen concentrators, and hospital patient support in Mathura.",
+      "photoCount": 2,
+      "createdAt": "2026-08-31T16:30:15.077Z"
+    },
+    {
+      "id": "alb-plantation",
+      "title": "Vrindavan Harit Kranti - Native Afforestation",
+      "slug": "vrindavan-harit-kranti",
+      "category": "Plantation",
+      "coverImage": "/images/vrindavan-plantation.jpg",
+      "description": "Native Neem, Peepal, Banyan, and Kadamba tree plantation along Braj Parikrama Marg.",
+      "photoCount": 2,
+      "createdAt": "2026-08-31T16:30:15.077Z"
+    },
+    {
+      "id": "alb-health",
+      "title": "Jan Swasthya Raksha - Free Healthcare Camps",
+      "slug": "jan-swasthya-raksha",
+      "category": "Healthcare",
+      "coverImage": "/images/health-camp-vrindavan.jpg",
+      "description": "Monthly general health checkups, geriatric eye screening for cataract surgery, and free medicines.",
+      "photoCount": 2,
+      "createdAt": "2026-08-31T16:30:15.077Z"
+    },
+    {
+      "id": "alb-jeev-jal",
+      "title": "Jeev Jal Seva - Bird & Animal Water Feeders",
+      "slug": "jeev-jal-seva",
+      "category": "Jeev Jal Seva",
+      "coverImage": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80",
+      "description": "Earthen water pots and gaushala drinking troughs to protect birds and animals in peak summer.",
+      "photoCount": 1,
+      "createdAt": "2026-08-31T16:30:15.077Z"
+    },
+    {
+      "id": "alb-vocational",
+      "title": "Aadhar Youth Vocational & Digital Training",
+      "slug": "aadhar-vocational-training",
+      "category": "Vocational Training",
+      "coverImage": "/images/youth-skills-vrindavan.jpg",
+      "description": "Computer literacy, tailoring skills, and vocational aptitude guidance for rural youth.",
+      "photoCount": 2,
       "createdAt": "2026-08-31T16:30:15.077Z"
     }
   ],
   "photos": [
     {
-      "id": "photo-1788194935565-lk1md",
+      "id": "photo-real-1",
       "albumId": "alb-education",
-      "title": "Jatin",
-      "caption": "",
-      "url": "/uploads/1788194933230-screenshot-2026-03-27-110126.png",
+      "title": "Children studying under ancient banyan tree in Vrindavan",
+      "caption": "Project Aashayein rural education circle in Vrindavan.",
+      "url": "/images/banyan-study-vrindavan.jpg",
       "category": "Free Education",
-      "location": "Mathura / Vrindavan",
+      "location": "Vrindavan, Mathura",
       "createdAt": "2026-08-31T16:48:55.565Z"
+    },
+    {
+      "id": "photo-real-2",
+      "albumId": "alb-education",
+      "title": "Remedial evening tutoring batch at Raman Reti center",
+      "caption": "Daily evening classes helping underprivileged kids excel in school.",
+      "url": "/images/hero-education-vrindavan.jpg",
+      "category": "Free Education",
+      "location": "Raman Reti, Vrindavan",
+      "createdAt": "2026-08-31T16:40:00.000Z"
+    },
+    {
+      "id": "photo-real-3",
+      "albumId": "alb-education",
+      "title": "Inspiring rural student with school textbook",
+      "caption": "Nurturing young minds through quality education.",
+      "url": "/images/child-hero-portrait.jpg",
+      "category": "Free Education",
+      "location": "Village Chhatikara",
+      "createdAt": "2026-08-31T16:35:00.000Z"
+    },
+    {
+      "id": "photo-real-4",
+      "albumId": "alb-education",
+      "title": "Happy young girl with free school learning kit",
+      "caption": "Annual notebook, uniform, and school bag distribution.",
+      "url": "/images/child-hope-vrindavan.jpg",
+      "category": "Free Education",
+      "location": "Mathura District",
+      "createdAt": "2026-08-31T16:30:00.000Z"
+    },
+    {
+      "id": "photo-real-5",
+      "albumId": "alb-blood",
+      "title": "Voluntary donor participating at Mathura emergency blood desk",
+      "caption": "Rapid volunteer blood donor mobilization for hospital patients.",
+      "url": "/images/medical-blood-seva.jpg",
+      "category": "Blood Donation",
+      "location": "Mathura City Hospital",
+      "createdAt": "2026-08-31T16:25:00.000Z"
+    },
+    {
+      "id": "photo-real-6",
+      "albumId": "alb-health",
+      "title": "Elderly patient diagnostic checkup at Chhatikara health camp",
+      "caption": "Free medical checkups, cataract screening, and medicine distribution.",
+      "url": "/images/health-camp-vrindavan.jpg",
+      "category": "Healthcare",
+      "location": "Chhatikara Village",
+      "createdAt": "2026-08-31T16:20:00.000Z"
+    },
+    {
+      "id": "photo-real-7",
+      "albumId": "alb-plantation",
+      "title": "Native Neem and Peepal sapling plantation drive along Parikrama Marg",
+      "caption": "Vrindavan Harit Kranti ecological afforestation campaign.",
+      "url": "/images/vrindavan-plantation.jpg",
+      "category": "Plantation",
+      "location": "Parikrama Marg, Vrindavan",
+      "createdAt": "2026-08-31T16:15:00.000Z"
+    },
+    {
+      "id": "photo-real-8",
+      "albumId": "alb-vocational",
+      "title": "Youth digital literacy and career vocational workshop",
+      "caption": "Project Aadhar providing practical computer skills to rural students.",
+      "url": "/images/youth-skills-vrindavan.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura Skill Center",
+      "createdAt": "2026-08-31T16:10:00.000Z"
+    },
+    {
+      "id": "photo-real-9",
+      "albumId": "alb-jeev-jal",
+      "title": "Earthen terracotta water bowl installed for thirsty birds in summer",
+      "caption": "Jeev Jal Seva providing lifelines for birds and street animals.",
+      "url": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80",
+      "category": "Jeev Jal Seva",
+      "location": "Vrindavan Raman Reti",
+      "createdAt": "2026-08-31T16:05:00.000Z"
+    },
+    {
+      "id": "photo-real-10",
+      "albumId": "alb-vocational",
+      "title": "Women mastering tailoring and garment manufacturing",
+      "caption": "Free vocational sewing training empowering rural women.",
+      "url": "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=80",
+      "category": "Vocational Training",
+      "location": "Vrindavan Center",
+      "createdAt": "2026-08-31T16:00:00.000Z"
     }
   ]
 }

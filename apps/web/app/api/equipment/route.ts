@@ -64,42 +64,74 @@ export async function POST(req: Request) {
     }
 
     // 2. Patient / Family Borrowing Request
-    const validated = EquipmentRequestSchema.safeParse(body);
-    if (!validated.success) {
+    let targetEquipmentId = body.equipmentId;
+
+    if (!targetEquipmentId) {
+      const searchTerm = body.equipmentType || body.equipmentName || body.name || "Oxygen";
+      const matched = await prisma.medicalEquipment.findFirst({
+        where: {
+          OR: [
+            { name: { contains: searchTerm, mode: "insensitive" } },
+            { category: { contains: searchTerm, mode: "insensitive" } },
+            { description: { contains: searchTerm, mode: "insensitive" } },
+          ],
+        },
+      });
+
+      if (matched) {
+        targetEquipmentId = matched.id;
+      } else {
+        const firstItem = await prisma.medicalEquipment.findFirst();
+        if (firstItem) targetEquipmentId = firstItem.id;
+      }
+    }
+
+    const patientName = body.patientName?.trim() || "";
+    const requesterName = body.requesterName?.trim() || patientName || "Beneficiary";
+    const contactPhone = (body.contactPhone || body.phone || "").trim();
+    const deliveryAddress = (body.deliveryAddress || body.address || "").trim();
+    const city = (body.city || "Mathura").trim();
+    const purpose = (body.purpose || body.notes || "Home medical recovery support").trim();
+
+    let requestedDays = 7;
+    if (typeof body.requestedDays === "number") {
+      requestedDays = body.requestedDays;
+    } else if (body.duration) {
+      const parsed = parseInt(String(body.duration).replace(/\D/g, ""), 10);
+      if (!isNaN(parsed) && parsed > 0) requestedDays = parsed;
+    }
+
+    if (!targetEquipmentId || !requesterName || !contactPhone || !deliveryAddress) {
       return NextResponse.json(
-        { error: "Validation failed", details: validated.error.flatten().fieldErrors },
+        { error: "Please provide valid patient/requester name, contact number, and delivery address." },
         { status: 400 }
       );
     }
-
-    const {
-      equipmentId,
-      requesterName,
-      contactPhone,
-      purpose,
-      requestedDays,
-      deliveryAddress,
-    } = validated.data;
 
     const authUser = await getAuthUser(req);
 
     const request = await prisma.equipmentRequest.create({
       data: {
-        equipmentId,
+        equipmentId: targetEquipmentId,
         requesterName,
+        patientName: patientName || requesterName,
         contactPhone,
+        deliveryAddress,
+        city,
         purpose,
         requestedDays,
-        deliveryAddress,
         requesterId: authUser?.userId || null,
         status: "PENDING",
+      },
+      include: {
+        equipment: true,
       },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Equipment request submitted successfully. Our team will contact you shortly.",
+        message: "Equipment loan request submitted successfully. Our coordination team will contact you shortly.",
         data: request,
       },
       { status: 201 }

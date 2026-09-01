@@ -71,6 +71,16 @@ export async function POST(req: Request) {
 
     // Optional authentication context
     const authUser = await getAuthUser(req);
+    let validRequesterId: string | null = null;
+    if (authUser?.userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: authUser.userId },
+        select: { id: true },
+      });
+      if (userExists) {
+        validRequesterId = userExists.id;
+      }
+    }
 
     // 1. Insert into PostgreSQL via Prisma
     const newRequest = await prisma.bloodRequest.create({
@@ -83,7 +93,7 @@ export async function POST(req: Request) {
         urgency: urgency as any,
         contactPhone,
         notes: notes || null,
-        requesterId: authUser?.userId || null,
+        requesterId: validRequesterId,
         status: "PENDING",
       },
     });
