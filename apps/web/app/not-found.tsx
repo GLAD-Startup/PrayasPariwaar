@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Home,
@@ -56,10 +57,11 @@ export default function NotFound() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="p-1.5 rounded-xl bg-[#EFECE6] border border-[#E2DDD5] shadow-xs inline-flex items-center justify-center group-hover:scale-105 transition-transform">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/images/prayas-logo.png"
                 alt="Prayas Pariwaar"
+                width={120}
+                height={32}
                 className="h-8 w-auto object-contain"
               />
             </div>

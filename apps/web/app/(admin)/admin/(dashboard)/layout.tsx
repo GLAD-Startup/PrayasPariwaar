@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -143,10 +144,11 @@ export default function AdminLayout({
       <header className="lg:hidden bg-white text-prayas-ink h-[68px] px-4 border-b border-prayas-rule flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <Link href="/admin" className="flex items-center gap-2.5">
           <div className="p-1 rounded-lg bg-prayas-stone border border-prayas-rule inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <NextImage
               src="/images/prayas-logo.png"
               alt="Prayas Pariwaar"
+              width={100}
+              height={32}
               className="h-8 w-auto object-contain"
             />
           </div>
@@ -200,10 +202,11 @@ export default function AdminLayout({
                 onClick={() => setMobileSidebarOpen(false)}
               >
                 <div className="p-1.5 rounded-xl bg-prayas-stone border border-prayas-rule shadow-sm inline-block group-hover:scale-105 transition-transform shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <NextImage
                     src="/images/prayas-logo.png"
                     alt="Prayas Pariwaar"
+                    width={100}
+                    height={32}
                     className="h-8 w-auto object-contain"
                   />
                 </div>
