@@ -10,19 +10,30 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#DC2626"
+      "backgroundColor": "#1D4ED8"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.prayassanstha.mobile"
+      "bundleIdentifier": "org.prayassanstha.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Prayas needs camera access so you can capture profile photos and document seva drives.",
+        "NSPhotoLibraryUsageDescription": "Prayas needs access to your photo gallery to upload profile avatars and project images.",
+        "NSPhotoLibraryAddUsageDescription": "Prayas needs permission to save donation receipts and certificates to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#DC2626"
+        "backgroundColor": "#1D4ED8"
       },
       "package": "org.prayassanstha.mobile",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "POST_NOTIFICATIONS",
         "NOTIFICATIONS"
       ]
     },
@@ -32,7 +43,14 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#DC2626"
+          "color": "#1D4ED8"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Prayas to access your photo library to select and upload your profile picture.",
+          "cameraPermission": "Allow Prayas to use your camera to take a new profile photo."
         }
       ]
     ],

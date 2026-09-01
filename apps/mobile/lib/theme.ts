@@ -1,19 +1,19 @@
 export const Colors = {
-  // Primary Green Palette (Forest / Emerald Green matching reference)
-  primary: "#166534", // Deep rich forest green for primary buttons & accents
-  primaryDark: "#14532D", // Dark green for headings & active states
-  primaryLight: "#22C55E", // Vibrant green for highlights & badges
-  primarySoft: "#F0FDF4", // Soft light green tint for surfaces & pills
-  primaryBorder: "#BBF7D0", // Light green border
-  primaryMuted: "#15803D",
+  // Primary Royal / Cobalt Blue Palette (Matching Official Prayas Blue Brand)
+  primary: "#1D4ED8", // Deep royal blue for primary buttons & accents
+  primaryDark: "#1E3A8A", // Deep navy blue for headings & brand text
+  primaryLight: "#3B82F6", // Vibrant sapphire blue for highlights & badges
+  primarySoft: "#EFF6FF", // Soft ice blue tint for surfaces & pills
+  primaryBorder: "#BFDBFE", // Light blue border
+  primaryMuted: "#2563EB",
 
   // Secondary & Accents
-  secondary: "#2E5339",
-  accent: "#10B981",
+  secondary: "#1E40AF",
+  accent: "#0284C7",
 
   // Backgrounds & Surfaces
   background: "#FFFFFF",
-  backgroundSecondary: "#F8FAF9",
+  backgroundSecondary: "#F8FAFC",
   card: "#FFFFFF",
   surface: "#F8FAFC",
 
@@ -21,6 +21,8 @@ export const Colors = {
   textPrimary: "#0F172A",
   textSecondary: "#64748B",
   textMuted: "#94A3B8",
+  textBlue: "#1D4ED8",
+  textBlueDark: "#1E3A8A",
   textGreen: "#166534",
   textGreenDark: "#14532D",
   textWhite: "#FFFFFF",
@@ -28,11 +30,12 @@ export const Colors = {
   // Borders & Dividers
   border: "#E2E8F0",
   borderLight: "#F1F5F9",
+  borderBlue: "#93C5FD",
   borderGreen: "#86EFAC",
-  borderFocus: "#166534",
+  borderFocus: "#1D4ED8",
 
   // Input styling
-  inputBg: "#F8FAF9",
+  inputBg: "#F8FAFC",
 
   // Status & Alerts
   error: "#DC2626",
@@ -63,7 +66,7 @@ export const Shadows = {
     elevation: 3,
   },
   primaryBtn: {
-    shadowColor: "#166534",
+    shadowColor: "#1D4ED8",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,

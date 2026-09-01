@@ -85,6 +85,22 @@ export async function getAuthUser(req?: Request | NextRequest): Promise<AuthUser
   }
 
   // 2. Check HTTP-only cookies (Access Token & Refresh Token fallback)
+  if (req) {
+    const cookieHeader = req.headers.get("cookie");
+    if (cookieHeader) {
+      const matchAccess = cookieHeader.match(/prayas_access_token=([^;]+)/);
+      if (matchAccess && matchAccess[1]) {
+        const decoded = verifyAccessToken(matchAccess[1]);
+        if (decoded) return decoded;
+      }
+      const matchRefresh = cookieHeader.match(/prayas_refresh_token=([^;]+)/);
+      if (matchRefresh && matchRefresh[1]) {
+        const decoded = verifyRefreshToken(matchRefresh[1]);
+        if (decoded) return decoded;
+      }
+    }
+  }
+
   try {
     const cookieStore = cookies();
     const token = cookieStore.get("prayas_access_token")?.value;

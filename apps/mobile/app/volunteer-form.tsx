@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { api } from "../lib/api";
-import { getStoredUser, getItem, setItem } from "../lib/secureStore";
+import { getStoredUser } from "../lib/secureStore";
 
 const { width } = Dimensions.get("window");
 
@@ -53,7 +53,7 @@ export interface VolunteerRecord {
   skills?: string;
   city?: string;
   state?: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE";
   createdAt: string;
 }
 
@@ -90,54 +90,54 @@ export default function VolunteerFormScreen() {
   const checkExistingApplication = async () => {
     setCheckingExisting(true);
     try {
-      // 1. Check if user is logged in or has stored profile
+      // 1. Check logged-in user profile
       const user = await getStoredUser();
-      let queryEmail = user?.email;
-      let queryPhone = user?.phone;
 
-      // 2. Also check local volunteer cache
-      const cachedVolStr = await getItem("prayas_my_volunteer_record");
-      if (cachedVolStr) {
-        try {
-          const cachedVol = JSON.parse(cachedVolStr);
-          if (cachedVol && cachedVol.email) {
-            setExistingVolunteer(cachedVol);
-            setViewMode("STATUS");
-            queryEmail = queryEmail || cachedVol.email;
-            queryPhone = queryPhone || cachedVol.phone;
-          }
-        } catch (e) {}
+      if (!user || (!user.email && !user.phone)) {
+        // Unauthenticated or guest user: default directly to new form
+        setExistingVolunteer(null);
+        setViewMode("FORM");
+        setCheckingExisting(false);
+        return;
       }
 
-      // 3. Query API for live volunteer status
-      if (queryEmail || queryPhone) {
-        const queryParams = new URLSearchParams();
-        if (queryEmail) queryParams.append("email", queryEmail);
-        if (queryPhone) queryParams.append("phone", queryPhone);
+      // Pre-fill form fields with user's info for convenience
+      if (user.name) setFullName(user.name);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+      if (user.city) setCity(user.city);
 
-        const res = await api.get<any>(`/volunteers?${queryParams.toString()}`);
-        if (res.data?.success && res.data.registered && res.data.data) {
-          const vol: VolunteerRecord = {
-            id: res.data.data.id,
-            name: res.data.data.name,
-            email: res.data.data.email,
-            phone: res.data.data.phone,
-            areasOfInterest: Array.isArray(res.data.data.areasOfInterest)
-              ? res.data.data.areasOfInterest
-              : ["Free Education"],
-            skills: res.data.data.skills,
-            city: res.data.data.city,
-            state: res.data.data.state,
-            status: res.data.data.status || "PENDING",
-            createdAt: res.data.data.createdAt,
-          };
-          setExistingVolunteer(vol);
-          setViewMode("STATUS");
-          await setItem("prayas_my_volunteer_record", JSON.stringify(vol));
-        }
+      // 2. Query API for live volunteer registration scoped strictly to this user
+      const queryParams = new URLSearchParams();
+      if (user.email) queryParams.append("email", user.email);
+      else if (user.phone) queryParams.append("phone", user.phone);
+
+      const res = await api.get<any>(`/volunteers?${queryParams.toString()}`);
+      if (res.data?.success && res.data.registered && res.data.data) {
+        const d = res.data.data;
+        const vol: VolunteerRecord = {
+          id: d.id,
+          name: d.name,
+          email: d.email,
+          phone: d.phone,
+          areasOfInterest: Array.isArray(d.areasOfInterest) && d.areasOfInterest.length > 0
+            ? d.areasOfInterest
+            : [d.areaOfInterest || "Free Education"],
+          skills: d.skills,
+          city: d.city,
+          state: d.state,
+          status: d.status || "PENDING",
+          createdAt: d.createdAt,
+        };
+        setExistingVolunteer(vol);
+        setViewMode("STATUS");
+      } else {
+        setExistingVolunteer(null);
+        setViewMode("FORM");
       }
     } catch (e) {
-      console.warn("Failed to check existing volunteer status:", e);
+      console.log("[Volunteer Status Check Notice]", e);
+      setViewMode("FORM");
     } finally {
       setCheckingExisting(false);
     }
@@ -161,9 +161,9 @@ export default function VolunteerFormScreen() {
     setPhone("");
     setDob("");
     setAddress("");
-    setCity("Mathura");
+    setCity("Vrindavan");
     setPincode("");
-    setSelectedInterests(["Free Education", "Blood Donation"]);
+    setSelectedInterests(["Free Education", "Tree Plantation"]);
     setViewMode("FORM");
   };
 
@@ -176,94 +176,50 @@ export default function VolunteerFormScreen() {
     setIsSubmitting(true);
     try {
       const res = await api.post<any>("/volunteers", {
-        name: fullName,
-        email,
-        phone,
+        name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        dob: dob.trim() || undefined,
+        gender: gender || undefined,
+        address: address.trim() || undefined,
+        city: city.trim() || "Vrindavan",
+        state: state.trim() || "Uttar Pradesh",
+        pincode: pincode.trim() || undefined,
         areasOfInterest: selectedInterests,
-        address: address || undefined,
-        city: city || "Vrindavan / Mathura",
-        state,
-        pincode: pincode || undefined,
         skills: selectedInterests.join(", "),
+        availability: "Weekends / On-Call",
       });
 
-      // If user was already registered under this email/phone
-      if (res.data?.alreadyRegistered && res.data.data) {
-        const vol: VolunteerRecord = {
-          id: res.data.data.id,
-          name: res.data.data.name,
-          email: res.data.data.email,
-          phone: res.data.data.phone,
-          areasOfInterest: Array.isArray(res.data.data.areasOfInterest)
-            ? res.data.data.areasOfInterest
-            : ["Free Education"],
-          skills: res.data.data.skills,
-          city: res.data.data.city,
-          state: res.data.data.state,
-          status: res.data.data.status || "PENDING",
-          createdAt: res.data.data.createdAt,
-        };
-        setExistingVolunteer(vol);
-        await setItem("prayas_my_volunteer_record", JSON.stringify(vol));
-        setViewMode("STATUS");
-        Alert.alert(
-          "Already Registered",
-          `An active volunteer registration was found for ${vol.name} (${vol.email}). Status: ${vol.status}. Displaying application details.`
-        );
-        return;
-      }
-
       if (res.data?.success && res.data.data) {
+        const d = res.data.data;
         const vol: VolunteerRecord = {
-          id: res.data.data.id,
-          name: res.data.data.name,
-          email: res.data.data.email,
-          phone: res.data.data.phone,
-          areasOfInterest: selectedInterests,
-          skills: selectedInterests.join(", "),
-          city: city || "Vrindavan",
-          state,
-          status: "PENDING",
-          createdAt: new Date().toISOString(),
+          id: d.id,
+          name: d.name,
+          email: d.email,
+          phone: d.phone,
+          areasOfInterest: Array.isArray(d.areasOfInterest) && d.areasOfInterest.length > 0
+            ? d.areasOfInterest
+            : selectedInterests,
+          skills: d.skills || selectedInterests.join(", "),
+          city: d.city || city,
+          state: d.state || state,
+          status: d.status || "PENDING",
+          createdAt: d.createdAt || new Date().toISOString(),
         };
         setExistingVolunteer(vol);
-        await setItem("prayas_my_volunteer_record", JSON.stringify(vol));
         setSubmittedModalVisible(true);
       } else {
-        // Fallback save
-        const vol: VolunteerRecord = {
-          id: `VOL-${Date.now().toString().slice(-6)}`,
-          name: fullName,
-          email,
-          phone,
-          areasOfInterest: selectedInterests,
-          skills: selectedInterests.join(", "),
-          city: city || "Vrindavan",
-          state,
-          status: "PENDING",
-          createdAt: new Date().toISOString(),
-        };
-        setExistingVolunteer(vol);
-        await setItem("prayas_my_volunteer_record", JSON.stringify(vol));
-        setSubmittedModalVisible(true);
+        Alert.alert(
+          "Submission Error",
+          res.data?.error || "Could not register volunteer application. Please verify your details."
+        );
       }
     } catch (e: any) {
-      console.warn("Volunteer submission fallback", e);
-      const vol: VolunteerRecord = {
-        id: `VOL-${Date.now().toString().slice(-6)}`,
-        name: fullName,
-        email,
-        phone,
-        areasOfInterest: selectedInterests,
-        skills: selectedInterests.join(", "),
-        city: city || "Vrindavan",
-        state,
-        status: "PENDING",
-        createdAt: new Date().toISOString(),
-      };
-      setExistingVolunteer(vol);
-      await setItem("prayas_my_volunteer_record", JSON.stringify(vol));
-      setSubmittedModalVisible(true);
+      console.error("[Volunteer Submit Error]", e);
+      Alert.alert(
+        "Connection Error",
+        e?.message || "Failed to reach Prayas server. Please verify your internet connection and try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -280,7 +236,7 @@ export default function VolunteerFormScreen() {
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home"))}
           activeOpacity={0.8}
         >
-          <Ionicons name="arrow-back" size={22} color="#164E2E" />
+          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>
@@ -317,38 +273,42 @@ export default function VolunteerFormScreen() {
           <View style={styles.statusHeroCard}>
             <View style={styles.statusHeroTop}>
               <View style={styles.statusEmblem}>
-                <MaterialCommunityIcons name="hand-heart" size={28} color="#166534" />
+                <MaterialCommunityIcons name="hand-heart" size={28} color={Colors.primary} />
               </View>
               <View style={styles.statusBadgeWrapper}>
                 <View
                   style={[
                     styles.statusPill,
-                    existingVolunteer.status === "APPROVED"
+                    existingVolunteer.status === "APPROVED" || existingVolunteer.status === "ACTIVE"
                       ? styles.statusPillApproved
                       : styles.statusPillPending,
                   ]}
                 >
                   <Ionicons
                     name={
-                      existingVolunteer.status === "APPROVED"
+                      existingVolunteer.status === "APPROVED" || existingVolunteer.status === "ACTIVE"
                         ? "checkmark-circle"
                         : "time-outline"
                     }
                     size={14}
                     color={
-                      existingVolunteer.status === "APPROVED" ? "#166534" : "#D97706"
+                      existingVolunteer.status === "APPROVED" || existingVolunteer.status === "ACTIVE"
+                        ? "#166534"
+                        : "#D97706"
                     }
                     style={{ marginRight: 4 }}
                   />
                   <Text
                     style={[
                       styles.statusPillText,
-                      existingVolunteer.status === "APPROVED"
+                      existingVolunteer.status === "APPROVED" || existingVolunteer.status === "ACTIVE"
                         ? { color: "#166534" }
                         : { color: "#D97706" },
                     ]}
                   >
-                    {existingVolunteer.status === "APPROVED"
+                    {existingVolunteer.status === "ACTIVE"
+                      ? "Active Sevak"
+                      : existingVolunteer.status === "APPROVED"
                       ? "Verified Volunteer"
                       : "Application Under Review"}
                   </Text>
@@ -392,7 +352,7 @@ export default function VolunteerFormScreen() {
               <View style={styles.statusChipsRow}>
                 {existingVolunteer.areasOfInterest.map((stream, idx) => (
                   <View key={idx} style={styles.statusStreamChip}>
-                    <Ionicons name="sparkles" size={11} color="#166534" style={{ marginRight: 4 }} />
+                    <Ionicons name="sparkles" size={11} color={Colors.primary} style={{ marginRight: 4 }} />
                     <Text style={styles.statusStreamChipText}>{stream}</Text>
                   </View>
                 ))}
@@ -403,7 +363,7 @@ export default function VolunteerFormScreen() {
           {/* Coordination Desk Card */}
           <View style={styles.deskCard}>
             <View style={styles.deskCardHeader}>
-              <Ionicons name="business-outline" size={20} color="#166534" />
+              <Ionicons name="business-outline" size={20} color={Colors.primary} />
               <Text style={styles.deskCardTitle}>Vrindavan Seva Karyalaya Desk</Text>
             </View>
             <Text style={styles.deskCardDesc}>
@@ -414,14 +374,14 @@ export default function VolunteerFormScreen() {
                 style={styles.deskContactBtn}
                 onPress={() => Linking.openURL("tel:+919412279000")}
               >
-                <Ionicons name="call" size={14} color="#166534" style={{ marginRight: 4 }} />
+                <Ionicons name="call" size={14} color={Colors.primary} style={{ marginRight: 4 }} />
                 <Text style={styles.deskContactBtnText}>Call Coordinator</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deskContactBtn}
                 onPress={() => Linking.openURL("mailto:volunteer@prayas.org")}
               >
-                <Ionicons name="mail" size={14} color="#166534" style={{ marginRight: 4 }} />
+                <Ionicons name="mail" size={14} color={Colors.primary} style={{ marginRight: 4 }} />
                 <Text style={styles.deskContactBtnText}>Email Desk</Text>
               </TouchableOpacity>
             </View>
@@ -430,7 +390,7 @@ export default function VolunteerFormScreen() {
           {/* Register Another Person Button */}
           <View style={styles.registerAnotherSection}>
             <Text style={styles.registerAnotherHeading}>
-              Want to enroll a family member, friend, or colleague?
+              Want to enroll a family member, friend, or submit a new form?
             </Text>
             <TouchableOpacity
               style={styles.registerAnotherBtn}
@@ -455,7 +415,7 @@ export default function VolunteerFormScreen() {
         >
           {existingVolunteer && (
             <View style={styles.switchNoticeBanner}>
-              <Ionicons name="information-circle" size={18} color="#166534" style={{ marginRight: 8 }} />
+              <Ionicons name="information-circle" size={18} color={Colors.primary} style={{ marginRight: 8 }} />
               <Text style={styles.switchNoticeText}>
                 Registering a new volunteer. Your existing application is active.
               </Text>
@@ -543,7 +503,7 @@ export default function VolunteerFormScreen() {
                   <Ionicons
                     name={isSelected ? "checkmark-circle" : "add-circle-outline"}
                     size={16}
-                    color={isSelected ? "#FFFFFF" : "#166534"}
+                    color={isSelected ? "#FFFFFF" : Colors.primary}
                     style={{ marginRight: 6 }}
                   />
                   <Text
@@ -638,7 +598,7 @@ export default function VolunteerFormScreen() {
                   <Text style={[styles.modalItemText, state === s && styles.modalItemTextActive]}>
                     {s}
                   </Text>
-                  {state === s && <Ionicons name="checkmark" size={18} color="#166534" />}
+                  {state === s && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -651,11 +611,11 @@ export default function VolunteerFormScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.successModalContent}>
             <View style={styles.successIconCircle}>
-              <Ionicons name="checkmark" size={32} color="#166534" />
+              <Ionicons name="checkmark" size={32} color={Colors.primary} />
             </View>
             <Text style={styles.successTitle}>Application Submitted!</Text>
             <Text style={styles.successSubtitle}>
-              Thank you for stepping forward to serve society. Our volunteer coordinator will reach out to you within 24 hours.
+              Thank you for stepping forward to serve society. Your application has been recorded in the Prayas database and our coordinator will reach out to you within 24 hours.
             </Text>
             <TouchableOpacity
               style={styles.successBtn}
@@ -680,7 +640,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#F8FAF8",
+    backgroundColor: "#F8FAFC",
   },
   scrollContent: {
     padding: 18,
@@ -700,27 +660,27 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#164E2E",
+    color: "#1E3A8A",
   },
   headerTextBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
   },
   headerTextBtnLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#166534",
+    color: Colors.primary,
   },
   loadingContainer: {
     flex: 1,
@@ -754,9 +714,9 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -831,9 +791,9 @@ const styles = StyleSheet.create({
   statusStreamChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -841,7 +801,7 @@ const styles = StyleSheet.create({
   statusStreamChipText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#166534",
+    color: Colors.primary,
   },
 
   /* DESK CARD */
@@ -863,7 +823,7 @@ const styles = StyleSheet.create({
   deskCardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#164E2E",
+    color: "#1E3A8A",
   },
   deskCardDesc: {
     fontSize: 12,
@@ -880,21 +840,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     paddingVertical: 8,
     borderRadius: 10,
   },
   deskContactBtnText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#166534",
+    color: Colors.primary,
   },
 
   /* REGISTER ANOTHER */
   registerAnotherSection: {
-    backgroundColor: "#164E2E",
+    backgroundColor: "#1E3A8A",
     borderRadius: 16,
     padding: 18,
     alignItems: "center",
@@ -911,7 +871,7 @@ const styles = StyleSheet.create({
   registerAnotherBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#22C55E",
+    backgroundColor: Colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -930,16 +890,16 @@ const styles = StyleSheet.create({
   switchNoticeBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   switchNoticeText: {
     fontSize: 12,
-    color: "#166534",
+    color: Colors.primary,
     fontWeight: "600",
     flex: 1,
   },
@@ -995,8 +955,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   genderChipActive: {
-    backgroundColor: "#166534",
-    borderColor: "#166534",
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   genderChipText: {
     fontSize: 12,
@@ -1024,8 +984,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   interestChipSelected: {
-    backgroundColor: "#166534",
-    borderColor: "#166534",
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   interestChipText: {
     fontSize: 12,
@@ -1055,7 +1015,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#166534",
+    backgroundColor: Colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     marginTop: 18,
@@ -1105,7 +1065,7 @@ const styles = StyleSheet.create({
     color: "#334155",
   },
   modalItemTextActive: {
-    color: "#166534",
+    color: Colors.primary,
     fontWeight: "700",
   },
   successModalContent: {
@@ -1119,9 +1079,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#EFF6FF",
     borderWidth: 2,
-    borderColor: "#BBF7D0",
+    borderColor: "#BFDBFE",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -1140,7 +1100,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   successBtn: {
-    backgroundColor: "#166534",
+    backgroundColor: Colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,

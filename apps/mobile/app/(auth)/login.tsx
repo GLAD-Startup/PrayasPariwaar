@@ -11,6 +11,7 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -92,22 +93,20 @@ export default function MobileLoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Avatar / Brand Icon */}
+          {/* Avatar / Prayas Blue Brand Logo */}
           <View style={styles.avatarSection}>
-            <View style={styles.avatarCircle}>
-              <View style={styles.avatarInner}>
-                <MaterialCommunityIcons name="account-circle" size={48} color={Colors.primary} />
-              </View>
-              <View style={styles.leafBadge}>
-                <Text style={styles.leafIcon}>🌿</Text>
-              </View>
-            </View>
+            <Image
+              source={require("../../assets/images/prayas-logo-blue.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.orgTagline}>A TRIAL TO MOVE AHEAD</Text>
           </View>
 
           {/* Heading */}
           <View style={styles.header}>
             <Text style={styles.title}>Welcome Back!</Text>
-            <Text style={styles.subtitle}>Login to continue your journey</Text>
+            <Text style={styles.subtitle}>Sign in to your Prayas Seva account</Text>
           </View>
 
           {/* Error Message */}
@@ -299,48 +298,29 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 6,
     marginBottom: 16,
   },
-  avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.primaryBorder,
-    position: "relative",
+  logoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    marginBottom: 6,
   },
-  avatarInner: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  leafBadge: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: Colors.primaryBorder,
-  },
-  leafIcon: {
-    fontSize: 12,
+  orgTagline: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.primaryDark,
+    letterSpacing: 1,
   },
   header: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
-    color: Colors.textGreenDark,
+    color: Colors.primaryDark,
     letterSpacing: -0.3,
   },
   subtitle: {

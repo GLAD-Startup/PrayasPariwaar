@@ -22,13 +22,15 @@ import {
   Calendar,
   CheckCircle,
   Eye,
+  HeartHandshake,
+  ExternalLink,
 } from "lucide-react";
 
 export default function AdminVolunteersPage() {
   const [volunteers, setVolunteers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [causeFilter, setCauseFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -43,11 +45,13 @@ export default function AdminVolunteersPage() {
     try {
       const res = await fetch("/api/volunteers");
       const json = await res.json();
-      if (json.success) {
+      if (json.success && Array.isArray(json.data)) {
         setVolunteers(json.data);
+      } else {
+        console.warn("[Volunteers Fetch Warning]", json.error);
       }
     } catch (e) {
-      console.error(e);
+      console.error("[Volunteers Fetch Error]", e);
     } finally {
       setLoading(false);
     }
@@ -99,20 +103,28 @@ export default function AdminVolunteersPage() {
 
   const filteredVolunteers = volunteers.filter((vol) => {
     const matchesStatus = statusFilter === "ALL" || vol.status === statusFilter;
-    const areas = Array.isArray(vol.areasOfInterest)
-      ? vol.areasOfInterest.join(" ")
-      : vol.areaOfInterest || "";
+    const areas: string[] = Array.isArray(vol.areasOfInterest) && vol.areasOfInterest.length > 0
+      ? vol.areasOfInterest
+      : vol.areaOfInterest ? [vol.areaOfInterest] : ["Education"];
+    const areasStr = areas.join(" ");
+
+    const matchesCause =
+      causeFilter === "ALL" ||
+      areas.some((a) => a.toLowerCase().includes(causeFilter.toLowerCase()));
+
     const matchesSearch =
       vol.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vol.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vol.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (vol.city && vol.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      areas.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+      (vol.skills && vol.skills.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      areasStr.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesStatus && matchesCause && matchesSearch;
   });
 
   const pendingCount = volunteers.filter((v) => v.status === "PENDING").length;
-  const approvedCount = volunteers.filter((v) => v.status === "APPROVED").length;
+  const approvedCount = volunteers.filter((v) => v.status === "APPROVED" || v.status === "ACTIVE").length;
 
   return (
     <div className="space-y-6">
@@ -127,7 +139,7 @@ export default function AdminVolunteersPage() {
             Volunteer Applications & Roster
           </h1>
           <p className="text-xs text-prayas-muted max-w-2xl">
-            Review and approve volunteer applications with multi-cause interests (Free Education, Blood Donation, Plantation, Jeev Jal, Vocational Training) across Mathura & Vrindavan.
+            Review, approve, and mobilize volunteer signups across all 5 grassroots Seva Streams (Free Education, Emergency Blood Donation, Parikrama Tree Plantation, Jeev Jal Seva, Vocational Training).
           </p>
         </div>
 
@@ -156,7 +168,7 @@ export default function AdminVolunteersPage() {
         </div>
 
         <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 shadow-card space-y-1">
-          <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Active Approved</span>
+          <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Approved / Active</span>
           <p className="font-serif text-2xl font-bold text-emerald-950">{approvedCount}</p>
           <span className="text-[10px] text-emerald-700 font-medium">Ready for deployment</span>
         </div>
@@ -166,7 +178,7 @@ export default function AdminVolunteersPage() {
           <p className="font-serif text-2xl font-bold text-sky-950">
             {new Set(volunteers.map((v) => v.city).filter(Boolean)).size || 1}
           </p>
-          <span className="text-[10px] text-sky-700 font-medium">Mathura, Vrindavan & NCR</span>
+          <span className="text-[10px] text-sky-700 font-medium">Mathura, Vrindavan & Braj</span>
         </div>
       </div>
 
@@ -197,18 +209,38 @@ export default function AdminVolunteersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-prayas-muted">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-prayas-stone/60 border border-prayas-rule text-prayas-ink rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-700"
-            >
-              <option value="ALL">All Statuses ({volunteers.length})</option>
-              <option value="PENDING">PENDING ({pendingCount})</option>
-              <option value="APPROVED">APPROVED ({approvedCount})</option>
-              <option value="INACTIVE">INACTIVE</option>
-            </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-prayas-muted">Cause:</span>
+              <select
+                value={causeFilter}
+                onChange={(e) => setCauseFilter(e.target.value)}
+                className="bg-prayas-stone/60 border border-prayas-rule text-prayas-ink rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-700"
+              >
+                <option value="ALL">All Causes</option>
+                <option value="Education">Education</option>
+                <option value="Blood">Blood Donation</option>
+                <option value="Plantation">Plantation</option>
+                <option value="Jal">Jeev Jal Seva</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Vocational">Vocational</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-prayas-muted">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-prayas-stone/60 border border-prayas-rule text-prayas-ink rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-700"
+              >
+                <option value="ALL">All Statuses ({volunteers.length})</option>
+                <option value="PENDING">PENDING ({pendingCount})</option>
+                <option value="APPROVED">APPROVED</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -291,7 +323,7 @@ export default function AdminVolunteersPage() {
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            vol.status === "APPROVED"
+                            vol.status === "APPROVED" || vol.status === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
                               : vol.status === "PENDING"
                               ? "bg-amber-100 text-amber-900 border border-amber-200"
@@ -319,7 +351,7 @@ export default function AdminVolunteersPage() {
                           <Eye className="w-4 h-4" />
                         </button>
 
-                        {vol.status !== "APPROVED" ? (
+                        {vol.status === "PENDING" ? (
                           <button
                             onClick={() => updateStatus(vol.id, "APPROVED")}
                             disabled={actionLoading === vol.id}
@@ -327,6 +359,14 @@ export default function AdminVolunteersPage() {
                           >
                             <UserCheck className="w-3.5 h-3.5" />
                             <span>Approve</span>
+                          </button>
+                        ) : vol.status === "APPROVED" ? (
+                          <button
+                            onClick={() => updateStatus(vol.id, "ACTIVE")}
+                            disabled={actionLoading === vol.id}
+                            className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl shadow-sm disabled:opacity-50"
+                          >
+                            Mark Active
                           </button>
                         ) : (
                           <button
@@ -359,11 +399,14 @@ export default function AdminVolunteersPage() {
       {/* Volunteer Details Modal */}
       {selectedVolunteer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-prayas-rule space-y-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-prayas-rule space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-prayas-rule pb-3">
-              <h3 className="font-serif text-lg font-bold text-prayas-ink">
-                Volunteer Profile Dossier
-              </h3>
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="w-5 h-5 text-emerald-700" />
+                <h3 className="font-serif text-lg font-bold text-prayas-ink">
+                  Volunteer Application Dossier
+                </h3>
+              </div>
               <button
                 onClick={() => setSelectedVolunteer(null)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
@@ -379,13 +422,20 @@ export default function AdminVolunteersPage() {
                   <p className="font-bold text-sm text-prayas-ink">{selectedVolunteer.name}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Gender & DOB</span>
-                  <p className="text-prayas-ink">
-                    {selectedVolunteer.gender || "Not specified"} •{" "}
-                    {selectedVolunteer.dob
-                      ? new Date(selectedVolunteer.dob).toLocaleDateString("en-IN")
-                      : "N/A"}
-                  </p>
+                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Status</span>
+                  <div className="mt-0.5">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        selectedVolunteer.status === "APPROVED" || selectedVolunteer.status === "ACTIVE"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                          : selectedVolunteer.status === "PENDING"
+                          ? "bg-amber-100 text-amber-900 border border-amber-200"
+                          : "bg-red-100 text-red-900 border border-red-200"
+                      }`}
+                    >
+                      {selectedVolunteer.status}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -404,12 +454,12 @@ export default function AdminVolunteersPage() {
                 <span className="text-[10px] font-bold text-prayas-muted uppercase">Full Address</span>
                 <p className="text-prayas-ink">
                   {selectedVolunteer.address || "N/A"}, {selectedVolunteer.city || "Vrindavan"},{" "}
-                  {selectedVolunteer.state || "UP"} - {selectedVolunteer.pincode || ""}
+                  {selectedVolunteer.state || "Uttar Pradesh"} - {selectedVolunteer.pincode || ""}
                 </p>
               </div>
 
               <div>
-                <span className="text-[10px] font-bold text-prayas-muted uppercase">Areas of Interest</span>
+                <span className="text-[10px] font-bold text-prayas-muted uppercase">Areas of Interest (Causes)</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {(Array.isArray(selectedVolunteer.areasOfInterest) && selectedVolunteer.areasOfInterest.length > 0
                     ? selectedVolunteer.areasOfInterest
@@ -425,29 +475,77 @@ export default function AdminVolunteersPage() {
                 </div>
               </div>
 
+              {selectedVolunteer.skills && (
+                <div>
+                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Skills & Special Strengths</span>
+                  <p className="text-prayas-ink bg-slate-50 p-2 rounded-lg border border-prayas-rule mt-0.5">
+                    {selectedVolunteer.skills}
+                  </p>
+                </div>
+              )}
+
+              {selectedVolunteer.availability && (
+                <div>
+                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Availability & Schedule</span>
+                  <p className="text-prayas-ink bg-slate-50 p-2 rounded-lg border border-prayas-rule mt-0.5">
+                    {selectedVolunteer.availability}
+                  </p>
+                </div>
+              )}
+
               {selectedVolunteer.previousExperience && (
                 <div>
-                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Experience</span>
-                  <p className="text-prayas-ink italic">"{selectedVolunteer.previousExperience}"</p>
+                  <span className="text-[10px] font-bold text-prayas-muted uppercase">Previous Experience</span>
+                  <p className="text-prayas-ink italic bg-slate-50 p-2 rounded-lg border border-prayas-rule mt-0.5">
+                    "{selectedVolunteer.previousExperience}"
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-prayas-rule">
-              <button
-                onClick={() => setSelectedVolunteer(null)}
-                className="px-4 py-2 bg-prayas-stone text-prayas-ink font-semibold rounded-xl text-xs"
-              >
-                Close
-              </button>
-              {selectedVolunteer.status !== "APPROVED" && (
-                <button
-                  onClick={() => updateStatus(selectedVolunteer.id, "APPROVED")}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs"
+            {/* Modal Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-prayas-rule">
+              <div className="flex items-center gap-2">
+                <a
+                  href={`tel:${selectedVolunteer.phone}`}
+                  className="px-3 py-2 bg-emerald-50 text-emerald-800 font-bold rounded-xl text-xs hover:bg-emerald-100 flex items-center gap-1.5 border border-emerald-200"
                 >
-                  Approve Volunteer
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>Call</span>
+                </a>
+                <a
+                  href={`mailto:${selectedVolunteer.email}`}
+                  className="px-3 py-2 bg-blue-50 text-blue-800 font-bold rounded-xl text-xs hover:bg-blue-100 flex items-center gap-1.5 border border-blue-200"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email</span>
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedVolunteer(null)}
+                  className="px-4 py-2 bg-prayas-stone text-prayas-ink font-semibold rounded-xl text-xs"
+                >
+                  Close
                 </button>
-              )}
+                {selectedVolunteer.status === "PENDING" && (
+                  <button
+                    onClick={() => updateStatus(selectedVolunteer.id, "APPROVED")}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-sm"
+                  >
+                    Approve Application
+                  </button>
+                )}
+                {selectedVolunteer.status === "APPROVED" && (
+                  <button
+                    onClick={() => updateStatus(selectedVolunteer.id, "ACTIVE")}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm"
+                  >
+                    Set as Active Sevak
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

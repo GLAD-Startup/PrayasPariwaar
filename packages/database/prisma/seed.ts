@@ -1,4 +1,4 @@
-import { PrismaClient, Role, BloodGroup, UrgencyLevel, BloodRequestStatus, EquipmentStatus, ProjectCategory, ProjectStatus, PostType, MediaType, VolunteerStatus } from "@prisma/client";
+import { PrismaClient, Role, BloodGroup, UrgencyLevel, BloodRequestStatus, EquipmentStatus, RequestStatus, ProjectCategory, ProjectStatus, PostType, MediaType, VolunteerStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -369,6 +369,63 @@ This emergency response marked the 400th verified blood transfusion coordinated 
     ],
   });
 
+  // 8b. Sample Active & Pending Medical Equipment Loans
+  const oxygenDev = await prisma.medicalEquipment.findFirst({ where: { slug: "oxygen-concentrator-10l" } });
+  const wheelchairDev = await prisma.medicalEquipment.findFirst({ where: { slug: "foldable-hospital-wheelchair" } });
+  const fowlerBedDev = await prisma.medicalEquipment.findFirst({ where: { slug: "hospital-fowler-bed" } });
+
+  if (oxygenDev) {
+    await prisma.equipmentRequest.create({
+      data: {
+        equipmentId: oxygenDev.id,
+        requesterName: "Kamlesh Sharma",
+        patientName: "Kamlesh Sharma (Elderly Patient)",
+        contactPhone: "+91 98765 43210",
+        purpose: "Post-pneumonia respiratory oxygen support at home",
+        requestedDays: 15,
+        deliveryAddress: "House No. 14, Krishna Nagar, Mathura",
+        city: "Mathura",
+        status: RequestStatus.ACTIVE,
+        issueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        returnDueDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  if (wheelchairDev) {
+    await prisma.equipmentRequest.create({
+      data: {
+        equipmentId: wheelchairDev.id,
+        requesterName: "Gopal Das",
+        patientName: "Smt. Shanti Devi",
+        contactPhone: "+91 94122 79001",
+        purpose: "Post-surgery knee orthopedic rehabilitation",
+        requestedDays: 30,
+        deliveryAddress: "Near ISKCON Temple, Raman Reti, Vrindavan",
+        city: "Vrindavan",
+        status: RequestStatus.APPROVED,
+        issueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        returnDueDate: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  if (fowlerBedDev) {
+    await prisma.equipmentRequest.create({
+      data: {
+        equipmentId: fowlerBedDev.id,
+        requesterName: "Rajesh Agrawal",
+        patientName: "Rameshwar Agrawal",
+        contactPhone: "+91 98370 12345",
+        purpose: "Bedridden patient homecare with headrest adjustment",
+        requestedDays: 15,
+        deliveryAddress: "Civil Lines, Mathura Cantonment",
+        city: "Mathura",
+        status: RequestStatus.PENDING,
+      },
+    });
+  }
+
   // 9. Institutional Awards & Recognitions
   await prisma.award.createMany({
     data: [
@@ -452,6 +509,280 @@ This emergency response marked the 400th verified blood transfusion coordinated 
         url: "https://news18.com",
         imageUrl: "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?auto=format&fit=crop&w=800&q=80",
         order: 3,
+      },
+    ],
+  });
+
+  // 12. Gallery Albums & Photos
+  await prisma.galleryPhoto.deleteMany();
+  await prisma.galleryAlbum.deleteMany();
+
+  const albEdu = await prisma.galleryAlbum.create({
+    data: {
+      title: "Free Education & Evening Tutoring Centers",
+      slug: "free-education-centers",
+      category: "Free Education",
+      coverImage: "/images/hero-education-vrindavan.jpg",
+      description: "Evening remedial tutoring classes, school kit distribution, and child literacy in rural Vrindavan.",
+      published: true,
+      order: 1,
+    },
+  });
+
+  const albBlood = await prisma.galleryAlbum.create({
+    data: {
+      title: "Emergency Blood Donation & Medical Bank",
+      slug: "emergency-blood-seva",
+      category: "Blood Donation",
+      coverImage: "/images/medical-blood-seva.jpg",
+      description: "24/7 volunteer donor network dispatch, oxygen concentrators, and hospital patient support in Mathura.",
+      published: true,
+      order: 2,
+    },
+  });
+
+  const albPlant = await prisma.galleryAlbum.create({
+    data: {
+      title: "Vrindavan Harit Kranti - Native Tree Afforestation",
+      slug: "vrindavan-harit-kranti",
+      category: "Plantation",
+      coverImage: "/images/vrindavan-plantation.jpg",
+      description: "Native Neem, Peepal, Banyan, and Kadamba tree plantation along Braj Parikrama Marg.",
+      published: true,
+      order: 3,
+    },
+  });
+
+  const albHealth = await prisma.galleryAlbum.create({
+    data: {
+      title: "Jan Swasthya Raksha - Free Healthcare Camps",
+      slug: "jan-swasthya-raksha-album",
+      category: "Healthcare",
+      coverImage: "/images/health-camp-vrindavan.jpg",
+      description: "Monthly general health checkups, geriatric eye screening for cataract surgery, and free medicines.",
+      published: true,
+      order: 4,
+    },
+  });
+
+  const albJal = await prisma.galleryAlbum.create({
+    data: {
+      title: "Jeev Jal Seva - Bird & Animal Water Feeders",
+      slug: "jeev-jal-seva",
+      category: "Jeev Jal Seva",
+      coverImage: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80",
+      description: "Earthen water pots and gaushala drinking troughs to protect birds and animals in peak summer.",
+      published: true,
+      order: 5,
+    },
+  });
+
+  const albVoc = await prisma.galleryAlbum.create({
+    data: {
+      title: "Aadhar Youth Vocational & Digital Training",
+      slug: "aadhar-vocational-training",
+      category: "Vocational Training",
+      coverImage: "/images/youth-skills-vrindavan.jpg",
+      description: "Computer literacy, tailoring skills, and vocational aptitude guidance for rural youth.",
+      published: true,
+      order: 6,
+    },
+  });
+
+  await prisma.galleryPhoto.createMany({
+    data: [
+      {
+        albumId: albEdu.id,
+        title: "Children studying under ancient banyan tree in Vrindavan",
+        caption: "Project Aashayein rural education circle in Vrindavan.",
+        url: "/images/banyan-study-vrindavan.jpg",
+        category: "Free Education",
+        location: "Vrindavan, Mathura",
+        order: 1,
+      },
+      {
+        albumId: albEdu.id,
+        title: "Remedial evening tutoring batch at Raman Reti center",
+        caption: "Daily evening classes helping underprivileged kids excel in school.",
+        url: "/images/hero-education-vrindavan.jpg",
+        category: "Free Education",
+        location: "Raman Reti, Vrindavan",
+        order: 2,
+      },
+      {
+        albumId: albEdu.id,
+        title: "Inspiring rural student with school textbook",
+        caption: "Nurturing young minds through quality education.",
+        url: "/images/child-hero-portrait.jpg",
+        category: "Free Education",
+        location: "Village Chhatikara",
+        order: 3,
+      },
+      {
+        albumId: albEdu.id,
+        title: "Happy young girl with free school learning kit",
+        caption: "Annual notebook, uniform, and school bag distribution.",
+        url: "/images/child-hope-vrindavan.jpg",
+        category: "Free Education",
+        location: "Mathura District",
+        order: 4,
+      },
+      {
+        albumId: albBlood.id,
+        title: "Voluntary donor participating at Mathura emergency blood desk",
+        caption: "Rapid volunteer blood donor mobilization for hospital patients.",
+        url: "/images/medical-blood-seva.jpg",
+        category: "Blood Donation",
+        location: "Mathura City Hospital",
+        order: 1,
+      },
+      {
+        albumId: albHealth.id,
+        title: "Elderly patient diagnostic checkup at Chhatikara health camp",
+        caption: "Free medical checkups, cataract screening, and medicine distribution.",
+        url: "/images/health-camp-vrindavan.jpg",
+        category: "Healthcare",
+        location: "Chhatikara Village",
+        order: 1,
+      },
+      {
+        albumId: albPlant.id,
+        title: "Native Neem and Peepal sapling plantation drive along Parikrama Marg",
+        caption: "Vrindavan Harit Kranti ecological afforestation campaign.",
+        url: "/images/vrindavan-plantation.jpg",
+        category: "Plantation",
+        location: "Parikrama Marg, Vrindavan",
+        order: 1,
+      },
+      {
+        albumId: albVoc.id,
+        title: "Youth digital literacy and career vocational workshop",
+        caption: "Project Aadhar providing practical computer skills to rural students.",
+        url: "/images/youth-skills-vrindavan.jpg",
+        category: "Vocational Training",
+        location: "Mathura Skill Center",
+        order: 1,
+      },
+      {
+        albumId: albJal.id,
+        title: "Earthen terracotta water bowl installed for thirsty birds in summer",
+        caption: "Jeev Jal Seva providing lifelines for birds and street animals.",
+        url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80",
+        category: "Jeev Jal Seva",
+        location: "Vrindavan Raman Reti",
+        order: 1,
+      },
+      {
+        albumId: albVoc.id,
+        title: "Women mastering tailoring and garment manufacturing",
+        caption: "Free vocational sewing training empowering rural women.",
+        url: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1200&q=80",
+        category: "Vocational Training",
+        location: "Vrindavan Center",
+        order: 2,
+      },
+    ],
+  });
+
+  // 13. Volunteer Applications Roster
+  await prisma.volunteer.deleteMany();
+  await prisma.volunteer.createMany({
+    data: [
+      {
+        name: "Anjali Sharma",
+        email: "anjali.sharma@gmail.com",
+        phone: "+91 98765 43210",
+        gender: "FEMALE",
+        city: "Vrindavan",
+        state: "Uttar Pradesh",
+        pincode: "281121",
+        address: "Raman Reti, Near ISKCON Temple, Vrindavan",
+        areasOfInterest: ["Free Education", "Jeev Jal Seva"],
+        skills: "Mathematics & Science teaching, remedial evening class mentoring, child counseling",
+        availability: "Weekends & Weekday Evenings (4 PM - 7 PM)",
+        previousExperience: "2 years volunteer teacher at local community center in Mathura.",
+        status: VolunteerStatus.PENDING,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        name: "Vikram Singh Yadav",
+        email: "vikram.yadav@gmail.com",
+        phone: "+91 94129 88776",
+        gender: "MALE",
+        city: "Mathura",
+        state: "Uttar Pradesh",
+        pincode: "281001",
+        address: "Krishna Nagar, Mathura",
+        areasOfInterest: ["Blood Donation", "Healthcare"],
+        skills: "O+ voluntary blood donor, emergency logistics, first aid certified",
+        availability: "24/7 on-call for emergency blood transfusions",
+        previousExperience: "Donated blood 8 times; active in emergency rescue coordination.",
+        status: VolunteerStatus.APPROVED,
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
+      {
+        name: "Pooja Agrawal",
+        email: "pooja.agrawal@outlook.com",
+        phone: "+91 98370 54321",
+        gender: "FEMALE",
+        city: "Mathura",
+        state: "Uttar Pradesh",
+        pincode: "281003",
+        address: "Civil Lines, Mathura Cantonment",
+        areasOfInterest: ["Tree Plantation", "Awareness"],
+        skills: "Botanical gardening, tree guard installation, environmental workshops",
+        availability: "Sunday mornings (6 AM - 10 AM)",
+        previousExperience: "Organized neighborhood green plantation drives.",
+        status: VolunteerStatus.APPROVED,
+        createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      },
+      {
+        name: "Dr. Manish Verma",
+        email: "dr.manish.verma@gmail.com",
+        phone: "+91 97581 66554",
+        gender: "MALE",
+        city: "Govardhan",
+        state: "Uttar Pradesh",
+        pincode: "281502",
+        address: "Main Bazaar, Govardhan",
+        areasOfInterest: ["Healthcare", "Blood Donation"],
+        skills: "General medicine, geriatric diagnosis, cataract screening referral",
+        availability: "Monthly rural health camps on 2nd and 4th Sundays",
+        previousExperience: "Consultant physician with 12 years clinical practice.",
+        status: VolunteerStatus.ACTIVE,
+        createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+      },
+      {
+        name: "Radhika Gupta",
+        email: "radhika.gupta@gmail.com",
+        phone: "+91 98971 22334",
+        gender: "FEMALE",
+        city: "Vrindavan",
+        state: "Uttar Pradesh",
+        pincode: "281121",
+        address: "Chaitanya Vihar, Vrindavan",
+        areasOfInterest: ["Vocational Training", "Free Education"],
+        skills: "Women tailoring, garment design, industrial sewing machine operation",
+        availability: "Tuesday & Thursday afternoons (2 PM - 5 PM)",
+        previousExperience: "Diploma in Fashion & Garment Technology; passionate about women self-reliance.",
+        status: VolunteerStatus.PENDING,
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+      {
+        name: "Suresh Chand",
+        email: "suresh.chand@gmail.com",
+        phone: "+91 94560 11223",
+        gender: "MALE",
+        city: "Chaumuha",
+        state: "Uttar Pradesh",
+        pincode: "281406",
+        address: "Village Chaumuha, NH-19, Mathura",
+        areasOfInterest: ["Jeev Jal Seva", "Tree Plantation"],
+        skills: "Earthen bird bowl installation, gaushala water tank cleaning, cattle welfare",
+        availability: "Daily early mornings (5 AM - 7 AM)",
+        previousExperience: "Maintaining 40+ public bird watering bowls across Parikrama Marg.",
+        status: VolunteerStatus.ACTIVE,
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
       },
     ],
   });
