@@ -325,38 +325,48 @@ export default function BloodRequestScreen() {
               </Text>
             </View>
 
-            <Text style={styles.label}>Patient Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Ramesh Chandra"
-              placeholderTextColor="#94A3B8"
-              value={patientName}
-              onChangeText={setPatientName}
-            />
+            <Text style={styles.label}>Patient Full Name *</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.inputInner}
+                placeholder="e.g. Ramesh Chandra"
+                placeholderTextColor="#94A3B8"
+                value={patientName}
+                onChangeText={setPatientName}
+              />
+            </View>
 
-            <Text style={styles.label}>Hospital Name & Room/Ward</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. City Hospital, Ward 4, Mathura"
-              placeholderTextColor="#94A3B8"
-              value={hospital}
-              onChangeText={setHospital}
-            />
+            <Text style={styles.label}>Hospital Name & Room/Ward *</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="business-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.inputInner}
+                placeholder="e.g. City Hospital, Ward 4, Mathura"
+                placeholderTextColor="#94A3B8"
+                value={hospital}
+                onChangeText={setHospital}
+              />
+            </View>
 
             {/* Blood Group & Units */}
             <View style={styles.row}>
-              <View style={styles.col}>
-                <Text style={styles.label}>Blood Group</Text>
+              <View style={{ width: "42%" }}>
+                <Text style={styles.label}>Blood Group *</Text>
                 <TouchableOpacity
                   style={styles.dropdownBtn}
                   onPress={() => setBgModalVisible(true)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.dropdownValue}>{bloodGroup}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Ionicons name="water" size={16} color="#DC2626" />
+                    <Text style={styles.dropdownValue}>{bloodGroup}</Text>
+                  </View>
                   <Ionicons name="chevron-down" size={16} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.col}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.label}>Units Required</Text>
                 <View style={styles.unitsRow}>
                   {["1 Unit", "2 Units", "3+ Units"].map((u) => (
@@ -364,6 +374,7 @@ export default function BloodRequestScreen() {
                       key={u}
                       style={[styles.unitChip, units === u && styles.unitChipActive]}
                       onPress={() => setUnits(u)}
+                      activeOpacity={0.8}
                     >
                       <Text style={[styles.unitChipText, units === u && styles.unitChipTextActive]}>
                         {u}
@@ -375,11 +386,12 @@ export default function BloodRequestScreen() {
             </View>
 
             {/* Urgency Selector */}
-            <Text style={styles.label}>Urgency Level</Text>
+            <Text style={styles.label}>Urgency Level *</Text>
             <View style={styles.urgencyRow}>
               <TouchableOpacity
                 style={[styles.urgencyChip, urgency === "CRITICAL" && styles.urgencyCritical]}
                 onPress={() => setUrgency("CRITICAL")}
+                activeOpacity={0.8}
               >
                 <Text
                   style={[
@@ -387,13 +399,14 @@ export default function BloodRequestScreen() {
                     urgency === "CRITICAL" && styles.urgencyTextActive,
                   ]}
                 >
-                  🚨 Immediate (&lt;1h)
+                  🚨 Critical (&lt;1h)
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.urgencyChip, urgency === "URGENT" && styles.urgencyUrgent]}
                 onPress={() => setUrgency("URGENT")}
+                activeOpacity={0.8}
               >
                 <Text
                   style={[
@@ -408,6 +421,7 @@ export default function BloodRequestScreen() {
               <TouchableOpacity
                 style={[styles.urgencyChip, urgency === "NORMAL" && styles.urgencyNormal]}
                 onPress={() => setUrgency("NORMAL")}
+                activeOpacity={0.8}
               >
                 <Text
                   style={[
@@ -415,40 +429,52 @@ export default function BloodRequestScreen() {
                     urgency === "NORMAL" && styles.urgencyTextActive,
                   ]}
                 >
-                  Scheduled
+                  🗓️ Scheduled
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.label}>Attendant Contact Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter 10-digit mobile number"
-              placeholderTextColor="#94A3B8"
-              keyboardType="phone-pad"
-              value={attendantPhone}
-              onChangeText={setAttendantPhone}
-            />
+            <Text style={styles.label}>Attendant Contact Number *</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="call-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.inputInner}
+                placeholder="Enter 10-digit mobile number"
+                placeholderTextColor="#94A3B8"
+                keyboardType="phone-pad"
+                value={attendantPhone}
+                onChangeText={setAttendantPhone}
+              />
+            </View>
 
             <Text style={styles.label}>Doctor Prescription / Medical Note (Optional)</Text>
-            <TextInput
-              style={[styles.input, { height: 70, paddingTop: 10 }]}
-              placeholder="e.g. Surgery scheduled, platelet requirement..."
-              placeholderTextColor="#94A3B8"
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              value={notes}
-              onChangeText={setNotes}
-            />
+            <View style={[styles.inputWrapper, { height: 80, alignItems: "flex-start", paddingVertical: 10 }]}>
+              <Ionicons name="document-text-outline" size={18} color="#64748B" style={[styles.inputIcon, { marginTop: 2 }]} />
+              <TextInput
+                style={[styles.inputInner, { height: 60, textAlignVertical: "top" }]}
+                placeholder="e.g. Surgery scheduled, platelet requirement..."
+                placeholderTextColor="#94A3B8"
+                multiline
+                numberOfLines={3}
+                value={notes}
+                onChangeText={setNotes}
+              />
+            </View>
 
             <TouchableOpacity
               style={styles.broadcastBtn}
               onPress={handleBroadcast}
               activeOpacity={0.88}
+              disabled={isSubmitting}
             >
-              <Ionicons name="radio-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.broadcastBtnText}>Broadcast Emergency Alert</Text>
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="radio-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.broadcastBtnText}>Broadcast Emergency Alert</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         ) : (
@@ -654,13 +680,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 34,
+    paddingBottom: 60,
   },
   bannerAlert: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F0FDF4",
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#BBF7D0",
     padding: 12,
@@ -668,75 +694,100 @@ const styles = StyleSheet.create({
   },
   bannerAlertText: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: "700",
     color: "#166534",
-    lineHeight: 15,
+    lineHeight: 16,
   },
   label: {
     fontSize: 12,
     fontWeight: "700",
     color: "#334155",
-    marginBottom: 4,
+    marginBottom: 6,
     marginTop: 4,
   },
-  input: {
-    height: 44,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
     borderColor: "#E2E8F0",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    fontSize: 13,
+    height: 48,
+    marginBottom: 14,
+    ...Shadows.soft,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  inputInner: {
+    flex: 1,
+    fontSize: 13.5,
     color: "#0F172A",
-    marginBottom: 12,
+    fontWeight: "600",
+  },
+  input: {
+    height: 48,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 13.5,
+    color: "#0F172A",
+    marginBottom: 14,
+    ...Shadows.soft,
   },
   row: {
     flexDirection: "row",
     gap: 12,
+    marginBottom: 2,
   },
   col: {
     flex: 1,
   },
   dropdownBtn: {
-    height: 44,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
+    height: 48,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
     borderColor: "#E2E8F0",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 14,
+    ...Shadows.soft,
   },
   dropdownValue: {
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "900",
     color: "#DC2626",
   },
   unitsRow: {
     flexDirection: "row",
-    gap: 4,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 14,
   },
   unitChip: {
     flex: 1,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1.2,
     borderColor: "#E2E8F0",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+    ...Shadows.soft,
   },
   unitChipActive: {
     backgroundColor: "#166534",
     borderColor: "#166534",
   },
   unitChipText: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 11.5,
+    fontWeight: "800",
     color: "#64748B",
   },
   unitChipTextActive: {
@@ -745,17 +796,18 @@ const styles = StyleSheet.create({
   urgencyRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   urgencyChip: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.2,
     borderColor: "#E2E8F0",
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+    ...Shadows.soft,
   },
   urgencyCritical: {
     backgroundColor: "#DC2626",
@@ -771,26 +823,29 @@ const styles = StyleSheet.create({
   },
   urgencyText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#334155",
+    fontWeight: "800",
+    color: "#475569",
+    textAlign: "center",
   },
   urgencyTextActive: {
     color: "#FFFFFF",
   },
   broadcastBtn: {
-    height: 48,
+    height: 52,
     backgroundColor: "#DC2626",
-    borderRadius: 12,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 12,
+    marginBottom: 10,
     ...Shadows.primaryBtn,
   },
   broadcastBtnText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0.2,
   },
   statusContainer: {
     gap: 14,
