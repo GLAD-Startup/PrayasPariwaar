@@ -22,6 +22,53 @@ import ActionDialog from "../components/ActionDialog";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+function formatBloodGroup(bg?: string): string {
+  if (!bg) return "O+";
+  const trimmed = bg.trim();
+  if (/^(A|B|AB|O)[+-]$/i.test(trimmed)) return trimmed.toUpperCase();
+  const map: Record<string, string> = {
+    A_POSITIVE: "A+",
+    A_NEGATIVE: "A-",
+    B_POSITIVE: "B+",
+    B_NEGATIVE: "B-",
+    AB_POSITIVE: "AB+",
+    AB_NEGATIVE: "AB-",
+    O_POSITIVE: "O+",
+    O_NEGATIVE: "O-",
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+  };
+  if (map[trimmed.toUpperCase()]) return map[trimmed.toUpperCase()];
+  return trimmed
+    .replace(/_POSITIVE/gi, "+")
+    .replace(/_NEGATIVE/gi, "-")
+    .replace(/_POS/gi, "+")
+    .replace(/_NEG/gi, "-")
+    .replace(/\s*POSITIVE/gi, "+")
+    .replace(/\s*NEGATIVE/gi, "-")
+    .trim();
+}
+
+function toPrismaBloodGroup(bg: string): string {
+  const map: Record<string, string> = {
+    "A+": "A_POSITIVE",
+    "A-": "A_NEGATIVE",
+    "B+": "B_POSITIVE",
+    "B-": "B_NEGATIVE",
+    "AB+": "AB_POSITIVE",
+    "AB-": "AB_NEGATIVE",
+    "O+": "O_POSITIVE",
+    "O-": "O_NEGATIVE",
+  };
+  return map[bg] || "O_POSITIVE";
+}
+
 interface LiveBloodRequest {
   id: string;
   patientName: string;
@@ -128,8 +175,8 @@ export default function BloodRequestScreen() {
           id: r.id,
           patientName: r.patientName,
           hospital: r.hospitalName || r.hospital || "Hospital",
-          bloodGroup: r.bloodGroup?.replace("_POS", "+").replace("_NEG", "-") || "O+",
-          units: `${r.units || 1} Unit`,
+          bloodGroup: formatBloodGroup(r.bloodGroup),
+          units: `${r.units || r.unitsNeeded || 1} Unit`,
           urgency: r.urgency || "CRITICAL",
           postedTime: "Recently",
           attendantPhone: r.contactPhone,
@@ -164,12 +211,12 @@ export default function BloodRequestScreen() {
 
     setIsSubmitting(true);
     try {
-      const bgFormatted = bloodGroup.replace("+", "_POS").replace("-", "_NEG");
+      const bgFormatted = toPrismaBloodGroup(bloodGroup);
       const res = await api.post("/blood-requests", {
         patientName,
         hospitalName: hospital,
         bloodGroup: bgFormatted,
-        units: parseInt(units) || 1,
+        unitsNeeded: parseInt(units) || 1,
         urgency,
         contactPhone: attendantPhone,
         notes: notes || `Emergency request for ${patientName}`,
@@ -794,25 +841,32 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   bloodBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     backgroundColor: "#FEF2F2",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#FECACA",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
   bloodBadgeText: {
     fontSize: 16,
     fontWeight: "900",
     color: "#DC2626",
+    letterSpacing: -0.5,
+    textAlign: "center",
+    lineHeight: 18,
   },
   bloodUnitsText: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "800",
     color: "#991B1B",
+    marginTop: 2,
+    textAlign: "center",
   },
   liveInfo: {
     flex: 1,

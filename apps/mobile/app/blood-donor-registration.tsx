@@ -24,6 +24,39 @@ import ActionDialog from "../components/ActionDialog";
 const { width } = Dimensions.get("window");
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+function formatBloodGroup(bg?: string): string {
+  if (!bg) return "O+";
+  const trimmed = bg.trim();
+  if (/^(A|B|AB|O)[+-]$/i.test(trimmed)) return trimmed.toUpperCase();
+  const map: Record<string, string> = {
+    A_POSITIVE: "A+",
+    A_NEGATIVE: "A-",
+    B_POSITIVE: "B+",
+    B_NEGATIVE: "B-",
+    AB_POSITIVE: "AB+",
+    AB_NEGATIVE: "AB-",
+    O_POSITIVE: "O+",
+    O_NEGATIVE: "O-",
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+  };
+  if (map[trimmed.toUpperCase()]) return map[trimmed.toUpperCase()];
+  return trimmed
+    .replace(/_POSITIVE/gi, "+")
+    .replace(/_NEGATIVE/gi, "-")
+    .replace(/_POS/gi, "+")
+    .replace(/_NEG/gi, "-")
+    .replace(/\s*POSITIVE/gi, "+")
+    .replace(/\s*NEGATIVE/gi, "-")
+    .trim();
+}
+
 export interface BloodDonorRecord {
   id: string;
   name: string;
@@ -108,11 +141,7 @@ export default function BloodDonorRegistrationScreen() {
             name: donorData.name,
             phone: donorData.phone,
             email: donorData.email,
-            bloodGroup: donorData.bloodGroup
-              ?.replace("_POSITIVE", "+")
-              ?.replace("_NEGATIVE", "-")
-              ?.replace("_POS", "+")
-              ?.replace("_NEG", "-") || donorData.bloodGroup,
+            bloodGroup: formatBloodGroup(donorData.bloodGroup),
             city: donorData.city || "Mathura / Vrindavan",
             address: donorData.address,
             createdAt: donorData.createdAt,
@@ -170,11 +199,7 @@ export default function BloodDonorRegistrationScreen() {
           name: donorData.name,
           phone: donorData.phone,
           email: donorData.email,
-          bloodGroup: donorData.bloodGroup
-            ?.replace("_POSITIVE", "+")
-            ?.replace("_NEGATIVE", "-")
-            ?.replace("_POS", "+")
-            ?.replace("_NEG", "-") || bloodGroup,
+          bloodGroup: formatBloodGroup(donorData.bloodGroup),
           city: donorData.city || "Mathura / Vrindavan",
           address: donorData.address,
           createdAt: donorData.createdAt,
@@ -200,9 +225,7 @@ export default function BloodDonorRegistrationScreen() {
           name: donorData.name,
           phone: donorData.phone,
           email: donorData.email,
-          bloodGroup: donorData.bloodGroup
-            ?.replace("_POSITIVE", "+")
-            ?.replace("_NEGATIVE", "-") || bloodGroup,
+          bloodGroup: formatBloodGroup(donorData.bloodGroup),
           city: donorData.city || "Mathura / Vrindavan",
           address: donorData.address,
           createdAt: donorData.createdAt,
