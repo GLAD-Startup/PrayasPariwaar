@@ -37,7 +37,7 @@ function getStoredGallery(): LocalGalleryData {
         title: "Vrindavan Harit Kranti - 5,000 Sapling Afforestation",
         slug: "vrindavan-harit-kranti",
         category: "Plantation",
-        coverImage: "/images/vrindavan-neem-drive.jpg",
+        coverImage: "/images/vrindavan-plantation.jpg",
         description: "Native Neem, Peepal, and Kadamba tree plantation along Braj Parikrama Marg.",
         photoCount: 8,
         createdAt: new Date().toISOString(),

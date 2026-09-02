@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
+
 const nextConfig = {
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH !== undefined ? process.env.NEXT_PUBLIC_BASE_PATH : "/prayas",
+  ...(basePath ? { basePath } : {}),
   transpilePackages: ["@prayas/database", "@prayas/utils"],
   images: {
     loader: "custom",
@@ -18,3 +20,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
+

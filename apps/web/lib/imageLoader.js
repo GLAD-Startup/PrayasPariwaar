@@ -4,8 +4,13 @@ export default function imageLoader({ src, width, quality }) {
     return src;
   }
   const cleanSrc = src.startsWith("/") ? src : `/${src}`;
-  if (cleanSrc.startsWith("/prayas")) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  if (!basePath) {
     return cleanSrc;
   }
-  return `/prayas${cleanSrc}`;
+  if (cleanSrc.startsWith(basePath)) {
+    return cleanSrc;
+  }
+  return `${basePath}${cleanSrc}`;
 }
+
