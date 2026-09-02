@@ -31,11 +31,12 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) => {
+    if (!pathname) return false;
     if (path === "/admin") return pathname === "/admin";
     return pathname.startsWith(path);
   };
@@ -390,7 +391,7 @@ export default function AdminLayout({
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-prayas-ink font-bold capitalize">
-              {pathname === "/admin" ? "Overview" : pathname.replace("/admin/", "").replace("-", " ")}
+              {pathname === "/admin" ? "Overview" : pathname ? pathname.replace("/admin/", "").replace(/-/g, " ") : "Overview"}
             </span>
           </div>
 

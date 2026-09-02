@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [educationDropdownOpen, setEducationDropdownOpen] = useState(false);
   const [workDropdownOpen, setWorkDropdownOpen] = useState(false);
@@ -117,6 +117,7 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   const isActive = (path: string) => {
+    if (!pathname) return false;
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   };

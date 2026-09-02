@@ -39,8 +39,8 @@ export default function DonatePage() {
 
 function DonateForm() {
   const searchParams = useSearchParams();
-  const initialProject = searchParams.get("project");
-  const initialAmount = searchParams.get("amount");
+  const initialProject = searchParams?.get("project") || "";
+  const initialAmount = searchParams?.get("amount") || "";
 
   const [amount, setAmount] = useState<number>(initialAmount ? Number(initialAmount) : 1100);
   const [frequency, setFrequency] = useState<"ONE_TIME" | "MONTHLY" | "YEARLY">("ONE_TIME");
