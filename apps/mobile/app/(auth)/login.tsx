@@ -93,19 +93,26 @@ export default function MobileLoginScreen() {
           <View style={styles.topBar}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.canGoBack() ? router.back() : router.replace("/(auth)/onboarding")}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/onboarding"))}
+              activeOpacity={0.8}
             >
-              <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+              <Ionicons name="chevron-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
+
+            <View style={styles.topBadge}>
+              <Text style={styles.topBadgeText}>SEVA PORTAL</Text>
+            </View>
           </View>
 
-          {/* Avatar / Prayas Blue Brand Logo */}
+          {/* Avatar / Prayas Brand Logo */}
           <View style={styles.avatarSection}>
-            <Image
-              source={require("../../assets/images/prayas-logo-blue.png")}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
+            <View style={styles.logoCard}>
+              <Image
+                source={require("../../assets/images/prayas-logo-blue.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.orgTagline}>A TRIAL TO MOVE AHEAD</Text>
           </View>
 
@@ -129,6 +136,7 @@ export default function MobileLoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
               <View style={styles.inputWrapper}>
+                <Ionicons name="mail-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
@@ -146,6 +154,7 @@ export default function MobileLoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
                 <TextInput
                   style={[styles.input, { paddingRight: 44 }]}
                   placeholder="Enter your password"
@@ -162,7 +171,7 @@ export default function MobileLoginScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={Colors.textSecondary}
+                    color="#64748B"
                   />
                 </TouchableOpacity>
               </View>
@@ -170,7 +179,7 @@ export default function MobileLoginScreen() {
 
             {/* Forgot Password Link */}
             <View style={styles.forgotPassRow}>
-              <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
+              <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")} activeOpacity={0.8}>
                 <Text style={styles.forgotPassText}>Forgot Password?</Text>
               </TouchableOpacity>
             </View>
@@ -180,7 +189,7 @@ export default function MobileLoginScreen() {
               style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
               onPress={handleLogin}
               disabled={loading}
-              activeOpacity={0.85}
+              activeOpacity={0.88}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -202,9 +211,10 @@ export default function MobileLoginScreen() {
               <TouchableOpacity
                 style={styles.socialCard}
                 onPress={() => handleQuickFill("donor@prayaspariwaar.com", "donor123")}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.googleCircle]}>
-                  <FontAwesome name="google" size={22} color="#EA4335" />
+                  <FontAwesome name="google" size={20} color="#EA4335" />
                 </View>
                 <Text style={styles.socialLabel}>Google</Text>
               </TouchableOpacity>
@@ -213,9 +223,10 @@ export default function MobileLoginScreen() {
               <TouchableOpacity
                 style={styles.socialCard}
                 onPress={() => handleQuickFill("volunteer@prayaspariwaar.com", "volunteer123")}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.facebookCircle]}>
-                  <FontAwesome name="facebook" size={22} color="#1877F2" />
+                  <FontAwesome name="facebook" size={20} color="#1877F2" />
                 </View>
                 <Text style={styles.socialLabel}>Facebook</Text>
               </TouchableOpacity>
@@ -224,9 +235,10 @@ export default function MobileLoginScreen() {
               <TouchableOpacity
                 style={styles.socialCard}
                 onPress={() => handleQuickFill("admin@prayaspariwaar.com", "admin123")}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.appleCircle]}>
-                  <FontAwesome name="apple" size={24} color="#000000" />
+                  <FontAwesome name="apple" size={22} color="#000000" />
                 </View>
                 <Text style={styles.socialLabel}>Apple</Text>
               </TouchableOpacity>
@@ -239,18 +251,21 @@ export default function MobileLoginScreen() {
                 <TouchableOpacity
                   style={styles.demoPill}
                   onPress={() => handleQuickFill("admin@prayaspariwaar.com", "admin123")}
+                  activeOpacity={0.8}
                 >
                   <Text style={styles.demoPillText}>Admin</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.demoPill}
                   onPress={() => handleQuickFill("volunteer@prayaspariwaar.com", "volunteer123")}
+                  activeOpacity={0.8}
                 >
                   <Text style={styles.demoPillText}>Volunteer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.demoPill}
                   onPress={() => handleQuickFill("donor@prayaspariwaar.com", "donor123")}
+                  activeOpacity={0.8}
                 >
                   <Text style={styles.demoPillText}>Donor</Text>
                 </TouchableOpacity>
@@ -279,7 +294,7 @@ export default function MobileLoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
@@ -287,18 +302,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 60,
   },
   topBar: {
     paddingTop: Platform.OS === "android" ? 14 : 6,
-    paddingBottom: 8,
+    paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F8FAFC",
@@ -306,38 +322,63 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
     ...Shadows.soft,
   },
+  topBadge: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  topBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#166534",
+    letterSpacing: 0.6,
+  },
   avatarSection: {
     alignItems: "center",
-    marginTop: 6,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  logoCard: {
+    width: 76,
+    height: 76,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+    ...Shadows.soft,
   },
   logoImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
-    marginBottom: 6,
+    width: 58,
+    height: 58,
+    borderRadius: 12,
   },
   orgTagline: {
     fontSize: 11,
     fontWeight: "800",
-    color: Colors.primaryDark,
-    letterSpacing: 1,
+    color: "#166534",
+    letterSpacing: 1.2,
   },
   header: {
     alignItems: "center",
     marginBottom: 20,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: Colors.primaryDark,
-    letterSpacing: -0.3,
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#14532D",
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 6,
-    fontWeight: "500",
+    color: "#64748B",
+    marginTop: 4,
+    fontWeight: "600",
   },
   formContainer: {
     width: "100%",
@@ -360,27 +401,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: 8,
+    fontSize: 12.5,
+    fontWeight: "800",
+    color: "#334155",
+    marginBottom: 6,
   },
   inputWrapper: {
     position: "relative",
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 50,
+    ...Shadows.soft,
+  },
+  inputLeftIcon: {
+    marginRight: 10,
   },
   input: {
-    height: 50,
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: "#0F172A",
+    fontWeight: "600",
   },
   eyeIconBtn: {
     position: "absolute",
@@ -391,16 +439,16 @@ const styles = StyleSheet.create({
   forgotPassRow: {
     alignItems: "flex-end",
     marginTop: 2,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   forgotPassText: {
     fontSize: 13,
-    fontWeight: "700",
-    color: Colors.primary,
+    fontWeight: "800",
+    color: "#166534",
   },
   loginBtn: {
     height: 52,
-    backgroundColor: Colors.primary,
+    backgroundColor: "#166534",
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -410,46 +458,46 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   loginBtnText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
     letterSpacing: 0.3,
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 22,
+    marginVertical: 18,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: "#E2E8F0",
   },
   dividerText: {
     paddingHorizontal: 12,
-    fontSize: 12,
-    color: Colors.textMuted,
-    fontWeight: "600",
+    fontSize: 11.5,
+    color: "#94A3B8",
+    fontWeight: "700",
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 24,
-    marginBottom: 20,
+    gap: 20,
+    marginBottom: 18,
   },
   socialCard: {
     alignItems: "center",
   },
   socialCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 6,
+    marginBottom: 4,
     ...Shadows.soft,
   },
   googleCircle: {
@@ -463,22 +511,22 @@ const styles = StyleSheet.create({
   },
   socialLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: "600",
+    color: "#64748B",
+    fontWeight: "700",
   },
   demoBox: {
-    backgroundColor: Colors.primarySoft,
+    backgroundColor: "#F0FDF4",
     borderRadius: 14,
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.primaryBorder,
-    marginBottom: 16,
+    borderColor: "#BBF7D0",
+    marginBottom: 14,
   },
   demoTitle: {
     fontSize: 10,
-    fontWeight: "800",
-    color: Colors.primary,
+    fontWeight: "900",
+    color: "#166534",
     letterSpacing: 0.8,
     marginBottom: 8,
   },
@@ -487,30 +535,31 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   demoPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: Colors.white,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: Colors.primaryBorder,
+    borderColor: "#BBF7D0",
+    ...Shadows.soft,
   },
   demoPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.primary,
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#166534",
   },
   footer: {
     marginTop: "auto",
-    paddingTop: 10,
+    paddingTop: 8,
     alignItems: "center",
   },
   footerText: {
     fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: "500",
+    color: "#64748B",
+    fontWeight: "600",
   },
   footerLink: {
-    color: Colors.primary,
-    fontWeight: "800",
+    color: "#166534",
+    fontWeight: "900",
   },
 });

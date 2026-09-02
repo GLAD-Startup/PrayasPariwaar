@@ -63,9 +63,14 @@ export default function MobileForgotPasswordScreen() {
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.replace("/(auth)/login")}
+              activeOpacity={0.8}
             >
-              <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+              <Ionicons name="chevron-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
+
+            <View style={styles.topBadge}>
+              <Text style={styles.topBadgeText}>RECOVERY</Text>
+            </View>
           </View>
 
           {/* Heading */}
@@ -77,10 +82,10 @@ export default function MobileForgotPasswordScreen() {
           <View style={styles.illustrationSection}>
             <View style={styles.lockContainer}>
               <View style={styles.lockCircle}>
-                <MaterialCommunityIcons name="lock-reset" size={64} color={Colors.primary} />
+                <Ionicons name="shield-checkmark-outline" size={54} color="#166534" />
               </View>
               <View style={styles.leafBadge}>
-                <Text style={styles.leafIcon}>🌿</Text>
+                <Ionicons name="lock-closed" size={14} color="#166534" />
               </View>
             </View>
           </View>
@@ -96,7 +101,7 @@ export default function MobileForgotPasswordScreen() {
           {submitted ? (
             <View style={styles.successBox}>
               <View style={styles.successIconCircle}>
-                <Ionicons name="mail-open-outline" size={28} color={Colors.primary} />
+                <Ionicons name="mail-open-outline" size={28} color="#166534" />
               </View>
               <Text style={styles.successTitle}>Reset Link Sent!</Text>
               <Text style={styles.successText}>
@@ -106,6 +111,7 @@ export default function MobileForgotPasswordScreen() {
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => router.replace("/(auth)/login")}
+                activeOpacity={0.88}
               >
                 <Text style={styles.actionBtnText}>Back to Login</Text>
               </TouchableOpacity>
@@ -122,15 +128,18 @@ export default function MobileForgotPasswordScreen() {
               {/* Email Address */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email Address</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                />
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="mail-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your email"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
               </View>
 
               {/* Send Reset Link Button */}
@@ -138,7 +147,7 @@ export default function MobileForgotPasswordScreen() {
                 style={[styles.resetBtn, loading && styles.resetBtnDisabled]}
                 onPress={handleResetPassword}
                 disabled={loading}
-                activeOpacity={0.85}
+                activeOpacity={0.88}
               >
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
@@ -151,6 +160,7 @@ export default function MobileForgotPasswordScreen() {
               <TouchableOpacity
                 style={styles.backToLoginBtn}
                 onPress={() => router.replace("/(auth)/login")}
+                activeOpacity={0.8}
               >
                 <Text style={styles.backToLoginText}>Back to Login</Text>
               </TouchableOpacity>
@@ -165,7 +175,7 @@ export default function MobileForgotPasswordScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
@@ -173,18 +183,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 60,
   },
   topBar: {
     paddingTop: Platform.OS === "android" ? 14 : 6,
-    paddingBottom: 8,
+    paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F8FAFC",
@@ -192,16 +203,30 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
     ...Shadows.soft,
   },
+  topBadge: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  topBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#166534",
+    letterSpacing: 0.6,
+  },
   header: {
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 20,
+    marginTop: 4,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
-    fontWeight: "800",
-    color: Colors.textGreenDark,
-    letterSpacing: -0.3,
+    fontWeight: "900",
+    color: "#14532D",
+    letterSpacing: -0.4,
   },
   illustrationSection: {
     alignItems: "center",
@@ -213,42 +238,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   lockCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.primarySoft,
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: Colors.primaryBorder,
+    borderColor: "#BBF7D0",
   },
   leafBadge: {
     position: "absolute",
-    top: 4,
-    left: 4,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
+    top: 2,
+    left: 2,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     width: 28,
     height: 28,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: Colors.primaryBorder,
+    borderColor: "#BBF7D0",
     ...Shadows.soft,
   },
-  leafIcon: {
-    fontSize: 14,
-  },
   textContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 28,
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   description: {
-    fontSize: 14,
-    color: Colors.textSecondary,
+    fontSize: 13.5,
+    color: "#64748B",
     textAlign: "center",
-    lineHeight: 22,
-    fontWeight: "500",
+    lineHeight: 20,
+    fontWeight: "600",
   },
   formContainer: {
     width: "100%",
@@ -271,56 +293,67 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: 18,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: 8,
+    fontSize: 12.5,
+    fontWeight: "800",
+    color: "#334155",
+    marginBottom: 6,
+  },
+  inputWrapper: {
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 50,
+    ...Shadows.soft,
+  },
+  inputLeftIcon: {
+    marginRight: 10,
   },
   input: {
-    height: 50,
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: "#0F172A",
+    fontWeight: "600",
   },
   resetBtn: {
     height: 52,
-    backgroundColor: Colors.primary,
+    backgroundColor: "#166534",
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.primaryBtn,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   resetBtnDisabled: {
     opacity: 0.65,
   },
   resetBtnText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
     letterSpacing: 0.3,
   },
   backToLoginBtn: {
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   backToLoginText: {
     fontSize: 14,
-    fontWeight: "700",
-    color: Colors.primary,
+    fontWeight: "800",
+    color: "#166534",
   },
   successBox: {
-    backgroundColor: Colors.primarySoft,
-    borderRadius: 20,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: Colors.primaryBorder,
+    borderColor: "#BBF7D0",
     padding: 24,
     alignItems: "center",
   },
@@ -328,43 +361,44 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.white,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.primaryBorder,
+    borderWidth: 1.5,
+    borderColor: "#BBF7D0",
     ...Shadows.soft,
   },
   successTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: Colors.textGreenDark,
+    fontWeight: "900",
+    color: "#14532D",
     marginBottom: 8,
   },
   successText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: "#475569",
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 20,
+    fontWeight: "500",
   },
   successEmail: {
-    fontWeight: "700",
-    color: Colors.primary,
+    fontWeight: "800",
+    color: "#166534",
   },
   actionBtn: {
-    height: 46,
+    height: 48,
     paddingHorizontal: 24,
-    backgroundColor: Colors.primary,
+    backgroundColor: "#166534",
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.primaryBtn,
   },
   actionBtnText: {
-    color: Colors.white,
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "900",
   },
 });
