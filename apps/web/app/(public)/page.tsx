@@ -725,10 +725,11 @@ export default async function HomePage() {
           <div className="border border-prayas-rule bg-prayas-stone rounded-2xl p-6 sm:p-10 2xl:p-14 text-center space-y-5 sm:space-y-6 shadow-card">
             {/* Logo in CTA */}
             <div className="flex justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/images/prayas-logo.png"
                 alt="Prayas Pariwaar Logo"
+                width={180}
+                height={50}
                 className="h-10 sm:h-12 2xl:h-16 w-auto object-contain"
               />
             </div>

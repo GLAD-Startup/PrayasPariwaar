@@ -229,10 +229,11 @@ export default function AdminLoginPage() {
           {/* Mobile-Only Header Brand Logo */}
           <div className="lg:hidden text-center space-y-3 pb-2">
             <div className="inline-block p-2 rounded-2xl bg-white border border-slate-200 shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/images/prayas-logo.png"
                 alt="Prayas Pariwaar Logo"
+                width={160}
+                height={44}
                 className="h-11 w-auto object-contain mx-auto"
               />
             </div>

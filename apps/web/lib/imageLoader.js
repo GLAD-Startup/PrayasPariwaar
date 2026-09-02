@@ -4,8 +4,15 @@ export default function imageLoader({ src, width, quality }) {
     return src;
   }
   const cleanSrc = src.startsWith("/") ? src : `/${src}`;
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  const base = basePath && !cleanSrc.startsWith(basePath) ? `${basePath}${cleanSrc}` : cleanSrc;
+  if (cleanSrc.startsWith("/prayas/") || cleanSrc === "/prayas") {
+    return cleanSrc;
+  }
+  const basePath =
+    process.env.NEXT_PUBLIC_BASE_PATH !== undefined && process.env.NEXT_PUBLIC_BASE_PATH !== ""
+      ? process.env.NEXT_PUBLIC_BASE_PATH
+      : "/prayas";
+
+  const base = `${basePath}${cleanSrc}`;
   
   if (width) {
     const separator = base.includes("?") ? "&" : "?";
