@@ -128,39 +128,129 @@ export default function Navbar() {
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      {/* Top Ledger Strip: Education Mission & Blood Desk (Hidden on tiny screens to save vertical space) */}
-      <div className="bg-prayas-stone border-b border-prayas-rule text-xs 2xl:text-sm text-prayas-muted py-1.5 px-3 sm:px-6 lg:px-8 2xl:px-12 select-none w-full">
-        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto flex items-center justify-between gap-2">
-          {/* Left: Primary Education Mission */}
-          <div className="flex items-center gap-2 text-left">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0" aria-hidden="true" />
-            <Link href="/projects/aashayein-education" className="font-semibold text-slate-800 hover:text-emerald-800 transition-colors flex items-center gap-1.5 text-[11px] sm:text-xs">
-              <GraduationCap className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-              <span className="truncate">Project Aashayein: Sponsor a Student for ₹500/mo</span>
-            </Link>
-          </div>
+      {/* Top Ledger Strip: Flowing Marquee Ticker */}
+      <div className="bg-prayas-stone border-b border-prayas-rule text-[11px] sm:text-xs text-prayas-muted py-1.5 select-none w-full overflow-hidden relative z-20">
+        {/* Subtle left/right fade gradients for high-end look */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-12 bg-gradient-to-r from-prayas-stone to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 sm:w-12 bg-gradient-to-l from-prayas-stone to-transparent z-10" />
 
-          {/* Right: Tax Exemption & Secondary Emergency Blood Helpline */}
-          <div className="flex items-center gap-3 text-[11px] sm:text-xs justify-end shrink-0">
-            <span className="text-emerald-800 font-semibold hidden md:inline">
-              ✓ 80G Tax-Exempt Certified
-            </span>
-            <span className="text-slate-300 hidden md:inline">|</span>
-            <a
-              href="tel:+919412279000"
-              className="flex items-center gap-1 font-medium text-rose-700 hover:underline"
-            >
-              <Droplet className="w-3 h-3 fill-current shrink-0" />
-              <span className="hidden xs:inline">24/7 Blood Desk:</span>
-              <span className="font-bold">+91 94122 79000</span>
-            </a>
-            <span className="text-slate-300 hidden sm:inline">|</span>
-            <Link
-              href="/admin/login"
-              className="text-slate-500 hover:text-slate-900 underline font-medium hidden sm:inline"
-            >
-              Staff Portal
-            </Link>
+        <div className="overflow-hidden w-full flex items-center">
+          <div className="animate-marquee flex items-center whitespace-nowrap">
+            {/* First sequence */}
+            <div className="flex items-center gap-6 sm:gap-8 shrink-0 pr-6 sm:pr-8">
+              <Link
+                href="/projects/aashayein-education"
+                className="inline-flex items-center gap-1.5 font-semibold text-slate-800 hover:text-emerald-800 transition-colors"
+              >
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0" aria-hidden="true" />
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Project Aashayein: Sponsor a Student for ₹500/mo</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <a
+                href="tel:+919412279000"
+                className="inline-flex items-center gap-1 font-semibold text-rose-700 hover:underline"
+              >
+                <Droplet className="w-3.5 h-3.5 fill-current shrink-0" />
+                <span>24/7 Emergency Blood Helpline: +91 94122 79000</span>
+              </a>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/medical-equipment"
+                className="inline-flex items-center gap-1.5 font-semibold text-emerald-800 hover:text-emerald-950 transition-colors"
+              >
+                <Stethoscope className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Free Medical Equipment Bank: Oxygen & Beds</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/projects/vrindavan-harit-kranti"
+                className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-slate-900 transition-colors"
+              >
+                <Trees className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Vrindavan Harit Kranti: 5,400+ Native Trees Planted</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>18-Yr Registered Society (Reg. 142/2006-07)</span>
+              </span>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/admin/login"
+                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 underline font-medium"
+              >
+                <span>Staff Portal</span>
+              </Link>
+            </div>
+
+            {/* Second sequence (Identical duplicate for seamless continuous marquee loop) */}
+            <div className="flex items-center gap-6 sm:gap-8 shrink-0 pr-6 sm:pr-8" aria-hidden="true">
+              <Link
+                href="/projects/aashayein-education"
+                className="inline-flex items-center gap-1.5 font-semibold text-slate-800 hover:text-emerald-800 transition-colors"
+              >
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0" aria-hidden="true" />
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Project Aashayein: Sponsor a Student for ₹500/mo</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <a
+                href="tel:+919412279000"
+                className="inline-flex items-center gap-1 font-semibold text-rose-700 hover:underline"
+              >
+                <Droplet className="w-3.5 h-3.5 fill-current shrink-0" />
+                <span>24/7 Emergency Blood Helpline: +91 94122 79000</span>
+              </a>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/medical-equipment"
+                className="inline-flex items-center gap-1.5 font-semibold text-emerald-800 hover:text-emerald-950 transition-colors"
+              >
+                <Stethoscope className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Free Medical Equipment Bank: Oxygen & Beds</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/projects/vrindavan-harit-kranti"
+                className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-slate-900 transition-colors"
+              >
+                <Trees className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Vrindavan Harit Kranti: 5,400+ Native Trees Planted</span>
+              </Link>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>18-Yr Registered Society (Reg. 142/2006-07)</span>
+              </span>
+
+              <span className="text-slate-300 select-none">•</span>
+
+              <Link
+                href="/admin/login"
+                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 underline font-medium"
+              >
+                <span>Staff Portal</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -233,7 +323,7 @@ export default function Navbar() {
                       >
                         <Heart className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="block font-bold text-emerald-900">Sponsor a Student (80G)</strong>
+                          <strong className="block font-bold text-emerald-900">Sponsor a Student</strong>
                           <span className="text-[11px] text-slate-500">₹500/mo covers books, fees & meals</span>
                         </div>
                       </Link>
@@ -501,14 +591,14 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* Direct Action Button: Sponsor a Child / Donate (80G) */}
+            {/* Direct Action Button: Sponsor a Child / Donate */}
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/donate?project=aashayein-education"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[#1E5338] hover:bg-[#16432B] text-white transition-all shadow-sm whitespace-nowrap"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-white" />
-                <span>Sponsor a Student (80G)</span>
+                <span>Sponsor a Student</span>
               </Link>
 
               {/* Hamburger Button for Mobile */}
@@ -538,7 +628,7 @@ export default function Navbar() {
                     <span>Project Aashayein</span>
                   </div>
                   <span className="text-[10px] font-mono font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200">
-                    80G Tax Exempt
+                    ₹500/Month
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
@@ -620,7 +710,7 @@ export default function Navbar() {
                         onClick={() => setMobileMenuOpen(false)}
                         className="block px-3 py-2 rounded-lg hover:bg-emerald-50 text-emerald-800 font-semibold"
                       >
-                        Sponsor a Student (Section 80G)
+                        Sponsor a Student
                       </Link>
                       <Link
                         href="/projects/aadhar-career-counseling"

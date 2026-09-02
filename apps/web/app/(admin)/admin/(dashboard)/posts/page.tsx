@@ -574,149 +574,283 @@ export default function AdminPostsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-prayas-ink">
-              <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
-                <tr>
-                  <th className="p-4">Post & Cover</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Event Date & Location</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Gallery</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-prayas-rule">
-                {filteredPosts.map((post) => (
-                  <tr key={post.id} className="hover:bg-prayas-stone/30 transition-colors">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        {post.coverImage ? (
-                          <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={post.coverImage}
-                              alt={post.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-14 h-11 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
-                            <ImageIcon className="w-4 h-4" />
-                          </div>
-                        )}
-                        <div>
-                          <span className="font-bold text-prayas-ink text-sm block hover:text-prayas-neem line-clamp-1">
-                            {post.title}
-                          </span>
-                          <span className="text-[10px] text-prayas-muted font-mono">
-                            /blog/{post.slug}
-                          </span>
+          <div>
+            {/* 1. MOBILE CARD LIST (< md) */}
+            <div className="md:hidden divide-y divide-prayas-rule">
+          {filteredPosts.map((post) => (
+            <div key={post.id} className="p-4 space-y-3 hover:bg-prayas-stone/20 transition-colors">
+              {/* Top: Thumbnail & Title */}
+              <div className="flex items-start gap-3">
+                {post.coverImage ? (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={post.coverImage}
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="font-bold text-prayas-ink text-sm leading-snug line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-[10px] text-prayas-muted font-mono truncate">
+                    /blog/{post.slug}
+                  </p>
+                </div>
+              </div>
+
+              {/* Middle: Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                  post.type === "ACHIEVEMENT"
+                    ? "bg-purple-50 text-purple-800 border-purple-200"
+                    : post.type === "NEWS"
+                    ? "bg-blue-50 text-blue-800 border-blue-200"
+                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                }`}>
+                  {post.type || "EVENT"}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => togglePublished(post)}
+                  disabled={actionLoading === post.id}
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
+                    post.published
+                      ? "bg-emerald-100 text-emerald-900 border border-emerald-200 hover:bg-emerald-200"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                  }`}
+                >
+                  {post.published ? (
+                    <>
+                      <Eye className="w-3 h-3 text-emerald-700" />
+                      <span>Published</span>
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="w-3 h-3 text-slate-500" />
+                      <span>Draft</span>
+                    </>
+                  )}
+                </button>
+
+                <span className="text-[10px] font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule inline-flex items-center gap-1">
+                  📷 {post.images && post.images.length > 0 ? `${post.images.length} photos` : "1 photo"}
+                </span>
+              </div>
+
+              {/* Date & Location Line */}
+              <div className="flex items-center justify-between text-[11px] text-prayas-muted pt-0.5">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="font-medium text-slate-700">
+                    {post.eventDate
+                      ? new Date(post.eventDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : new Date(post.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                  </span>
+                </div>
+
+                {post.location && (
+                  <div className="flex items-center gap-1 truncate max-w-[50%]">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{post.location}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 border-t border-prayas-rule/60 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleStartEdit(post)}
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Edit</span>
+                </button>
+
+                <Link
+                  href={`/blog/${post.slug}`}
+                  target="_blank"
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                  <span>View</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(post.id)}
+                  disabled={actionLoading === post.id}
+                  className="p-2 text-slate-400 hover:text-rose-600 bg-prayas-stone hover:bg-rose-50 rounded-xl border border-prayas-rule transition-colors inline-flex items-center justify-center disabled:opacity-50 cursor-pointer"
+                  title="Delete post"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 2. DESKTOP TABLE VIEW (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-xs text-prayas-ink">
+            <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
+              <tr>
+                <th className="p-4 min-w-[260px]">Post & Cover</th>
+                <th className="p-4 min-w-[110px]">Category</th>
+                <th className="p-4 min-w-[150px]">Event Date & Location</th>
+                <th className="p-4 min-w-[110px]">Status</th>
+                <th className="p-4 min-w-[100px]">Gallery</th>
+                <th className="p-4 min-w-[140px] text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-prayas-rule">
+              {filteredPosts.map((post) => (
+                <tr key={post.id} className="hover:bg-prayas-stone/30 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      {post.coverImage ? (
+                        <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={post.coverImage}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      </div>
-                    </td>
-
-                    <td className="p-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                        post.type === "ACHIEVEMENT"
-                          ? "bg-purple-50 text-purple-800 border-purple-200"
-                          : post.type === "NEWS"
-                          ? "bg-blue-50 text-blue-800 border-blue-200"
-                          : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      }`}>
-                        {post.type || "EVENT"}
-                      </span>
-                    </td>
-
-                    <td className="p-4">
-                      <div className="text-prayas-ink font-semibold">
-                        {post.eventDate
-                          ? new Date(post.eventDate).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : new Date(post.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                            })}
-                      </div>
-                      {post.location && (
-                        <div className="text-[11px] text-prayas-muted flex items-center gap-1 mt-0.5 truncate max-w-xs">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span className="truncate">{post.location}</span>
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="p-4">
-                      <button
-                        onClick={() => togglePublished(post)}
-                        disabled={actionLoading === post.id}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
-                          post.published
-                            ? "bg-emerald-100 text-emerald-900 border border-emerald-200 hover:bg-emerald-200"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-                        }`}
-                      >
-                        {post.published ? (
-                          <>
-                            <Eye className="w-3 h-3 text-emerald-700" />
-                            <span>Published</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3 h-3 text-slate-500" />
-                            <span>Draft</span>
-                          </>
-                        )}
-                      </button>
-                    </td>
-
-                    <td className="p-4 text-prayas-muted text-[11px]">
-                      {post.images && post.images.length > 0 ? (
-                        <span className="font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule">
-                          📷 {post.images.length} photos
-                        </span>
                       ) : (
-                        <span className="text-slate-400">1 photo</span>
+                        <div className="w-14 h-11 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                          <ImageIcon className="w-4 h-4" />
+                        </div>
                       )}
-                    </td>
+                      <div className="min-w-0">
+                        <span className="font-bold text-prayas-ink text-sm block hover:text-prayas-neem line-clamp-1">
+                          {post.title}
+                        </span>
+                        <span className="text-[10px] text-prayas-muted font-mono truncate block">
+                          /blog/{post.slug}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
 
-                    <td className="p-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleStartEdit(post)}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
-                      >
-                        <Edit2 className="w-3 h-3 text-emerald-700" />
-                        <span>Edit</span>
-                      </button>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      post.type === "ACHIEVEMENT"
+                        ? "bg-purple-50 text-purple-800 border-purple-200"
+                        : post.type === "NEWS"
+                        ? "bg-blue-50 text-blue-800 border-blue-200"
+                        : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    }`}>
+                      {post.type || "EVENT"}
+                    </span>
+                  </td>
 
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        target="_blank"
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
-                      >
-                        <ExternalLink className="w-3 h-3 text-slate-500" />
-                        <span>View</span>
-                      </Link>
+                  <td className="p-4">
+                    <div className="text-prayas-ink font-semibold">
+                      {post.eventDate
+                        ? new Date(post.eventDate).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : new Date(post.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                    </div>
+                    {post.location && (
+                      <div className="text-[11px] text-prayas-muted flex items-center gap-1 mt-0.5 truncate max-w-xs">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{post.location}</span>
+                      </div>
+                    )}
+                  </td>
 
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={actionLoading === post.id}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
-                        title="Delete post"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  <td className="p-4">
+                    <button
+                      onClick={() => togglePublished(post)}
+                      disabled={actionLoading === post.id}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
+                        post.published
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-200 hover:bg-emerald-200"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                      }`}
+                    >
+                      {post.published ? (
+                        <>
+                          <Eye className="w-3 h-3 text-emerald-700" />
+                          <span>Published</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3 h-3 text-slate-500" />
+                          <span>Draft</span>
+                        </>
+                      )}
+                    </button>
+                  </td>
+
+                  <td className="p-4 text-prayas-muted text-[11px]">
+                    {post.images && post.images.length > 0 ? (
+                      <span className="font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule">
+                        📷 {post.images.length} photos
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">1 photo</span>
+                    )}
+                  </td>
+
+                  <td className="p-4 text-right space-x-2">
+                    <button
+                      onClick={() => handleStartEdit(post)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="w-3 h-3 text-emerald-700" />
+                      <span>Edit</span>
+                    </button>
+
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      target="_blank"
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3 text-slate-500" />
+                      <span>View</span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      disabled={actionLoading === post.id}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50 cursor-pointer"
+                      title="Delete post"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+      )}
     </div>
-  );
+  </div>
+);
 }

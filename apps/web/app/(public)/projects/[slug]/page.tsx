@@ -160,7 +160,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
             </span>
             <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg border border-white/15">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>80G Tax Exempt Donations</span>
+              <span>100% Direct Grassroots Impact</span>
             </span>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
                   <div className="flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                     <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>50% tax deduction under Section 80G. Instant receipt.</span>
+                    <span>100% direct allocation. Instant receipt.</span>
                   </div>
 
                   {/* Recent Donors */}

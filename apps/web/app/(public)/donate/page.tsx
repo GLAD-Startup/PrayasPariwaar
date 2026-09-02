@@ -27,7 +27,7 @@ export default function DonatePage() {
         <div className="min-h-[60vh] py-16 flex items-center justify-center">
           <div className="text-center space-y-3">
             <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs text-prayas-muted font-sans">Loading 80G Seva Donation Portal...</p>
+            <p className="text-xs text-prayas-muted font-sans">Loading Seva Donation Portal...</p>
           </div>
         </div>
       }
@@ -161,7 +161,7 @@ function DonateForm() {
         <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-green-50 border border-green-200 text-xs 2xl:text-sm font-bold text-prayas-neem">
             <GraduationCap className="w-4 h-4" />
-            <span>Project Aashayein Educational Sponsorship • Section 80G Tax-Exempt</span>
+            <span>Project Aashayein Educational Sponsorship • Direct Grassroots Impact</span>
           </div>
           <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl 2xl:text-5xl font-bold text-prayas-ink leading-tight">
             Sponsor a Child's Education in Rural Vrindavan
@@ -185,7 +185,7 @@ function DonateForm() {
 
             <div className="p-4 rounded border border-green-200 bg-white max-w-md mx-auto text-xs text-left space-y-2 font-mono text-prayas-ink">
               <p><strong>Payment ID:</strong> {donationSuccess.paymentId}</p>
-              <p><strong>80G Receipt:</strong> Emailed to {donorEmail || "your email"}</p>
+              <p><strong>Donation Receipt:</strong> Emailed to {donorEmail || "your email"}</p>
               <p><strong>Trust:</strong> Prayas Pariwaar (Regd. 142/2006-07 Mathura)</p>
             </div>
 
@@ -306,11 +306,11 @@ function DonateForm() {
                   </select>
                 </div>
 
-                {/* 3. Donor Identity for 80G Tax Exemption */}
+                {/* 3. Donor Identity */}
                 <div className="space-y-4 border-t border-prayas-rule pt-4">
                   <div>
                     <label className="font-bold text-prayas-ink text-sm block">
-                      3. Donor Details (Required for 80G Tax Certificate)
+                      3. Donor Details (Required for Donation Receipt)
                     </label>
                     <p className="text-[11px] text-prayas-muted">
                       Your official receipt will be generated and dispatched automatically.
@@ -331,7 +331,7 @@ function DonateForm() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="font-bold text-prayas-ink">Email Address (For Tax Receipt) *</label>
+                      <label className="font-bold text-prayas-ink">Email Address (For Donation Receipt) *</label>
                       <input
                         type="email"
                         required
@@ -357,7 +357,7 @@ function DonateForm() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="font-bold text-prayas-ink">PAN Number (For 80G Tax Exemption)</label>
+                      <label className="font-bold text-prayas-ink">PAN Number (Optional)</label>
                       <input
                         type="text"
                         placeholder="e.g. ABCDE1234F"
@@ -415,7 +415,7 @@ function DonateForm() {
                   <p><strong>IFSC Code:</strong> SBIN0001234</p>
                 </div>
                 <p className="text-[11px] text-prayas-muted">
-                  After wire transfer, WhatsApp transaction UTR to +91 94122 79000 for your instant 80G receipt.
+                  After wire transfer, WhatsApp transaction UTR to +91 94122 79000 for your instant donation receipt.
                 </p>
               </div>
 
@@ -435,7 +435,7 @@ function DonateForm() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
-                    <span><strong>Tax Exemption:</strong> 50% deduction on taxable income under Section 80G.</span>
+                    <span><strong>Official Receipt:</strong> Instant donation receipt issued for your records.</span>
                   </li>
                 </ul>
               </div>

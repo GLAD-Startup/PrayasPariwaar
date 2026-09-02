@@ -10,9 +10,9 @@ interface FAQItem {
 
 const faqItems: FAQItem[] = [
   {
-    question: "Is my donation tax-deductible under Indian law?",
+    question: "How will my donation be acknowledged and utilized?",
     answer:
-      "Yes. Prayas Pariwaar is registered under Section 12A and Section 80G of the Income Tax Act. All donations are eligible for 50% tax deduction. You will receive an official 80G tax receipt within 48 hours of your confirmed donation via email.",
+      "Prayas Pariwaar is an 18-year-old registered non-profit society in Vrindavan. 100% of public donations are allocated directly to program beneficiaries. You will receive an official donation receipt and acknowledgment via email along with progress updates.",
   },
   {
     question: "How do I know my money actually reached the child?",

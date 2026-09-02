@@ -453,118 +453,216 @@ export default function AdminMediaPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-prayas-ink">
-              <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
-                <tr>
-                  <th className="p-4">Report Headline & Clipping</th>
-                  <th className="p-4">Format</th>
-                  <th className="p-4">Source / Publication</th>
-                  <th className="p-4">Published Date</th>
-                  <th className="p-4">External Link</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-prayas-rule">
-                {filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-prayas-stone/30 transition-colors">
-                    <td className="p-4 max-w-sm sm:max-w-md">
-                      <div className="flex items-center gap-3">
-                        {item.imageUrl ? (
-                          <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-14 h-11 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
-                            <ImageIcon className="w-4 h-4" />
-                          </div>
-                        )}
-                        <span className="font-bold text-prayas-ink text-sm line-clamp-2">
-                          {item.title}
-                        </span>
-                      </div>
-                    </td>
+          <div>
+            {/* 1. MOBILE CARDS (< md) */}
+            <div className="md:hidden divide-y divide-prayas-rule">
+          {filteredItems.map((item) => (
+            <div key={item.id} className="p-4 space-y-3 hover:bg-prayas-stone/20 transition-colors">
+              <div className="flex items-start gap-3">
+                {item.imageUrl ? (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="font-bold text-prayas-ink text-sm leading-snug line-clamp-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-600">
+                    {item.source || "Dainik Jagran"}
+                  </p>
+                </div>
+              </div>
 
-                    <td className="p-4">
-                      {item.type === "PRINT" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          <Newspaper className="w-3 h-3 text-emerald-700" />
-                          <span>PRINT</span>
-                        </span>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div>
+                  {item.type === "PRINT" ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <Newspaper className="w-3 h-3 text-emerald-700" />
+                      <span>PRINT</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                      <Tv className="w-3 h-3 text-blue-700" />
+                      <span>ELECTRONIC</span>
+                    </span>
+                  )}
+                </div>
+
+                <span className="text-[11px] text-prayas-muted font-medium">
+                  {item.publishedDate
+                    ? new Date(item.publishedDate).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : new Date(item.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-prayas-rule/60 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleStartEdit(item)}
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Edit</span>
+                </button>
+
+                {item.url && (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Visit</span>
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item.id)}
+                  disabled={actionLoading === item.id}
+                  className="p-2 text-slate-400 hover:text-rose-600 bg-prayas-stone hover:bg-rose-50 rounded-xl border border-prayas-rule transition-colors inline-flex items-center justify-center disabled:opacity-50 cursor-pointer"
+                  title="Delete press report"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 2. DESKTOP TABLE VIEW (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-xs text-prayas-ink">
+            <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
+              <tr>
+                <th className="p-4 min-w-[260px]">Report Headline & Clipping</th>
+                <th className="p-4 min-w-[100px]">Format</th>
+                <th className="p-4 min-w-[130px]">Source / Publication</th>
+                <th className="p-4 min-w-[110px]">Published Date</th>
+                <th className="p-4 min-w-[110px]">External Link</th>
+                <th className="p-4 min-w-[130px] text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-prayas-rule">
+              {filteredItems.map((item) => (
+                <tr key={item.id} className="hover:bg-prayas-stone/30 transition-colors">
+                  <td className="p-4 max-w-sm sm:max-w-md">
+                    <div className="flex items-center gap-3">
+                      {item.imageUrl ? (
+                        <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                          <Tv className="w-3 h-3 text-blue-700" />
-                          <span>ELECTRONIC</span>
-                        </span>
+                        <div className="w-14 h-11 rounded-lg border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                          <ImageIcon className="w-4 h-4" />
+                        </div>
                       )}
-                    </td>
-
-                    <td className="p-4">
-                      <span className="font-semibold text-prayas-ink">
-                        {item.source || "Dainik Jagran"}
+                      <span className="font-bold text-prayas-ink text-sm line-clamp-2">
+                        {item.title}
                       </span>
-                    </td>
+                    </div>
+                  </td>
 
-                    <td className="p-4 text-prayas-muted text-[11px]">
-                      {item.publishedDate
-                        ? new Date(item.publishedDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : new Date(item.createdAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                          })}
-                    </td>
+                  <td className="p-4">
+                    {item.type === "PRINT" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <Newspaper className="w-3 h-3 text-emerald-700" />
+                        <span>PRINT</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                        <Tv className="w-3 h-3 text-blue-700" />
+                        <span>ELECTRONIC</span>
+                      </span>
+                    )}
+                  </td>
 
-                    <td className="p-4">
-                      {item.url ? (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-prayas-neem font-semibold hover:underline"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Visit Article</span>
-                        </a>
-                      ) : (
-                        <span className="text-[11px] text-slate-400">Scanned Only</span>
-                      )}
-                    </td>
+                  <td className="p-4">
+                    <span className="font-semibold text-prayas-ink">
+                      {item.source || "Dainik Jagran"}
+                    </span>
+                  </td>
 
-                    <td className="p-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleStartEdit(item)}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors"
+                  <td className="p-4 text-prayas-muted text-[11px]">
+                    {item.publishedDate
+                      ? new Date(item.publishedDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : new Date(item.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                  </td>
+
+                  <td className="p-4">
+                    {item.url ? (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-prayas-neem font-semibold hover:underline"
                       >
-                        <Edit2 className="w-3 h-3 text-emerald-700" />
-                        <span>Edit</span>
-                      </button>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Visit Article</span>
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-slate-400">Scanned Only</span>
+                    )}
+                  </td>
 
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        disabled={actionLoading === item.id}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
-                        title="Delete press report"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  <td className="p-4 text-right space-x-2">
+                    <button
+                      onClick={() => handleStartEdit(item)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="w-3 h-3 text-emerald-700" />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      disabled={actionLoading === item.id}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50 cursor-pointer"
+                      title="Delete press report"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+      )}
     </div>
-  );
+  </div>
+);
 }

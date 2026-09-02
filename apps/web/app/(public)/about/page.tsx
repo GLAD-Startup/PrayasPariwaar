@@ -66,8 +66,8 @@ export default async function AboutPage() {
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-prayas-neem shrink-0 mt-0.5" />
                 <div>
-                  <strong>Income Tax Exemption: Section 12A & 80G</strong>
-                  <p className="text-prayas-muted">Donations eligible for 50% tax exemption for Indian taxpayers.</p>
+                  <strong>Income Tax Exemption: Section 12A</strong>
+                  <p className="text-prayas-muted">Registered non-profit institution under Section 12A of the Income Tax Act.</p>
                 </div>
               </li>
               <li className="flex items-start gap-2">

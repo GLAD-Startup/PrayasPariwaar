@@ -159,7 +159,7 @@ export const CreateDonationOrderSchema = z.object({
   frequency: z.enum(DonationFrequencyValues).default("ONE_TIME"),
   paymentMethod: z.string().optional().nullable(),
   donorName: z.string().min(2, "Donor name is required"),
-  donorEmail: z.string().email("Valid email is required for 80G tax receipt"),
+  donorEmail: z.string().email("Valid email is required for donation receipt"),
   donorPhone: z.string().min(7, "Valid phone is required"),
   projectOrCause: z.string().default("General Fund & Emergency Relief"),
   isAnonymous: z.boolean().default(false),

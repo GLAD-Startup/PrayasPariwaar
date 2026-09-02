@@ -40,7 +40,7 @@ export default function PublicLayout({
               </p>
               <div className="pt-1 text-xs text-[#82908A] space-y-1 font-mono">
                 <p>Society Reg: 142/2006-07 (Mathura)</p>
-                <p>Income Tax: 12A & 80G Certified</p>
+                <p>Income Tax: 12A Registered</p>
                 <p>NITI Aayog Darpan: UP/2017/0154210</p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function PublicLayout({
 
           {/* Bottom Copyright & Transparency Notice */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#82908A] gap-4">
-            <p>© {new Date().getFullYear()} Prayas Pariwaar. All community contributions are strictly 80G tax-exempted.</p>
+            <p>© {new Date().getFullYear()} Prayas Pariwaar. Registered Grassroots Non-Profit Society.</p>
             <div className="flex items-center gap-5">
               <Link href="/about" className="hover:text-white">
                 Transparency & Governance

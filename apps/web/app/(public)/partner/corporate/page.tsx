@@ -54,7 +54,7 @@ export default function CorporatePartnerPage() {
           Corporate Social Responsibility (CSR) & Institutional Alliances
         </h1>
         <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted leading-relaxed">
-          Partner with an 18-year-old registered NGO with full 12A, 80G, and NITI Aayog Darpan compliance for direct on-ground impact in Mathura district.
+          Partner with an 18-year-old registered NGO with full 12A and NITI Aayog Darpan compliance for direct on-ground impact in Mathura district.
         </p>
       </div>
 

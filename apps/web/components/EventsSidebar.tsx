@@ -154,7 +154,7 @@ export default async function EventsSidebar({
           Sponsor a Child in Vrindavan for ₹500/mo
         </h4>
         <p className="text-xs text-prayas-muted leading-relaxed">
-          100% direct allocation for books, tuition & snacks. 80G tax receipt emailed instantly.
+          100% direct allocation for books, tuition & snacks. Donation receipt emailed instantly.
         </p>
         <Link
           href="/donate?project=aashayein-education"
@@ -162,7 +162,7 @@ export default async function EventsSidebar({
           style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
         >
           <Heart className="w-3.5 h-3.5 fill-white text-white" />
-          <span>Sponsor a Student (80G)</span>
+          <span>Sponsor a Student</span>
         </Link>
       </div>
     </aside>

@@ -156,7 +156,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded font-semibold bg-prayas-neem text-white hover:bg-[#23432b] transition-colors"
                   >
                     <Heart className="w-3.5 h-3.5" />
-                    Donate (80G)
+                    Donate
                   </Link>
                 </div>
               </div>

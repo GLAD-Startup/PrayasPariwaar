@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
               Empowering real-time humanitarian care across Uttar Pradesh.
             </h1>
             <p className="text-sm text-slate-600 leading-relaxed font-normal">
-              Unified mission control for emergency voluntary blood matching, medical equipment banks, doctor camps, and 80G donor auditing.
+              Unified mission control for emergency voluntary blood matching, medical equipment banks, doctor camps, and donor auditing.
             </p>
           </div>
 
@@ -177,10 +177,10 @@ export default function AdminLoginPage() {
                 <HeartHandshake className="w-4 h-4" />
               </div>
               <h2 className="text-xs font-bold text-slate-900 tracking-wide">
-                Section 80G Receipts
+                Donation Receipts
               </h2>
               <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                Automated tax-exempt receipts, audit logs & donor ledger.
+                Automated donation receipts, audit logs & donor ledger.
               </p>
             </div>
           </div>

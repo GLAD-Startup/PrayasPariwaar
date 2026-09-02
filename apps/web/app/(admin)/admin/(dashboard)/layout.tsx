@@ -81,9 +81,9 @@ export default function AdminLayout({
       links: [
         {
           href: "/admin/donations",
-          label: "Donations & 80G Receipts",
+          label: "Donations & Receipts",
           icon: Heart,
-          badge: "80G",
+          badge: null,
           badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
           color: "text-emerald-700",
         },
@@ -374,7 +374,7 @@ export default function AdminLayout({
                   <span>View Public Site</span>
                 </Link>
 
-                <span className="font-mono text-[10px] text-slate-400">12A/80G Reg.</span>
+                <span className="font-mono text-[10px] text-slate-400">12A Reg.</span>
               </div>
             </>
           )}

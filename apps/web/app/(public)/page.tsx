@@ -121,7 +121,7 @@ export default async function HomePage() {
               <div className="pt-4 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs 2xl:text-sm text-slate-200 border-t border-white/20">
                 <span className="flex items-center gap-1.5 font-medium">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  100% Tax-Exempt under Section 80G
+                  Registered Non-Profit Society
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -206,7 +206,7 @@ export default async function HomePage() {
                     style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                   >
                     <Heart className="w-4 h-4 fill-white text-white shrink-0" />
-                    <span className="font-bold text-white">Sponsor a Student Today (80G) →</span>
+                    <span className="font-bold text-white">Sponsor a Student Today →</span>
                   </Link>
                 </div>
 
@@ -293,7 +293,7 @@ export default async function HomePage() {
                   <CheckCircle2 className="w-5 h-5 2xl:w-6 2xl:h-6 text-[#2E5339] shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-bold text-xs sm:text-sm 2xl:text-base text-[#1C2421] leading-tight">
-                      12A, 80G Certified & NITI Aayog Empaneled
+                      12A Registered & NITI Aayog Empaneled
                     </h4>
                     <p className="text-xs 2xl:text-sm text-slate-500 mt-0.5">
                       Registered society (142/2006-07) with annual independent chartered audits.
@@ -398,7 +398,7 @@ export default async function HomePage() {
                   className="px-3 py-1.5 rounded-lg bg-[#2E5339] text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-[#23432b]"
                   style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
                 >
-                  Sponsor (80G)
+                  Sponsor
                 </Link>
               </div>
             </div>
@@ -646,7 +646,7 @@ export default async function HomePage() {
                   <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink">You Donate</h4>
                 </div>
                 <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
-                  Secure Razorpay donation with instant 80G tax receipt sent to your email.
+                  Secure online donation with instant confirmation sent to your email.
                 </p>
               </div>
 
@@ -743,7 +743,7 @@ export default async function HomePage() {
             </div>
 
             <p className="text-xs sm:text-sm 2xl:text-base text-prayas-muted max-w-xl 2xl:max-w-2xl mx-auto leading-relaxed">
-              All educational sponsorships and community contributions are 100% tax-deductible under Section 80G. You will receive direct progress report cards and handwritten letters from the student you sponsor.
+              All educational sponsorships directly support children with learning materials, uniforms, and tutoring. You will receive direct progress report cards and handwritten letters from the student you sponsor.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-3.5 pt-2">
@@ -753,7 +753,7 @@ export default async function HomePage() {
                 style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
               >
                 <Heart className="w-4 h-4 fill-white text-white" />
-                <span>Sponsor a Student (80G) →</span>
+                <span>Sponsor a Student Today →</span>
               </Link>
               <Link
                 href="/volunteer"

@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     "Medical Equipment Bank Vrindavan",
     "Rural Education UP",
     "Tree Plantation Braj",
-    "80G Tax Exemption Donation India",
+    "Community Donation India",
     "Oxygen Concentrator Vrindavan",
   ],
   authors: [{ name: "Prayas Pariwaar" }],

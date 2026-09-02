@@ -41,10 +41,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-prayas-rule pb-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 border-b border-prayas-rule pb-4">
         <Link
           href="/media"
-          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
             !selectedType
               ? "bg-[#2E5339] text-white shadow-sm"
               : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
@@ -55,26 +55,26 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         </Link>
         <Link
           href="/media?type=PRINT"
-          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
             selectedType === "PRINT"
               ? "bg-[#2E5339] text-white shadow-sm"
               : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
           }`}
           style={selectedType === "PRINT" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
         >
-          <Newspaper className="w-3.5 h-3.5" />
-          <span>Print Media Clippings (Dainik Jagran, Amar Ujala)</span>
+          <Newspaper className="w-3.5 h-3.5 shrink-0" />
+          <span>Print Media (Dainik Jagran, Amar Ujala)</span>
         </Link>
         <Link
           href="/media?type=ELECTRONIC"
-          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
             selectedType === "ELECTRONIC"
               ? "bg-[#2E5339] text-white shadow-sm"
               : "bg-white border border-prayas-rule text-prayas-ink hover:bg-prayas-stone"
           }`}
           style={selectedType === "ELECTRONIC" ? { backgroundColor: "#2E5339", color: "#ffffff" } : {}}
         >
-          <Tv className="w-3.5 h-3.5" />
+          <Tv className="w-3.5 h-3.5 shrink-0" />
           <span>Electronic & Digital Broadcasts</span>
         </Link>
       </div>

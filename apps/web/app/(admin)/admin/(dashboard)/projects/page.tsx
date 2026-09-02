@@ -451,139 +451,260 @@ export default function AdminProjectsPage() {
             No programs created yet. Click "Add New Program" above to launch a cause.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-prayas-ink">
-              <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
-                <tr>
-                  <th className="p-4">Program & Cover</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Funding Progress (₹)</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Gallery Photos</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-prayas-rule">
-                {projects.map((p) => {
-                  const percent = p.goalAmount > 0
-                    ? Math.min(Math.round((p.raisedAmount / p.goalAmount) * 100), 100)
-                    : 0;
+          <div>
+            {/* 1. MOBILE CARDS (< md) */}
+            <div className="md:hidden divide-y divide-prayas-rule">
+          {projects.map((p) => {
+            const percent = p.goalAmount > 0
+              ? Math.min(Math.round((p.raisedAmount / p.goalAmount) * 100), 100)
+              : 0;
 
-                  return (
-                    <tr key={p.id} className="hover:bg-prayas-paper transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          {p.coverImage && (
-                            <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={p.coverImage}
-                                alt={p.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-bold text-prayas-ink text-sm block">
-                              {p.title}
-                            </span>
-                            <span className="text-[10px] text-prayas-muted font-mono">
-                              /projects/{p.slug}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
+            return (
+              <div key={p.id} className="p-4 space-y-3 hover:bg-prayas-stone/20 transition-colors">
+                <div className="flex items-start gap-3">
+                  {p.coverImage ? (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.coverImage}
+                        alt={p.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border border-prayas-rule shrink-0 bg-prayas-stone flex items-center justify-center text-prayas-muted">
+                      <ImageIcon className="w-6 h-6" />
+                    </div>
+                  )}
 
-                      <td className="p-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-prayas-neem border border-green-200">
-                          {p.category}
-                        </span>
-                      </td>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-bold text-prayas-ink text-sm leading-snug line-clamp-2">
+                      {p.title}
+                    </h3>
+                    <p className="text-[10px] text-prayas-muted font-mono truncate">
+                      /projects/{p.slug}
+                    </p>
+                  </div>
+                </div>
 
-                      <td className="p-4 w-52">
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-baseline text-[11px]">
-                            <span className="font-bold text-prayas-ink">
-                              ₹{p.raisedAmount?.toLocaleString("en-IN") || 0}
-                            </span>
-                            <span className="text-prayas-muted text-[10px]">
-                              / ₹{p.goalAmount?.toLocaleString("en-IN") || 0} ({percent}%)
-                            </span>
-                          </div>
-                          <div className="w-full h-1.5 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
-                            <div
-                              className="h-full bg-emerald-700 rounded-full"
-                              style={{ width: `${percent}%` }}
+                {/* Category, Status & Photo Count */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-prayas-neem border border-green-200">
+                      {p.category}
+                    </span>
+
+                    <span className="text-[10px] font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule">
+                      📷 {p.images && p.images.length > 0 ? `${p.images.length} photos` : "1 cover"}
+                    </span>
+                  </div>
+
+                  <select
+                    value={p.status}
+                    onChange={(e) => updateProjectStatus(p.id, e.target.value)}
+                    disabled={actionLoading === p.id}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none ${
+                      p.status === "ACTIVE"
+                        ? "bg-green-100 text-emerald-900 border-green-200"
+                        : p.status === "COMPLETED"
+                        ? "bg-blue-100 text-blue-900 border-blue-200"
+                        : "bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="UPCOMING">UPCOMING</option>
+                  </select>
+                </div>
+
+                {/* Funding Progress Bar */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-bold text-prayas-ink">
+                      ₹{p.raisedAmount?.toLocaleString("en-IN") || 0}
+                    </span>
+                    <span className="text-prayas-muted text-[11px]">
+                      Goal: ₹{p.goalAmount?.toLocaleString("en-IN") || 0} ({percent}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
+                    <div
+                      className="h-full bg-emerald-700 rounded-full transition-all"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-2 border-t border-prayas-rule/60 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(p)}
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Edit</span>
+                  </button>
+
+                  <Link
+                    href={`/projects/${p.slug}`}
+                    target="_blank"
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-prayas-stone hover:bg-slate-200 text-prayas-ink border border-prayas-rule inline-flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                    <span>View</span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p.id)}
+                    disabled={actionLoading === p.id}
+                    className="p-2 text-slate-400 hover:text-rose-600 bg-prayas-stone hover:bg-rose-50 rounded-xl border border-prayas-rule transition-colors inline-flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-xs"
+                    title="Delete program"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 2. DESKTOP TABLE VIEW (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-xs text-prayas-ink">
+            <thead className="bg-prayas-stone border-b border-prayas-rule text-prayas-muted uppercase text-[10px] font-bold tracking-wider">
+              <tr>
+                <th className="p-4 min-w-[260px]">Program & Cover</th>
+                <th className="p-4 min-w-[110px]">Category</th>
+                <th className="p-4 min-w-[200px]">Funding Progress (₹)</th>
+                <th className="p-4 min-w-[120px]">Status</th>
+                <th className="p-4 min-w-[100px]">Gallery Photos</th>
+                <th className="p-4 min-w-[140px] text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-prayas-rule">
+              {projects.map((p) => {
+                const percent = p.goalAmount > 0
+                  ? Math.min(Math.round((p.raisedAmount / p.goalAmount) * 100), 100)
+                  : 0;
+
+                return (
+                  <tr key={p.id} className="hover:bg-prayas-paper transition-colors">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        {p.coverImage && (
+                          <div className="w-14 h-11 rounded-lg overflow-hidden border border-prayas-rule shrink-0 bg-prayas-stone">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={p.coverImage}
+                              alt={p.title}
+                              className="w-full h-full object-cover"
                             />
                           </div>
-                        </div>
-                      </td>
-
-                      <td className="p-4">
-                        <select
-                          value={p.status}
-                          onChange={(e) => updateProjectStatus(p.id, e.target.value)}
-                          disabled={actionLoading === p.id}
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none ${
-                            p.status === "ACTIVE"
-                              ? "bg-green-100 text-emerald-900 border-green-200"
-                              : p.status === "COMPLETED"
-                              ? "bg-blue-100 text-blue-900 border-blue-200"
-                              : "bg-slate-100 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          <option value="ACTIVE">ACTIVE</option>
-                          <option value="COMPLETED">COMPLETED</option>
-                          <option value="UPCOMING">UPCOMING</option>
-                        </select>
-                      </td>
-
-                      <td className="p-4 text-prayas-muted text-[11px]">
-                        {p.images && p.images.length > 0 ? (
-                          <span className="font-semibold text-prayas-ink">
-                            📷 {p.images.length} photos
-                          </span>
-                        ) : (
-                          <span>1 cover</span>
                         )}
-                      </td>
+                        <div>
+                          <span className="font-bold text-prayas-ink text-sm block">
+                            {p.title}
+                          </span>
+                          <span className="text-[10px] text-prayas-muted font-mono">
+                            /projects/{p.slug}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
 
-                      <td className="p-4 text-right space-x-2">
-                        <button
-                          onClick={() => openEditModal(p)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-xl border border-emerald-200 transition-colors shadow-sm"
-                          title="Edit Program & Images"
-                        >
-                          <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>Edit</span>
-                        </button>
+                    <td className="p-4">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-prayas-neem border border-green-200">
+                        {p.category}
+                      </span>
+                    </td>
 
-                        <Link
-                          href={`/projects/${p.slug}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-prayas-stone hover:bg-white text-prayas-ink text-[11px] font-bold rounded-xl border border-prayas-rule transition-colors shadow-sm"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          <span>View</span>
-                        </Link>
+                    <td className="p-4 w-52">
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-baseline text-[11px]">
+                          <span className="font-bold text-prayas-ink">
+                            ₹{p.raisedAmount?.toLocaleString("en-IN") || 0}
+                          </span>
+                          <span className="text-prayas-muted text-[10px]">
+                            / ₹{p.goalAmount?.toLocaleString("en-IN") || 0} ({percent}%)
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
+                          <div
+                            className="h-full bg-emerald-700 rounded-full"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
 
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          disabled={actionLoading === p.id}
-                          className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
-                          title="Delete project"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    <td className="p-4">
+                      <select
+                        value={p.status}
+                        onChange={(e) => updateProjectStatus(p.id, e.target.value)}
+                        disabled={actionLoading === p.id}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border outline-none ${
+                          p.status === "ACTIVE"
+                            ? "bg-green-100 text-emerald-900 border-green-200"
+                            : p.status === "COMPLETED"
+                            ? "bg-blue-100 text-blue-900 border-blue-200"
+                            : "bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="UPCOMING">UPCOMING</option>
+                      </select>
+                    </td>
+
+                    <td className="p-4 text-prayas-muted text-[11px]">
+                      {p.images && p.images.length > 0 ? (
+                        <span className="font-semibold text-prayas-ink">
+                          📷 {p.images.length} photos
+                        </span>
+                      ) : (
+                        <span>1 cover</span>
+                      )}
+                    </td>
+
+                    <td className="p-4 text-right space-x-2">
+                      <button
+                        onClick={() => openEditModal(p)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-xl border border-emerald-200 transition-colors shadow-sm cursor-pointer"
+                        title="Edit Program & Images"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Edit</span>
+                      </button>
+
+                      <Link
+                        href={`/projects/${p.slug}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-prayas-stone hover:bg-white text-prayas-ink text-[11px] font-bold rounded-xl border border-prayas-rule transition-colors shadow-sm"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>View</span>
+                      </Link>
+
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        disabled={actionLoading === p.id}
+                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center disabled:opacity-50 cursor-pointer"
+                        title="Delete project"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+      )}
+    </div>
 
       {/* FULL EDIT PROGRAM & CAUSES MODAL WITH IMAGE UPLOADS */}
       {editingProject && (

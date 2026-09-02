@@ -139,14 +139,14 @@ export default async function AdminDashboardPage() {
       pillColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
     },
     {
-      title: "80G Verified Funds",
+      title: "Total Seva Funds",
       count: `₹${totalDonations.toLocaleString("en-IN")}`,
-      subtitle: "100% Tax-Deductible",
+      subtitle: "Direct Grassroots Impact",
       href: "/admin/donations",
       icon: Heart,
       accent: "text-emerald-700",
       bgAccent: "bg-emerald-50 border-emerald-200",
-      pill: "Section 80G",
+      pill: "Contributions",
       pillColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
     },
   ];

@@ -33,8 +33,8 @@ export default function NotFound() {
       bgAccent: "bg-emerald-50 border-emerald-200",
     },
     {
-      title: "Support Our Causes (80G)",
-      desc: "100% tax-exempt donations powering rural education & health.",
+      title: "Support Our Causes",
+      desc: "Direct community donations powering rural education & health.",
       href: "/donate",
       icon: Heart,
       accent: "text-rose-600",

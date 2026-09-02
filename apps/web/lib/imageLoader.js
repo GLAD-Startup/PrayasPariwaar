@@ -5,12 +5,14 @@ export default function imageLoader({ src, width, quality }) {
   }
   const cleanSrc = src.startsWith("/") ? src : `/${src}`;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  if (!basePath) {
-    return cleanSrc;
+  const base = basePath && !cleanSrc.startsWith(basePath) ? `${basePath}${cleanSrc}` : cleanSrc;
+  
+  if (width) {
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}w=${width}&q=${quality || 75}`;
   }
-  if (cleanSrc.startsWith(basePath)) {
-    return cleanSrc;
-  }
-  return `${basePath}${cleanSrc}`;
+  
+  return base;
 }
+
 
