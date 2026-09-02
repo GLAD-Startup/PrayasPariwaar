@@ -7,7 +7,11 @@ import { RegisterPushTokenSchema } from "@prayas/utils";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    if (body.token && !body.expoPushToken) {
+      body.expoPushToken = body.token;
+    }
     const validated = RegisterPushTokenSchema.safeParse(body);
+
 
     if (!validated.success) {
       return NextResponse.json(
