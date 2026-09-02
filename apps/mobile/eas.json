@@ -30,7 +30,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:3000/api"
+        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
       }
     },
     "preview:simulator": {
@@ -39,7 +39,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:3000/api"
+        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
       }
     },
     "production": {
@@ -48,7 +48,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:3000/api"
+        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
       }
     }
   },

@@ -3,8 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import fs from "fs";
 import path from "path";
+import { getUploadsDir } from "@/lib/uploads";
 
-const STORAGE_FILE = path.join(process.cwd(), "public", "uploads", "gallery-data.json");
+function getStorageFilePath(): string {
+  return path.join(getUploadsDir(), "gallery-data.json");
+}
 
 interface LocalGalleryData {
   albums: any[];
@@ -12,9 +15,10 @@ interface LocalGalleryData {
 }
 
 function getStoredGallery(): LocalGalleryData {
+  const storageFile = getStorageFilePath();
   try {
-    if (fs.existsSync(STORAGE_FILE)) {
-      const content = fs.readFileSync(STORAGE_FILE, "utf-8");
+    if (fs.existsSync(storageFile)) {
+      const content = fs.readFileSync(storageFile, "utf-8");
       return JSON.parse(content);
     }
   } catch (e) {
@@ -59,11 +63,12 @@ function getStoredGallery(): LocalGalleryData {
 
 function saveStoredGallery(data: LocalGalleryData) {
   try {
-    const dir = path.dirname(STORAGE_FILE);
+    const storageFile = getStorageFilePath();
+    const dir = path.dirname(storageFile);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(storageFile, JSON.stringify(data, null, 2), "utf-8");
   } catch (e) {
     console.error("Failed to save local gallery storage", e);
   }
