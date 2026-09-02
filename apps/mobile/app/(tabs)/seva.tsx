@@ -671,7 +671,7 @@ export default function SevaScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.modalImpactTitle}>100% Direct Grassroots Seva</Text>
                       <Text style={styles.modalImpactSubtitle}>
-                        Zero administrative deductions. 80G tax exemption receipts issued.
+                        Zero administrative deductions. Official society donation receipts issued.
                       </Text>
                     </View>
                   </View>

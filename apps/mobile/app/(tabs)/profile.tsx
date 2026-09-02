@@ -372,7 +372,7 @@ export default function ProfileScreen() {
     {
       id: "my-donations",
       title: "My Donations & Seva Receipts",
-      subtitle: "80G tax deductible contributions",
+      subtitle: "View verified contribution receipts",
       icon: "hand-heart-outline",
       iconType: "material",
       iconColor: "#166534",

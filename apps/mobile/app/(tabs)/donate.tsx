@@ -146,8 +146,8 @@ export default function DonateScreen() {
       setDonateDialogState({
         visible: true,
         title: "Thank You for Your Seva!",
-        badge: "80G TAX EXEMPTION RECEIPT",
-        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. An 80G tax certificate has been generated for your records.`,
+        badge: "OFFICIAL SEVA RECEIPT",
+        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. An official donation receipt has been generated for your records.`,
         type: "success",
         icon: "checkmark-circle-outline",
         confirmText: "View Receipts",
@@ -172,7 +172,7 @@ export default function DonateScreen() {
 
         <View style={styles.headerTitleCol}>
           <Text style={styles.headerTitle}>Donate & Seva</Text>
-          <Text style={styles.headerSubtitle}>100% Tax Exempted (80G) • Direct Aid</Text>
+          <Text style={styles.headerSubtitle}>100% Direct Aid • Transparent Seva</Text>
         </View>
 
         <TouchableOpacity
@@ -378,7 +378,7 @@ export default function DonateScreen() {
           </View>
         )}
 
-        {/* Tax Benefit / Transparency Banner */}
+        {/* Transparency Banner */}
         <View style={styles.transparencyBanner}>
           <View style={styles.transparencyIconCircle}>
             <MaterialCommunityIcons name="hand-heart-outline" size={24} color="#166534" />
@@ -386,7 +386,7 @@ export default function DonateScreen() {
           <View style={styles.transparencyTextCol}>
             <Text style={styles.transparencyTitle}>100% of your donation goes to our programs.</Text>
             <Text style={styles.transparencySubtitle}>
-              We are a registered trust and your donation is eligible for tax benefits (80G).
+              We are an 18-year registered society (Reg. 142/2006-07) operating with zero administrative deductions.
             </Text>
           </View>
           <View style={styles.secureBadge}>
@@ -483,8 +483,8 @@ export default function DonateScreen() {
           {/* 2 */}
           <View style={styles.trustItem}>
             <Ionicons name="document-text-outline" size={22} color="#166534" />
-            <Text style={styles.trustTitle}>Tax{"\n"}Benefits</Text>
-            <Text style={styles.trustDesc}>80G certificate available for your donation.</Text>
+            <Text style={styles.trustTitle}>Official{"\n"}Receipts</Text>
+            <Text style={styles.trustDesc}>Instant digital receipt for every donation.</Text>
           </View>
 
           {/* 3 */}
@@ -543,12 +543,12 @@ export default function DonateScreen() {
 
               <View style={styles.modalRow}>
                 <Text style={styles.modalRowLabel}>Beneficiary</Text>
-                <Text style={styles.modalRowValue}>Seva Dham Trust (Prayas Pariwaar)</Text>
+                <Text style={styles.modalRowValue}>Prayas Pariwaar (Reg. 142/2006-07)</Text>
               </View>
 
               <View style={styles.modalRow}>
-                <Text style={styles.modalRowLabel}>Tax Benefit</Text>
-                <Text style={styles.modalRowValue}>80G Eligible (50% Exemption)</Text>
+                <Text style={styles.modalRowLabel}>Receipt Type</Text>
+                <Text style={styles.modalRowValue}>Official Society Receipt (12A Reg.)</Text>
               </View>
 
               <TouchableOpacity
@@ -578,9 +578,9 @@ export default function DonateScreen() {
                   <Text style={styles.donHistoryTitle}>Free Education Drive</Text>
                   <Text style={styles.donHistoryAmount}>₹1,000</Text>
                 </View>
-                <Text style={styles.donHistoryDate}>📅 15 May 2024 • Receipt #SDT-2024-884</Text>
+                <Text style={styles.donHistoryDate}>📅 15 May 2024 • Receipt #PPV-2024-884</Text>
                 <View style={styles.donStatusBadge}>
-                  <Text style={styles.donStatusText}>✓ 80G Receipt Issued</Text>
+                  <Text style={styles.donStatusText}>✓ Official Receipt Issued</Text>
                 </View>
               </View>
 
@@ -589,9 +589,9 @@ export default function DonateScreen() {
                   <Text style={styles.donHistoryTitle}>Summer Jeev Jal Seva</Text>
                   <Text style={styles.donHistoryAmount}>₹500</Text>
                 </View>
-                <Text style={styles.donHistoryDate}>📅 02 May 2024 • Receipt #SDT-2024-631</Text>
+                <Text style={styles.donHistoryDate}>📅 02 May 2024 • Receipt #PPV-2024-631</Text>
                 <View style={styles.donStatusBadge}>
-                  <Text style={styles.donStatusText}>✓ 80G Receipt Issued</Text>
+                  <Text style={styles.donStatusText}>✓ Official Receipt Issued</Text>
                 </View>
               </View>
 
