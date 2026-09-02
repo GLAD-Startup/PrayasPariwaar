@@ -19,6 +19,10 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: 3005,
+        NEXT_PUBLIC_BASE_PATH: "/prayas",
+        NEXT_PUBLIC_APP_URL: "https://gladstudio.net/prayas",
+        NEXT_PUBLIC_API_URL: "https://gladstudio.net/prayas/api",
+        EXPO_PUBLIC_API_URL: "https://gladstudio.net/prayas/api",
       },
     },
   ],

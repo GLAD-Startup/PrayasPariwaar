@@ -165,7 +165,7 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
     title: "Tree Plantation",
     subtitle: "Planting native trees for a greener tomorrow and restoring sacred green groves along Braj.",
     heroImage: require("../../assets/images/vrindavan-plantation.jpg"),
-    iconName: "sprout-outline",
+    iconName: "leaf-outline",
     iconType: "material",
     color: "#15803D",
     metrics: [

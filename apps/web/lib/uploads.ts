@@ -43,13 +43,22 @@ export function getUploadsDir(): string {
 
 /**
  * Locates an uploaded file across all candidate directory locations.
+ * Handles subpath prefixes (like /prayas/uploads/ or /uploads/ or /api/uploads/).
  * Returns the absolute path if found, or null if not found.
  */
 export function resolveUploadedFilePath(relativeSubpath: string | string[]): string | null {
   const parts = Array.isArray(relativeSubpath) ? relativeSubpath : [relativeSubpath];
   
-  // Protect against directory traversal attacks
-  const safeRelativePath = path.normalize(path.join(...parts)).replace(/^(\.\.[\/\\])+/, "");
+  // Strip out known route prefix segments if present in params
+  const cleanParts = parts.filter(
+    (p) => p !== "prayas" && p !== "uploads" && p !== "api" && Boolean(p)
+  );
+
+  const safeParts = cleanParts.length > 0 ? cleanParts : parts;
+  const safeRelativePath = path
+    .normalize(path.join(...safeParts))
+    .replace(/^(\.\.[\/\\])+/, "");
+
   if (safeRelativePath.includes("..")) {
     return null;
   }

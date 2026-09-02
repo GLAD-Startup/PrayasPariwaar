@@ -84,8 +84,11 @@ export async function POST(req: Request) {
         const filePath = path.join(uploadDir, uniqueName);
         await writeFile(filePath, buffer);
 
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+        const publicUrl = `${basePath}/uploads/${uniqueName}`;
+
         uploadedUrls.push({
-          url: `/uploads/${uniqueName}`,
+          url: publicUrl,
           filename: uniqueName,
           size: buffer.length,
         });
@@ -146,8 +149,11 @@ export async function POST(req: Request) {
 
         await writeFile(filePath, buffer);
 
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+        const publicUrl = `${basePath}/uploads/${uniqueName}`;
+
         uploadedUrls.push({
-          url: `/uploads/${uniqueName}`,
+          url: publicUrl,
           filename: uniqueName,
           size: file.size,
         });

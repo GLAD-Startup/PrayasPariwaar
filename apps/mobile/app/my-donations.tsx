@@ -64,7 +64,7 @@ const DONATIONS_LIST: DonationRecord[] = [
     status: "Success",
     category: "plantation",
     type: "monthly",
-    icon: "sprout-outline",
+    icon: "leaf-outline",
     iconColor: "#15803D",
     iconBg: "#F0FDF4",
     iconBorder: "#BBF7D0",

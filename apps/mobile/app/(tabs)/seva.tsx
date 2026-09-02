@@ -94,7 +94,7 @@ const SEVA_STREAMS_DATA: SevaStreamItem[] = [
     description: "Planting native trees for a greener tomorrow and restoring sacred Braj groves.",
     tag: "Plant Today, Protect Tomorrow",
     tagIcon: "leaf",
-    iconName: "sprout-outline",
+    iconName: "leaf-outline",
     iconType: "material",
     iconBg: "#F0FDF4",
     iconBorder: "#BBF7D0",
