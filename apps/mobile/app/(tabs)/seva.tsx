@@ -95,7 +95,7 @@ const SEVA_STREAMS_DATA: SevaStreamItem[] = [
     tag: "Plant Today, Protect Tomorrow",
     tagIcon: "leaf",
     iconName: "leaf-outline",
-    iconType: "material",
+    iconType: "ionicons",
     iconBg: "#F0FDF4",
     iconBorder: "#BBF7D0",
     iconColor: "#15803D",

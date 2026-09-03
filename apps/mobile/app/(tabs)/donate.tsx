@@ -46,7 +46,7 @@ const CAUSES = [
     id: "plantation",
     title: "Plantation",
     icon: "leaf-outline",
-    iconType: "material",
+    iconType: "ionicons",
     iconColor: "#15803D",
     bgColor: "#F0FDF4",
     borderColor: "#BBF7D0",

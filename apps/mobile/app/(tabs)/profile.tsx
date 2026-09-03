@@ -44,12 +44,12 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const [user, setUser] = useState<any>(null);
-  const [name, setName] = useState("Seva Supporter");
-  const [email, setEmail] = useState("donor@prayaspariwaar.com");
-  const [phone, setPhone] = useState("+91 94122 79001");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [bloodGroup, setBloodGroup] = useState<string>("O+");
-  const [city, setCity] = useState<string>("Mathura & Vrindavan");
+  const [city, setCity] = useState<string>("Mathura");
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [photoSheetVisible, setPhotoSheetVisible] = useState(false);
@@ -93,10 +93,10 @@ export default function ProfileScreen() {
       const stored = await getStoredUser();
       if (stored) {
         setUser(stored);
-        if (stored.name) setName(stored.name);
-        if (stored.email) setEmail(stored.email);
-        if (stored.phone) setPhone(stored.phone);
-        if (stored.avatarUrl || stored.avatar) setAvatarUri(stored.avatarUrl || stored.avatar);
+        setName(stored.name || "");
+        setEmail(stored.email || "");
+        setPhone(stored.phone || "");
+        setAvatarUri(stored.avatarUrl || stored.avatar || null);
         if (stored.bloodGroup) setBloodGroup(stored.bloodGroup);
         if (stored.city) setCity(stored.city);
       }
@@ -106,10 +106,10 @@ export default function ProfileScreen() {
       if (res.data?.success && res.data.user) {
         const u = res.data.user;
         setUser(u);
-        if (u.name) setName(u.name);
-        if (u.email) setEmail(u.email);
-        if (u.phone) setPhone(u.phone);
-        if (u.avatarUrl) setAvatarUri(u.avatarUrl);
+        setName(u.name || "");
+        setEmail(u.email || "");
+        setPhone(u.phone || "");
+        setAvatarUri(u.avatarUrl || null);
         if (u.bloodGroup) setBloodGroup(u.bloodGroup);
         if (u.city) setCity(u.city);
 
@@ -512,9 +512,20 @@ export default function ProfileScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <Text style={styles.profileName}>{name}</Text>
+              <Text style={styles.profileName}>{name || "Prayas Member"}</Text>
               <Text style={styles.profileEmail}>{email}</Text>
-              <Text style={styles.profilePhone}>{phone}</Text>
+              {phone ? (
+                <Text style={styles.profilePhone}>{phone}</Text>
+              ) : (
+                <TouchableOpacity
+                  style={styles.addPhonePill}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="call-outline" size={12} color="#93C5FD" style={{ marginRight: 4 }} />
+                  <Text style={styles.addPhonePillText}>+ Add Phone Number</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Edit Details Action Button */}
               <TouchableOpacity
@@ -1070,6 +1081,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#E2E8F0",
     marginTop: 1,
+  },
+  addPhonePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  addPhonePillText: {
+    fontSize: 11,
+    color: "#93C5FD",
+    fontWeight: "700",
   },
   editDetailsBtn: {
     flexDirection: "row",

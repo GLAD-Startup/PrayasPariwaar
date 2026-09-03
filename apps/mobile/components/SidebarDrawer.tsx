@@ -182,7 +182,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
       title: "Tree Plantation",
       subtitle: "Harit Kranti Braj Parikrama",
       icon: "leaf-outline",
-      iconType: "material",
+      iconType: "ionicons",
       route: "/seva/plantation",
     },
     {

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icon
 import { api } from "../../lib/api";
 import { saveAuthSession } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
+import { useGoogleAuth } from "../../lib/googleAuth";
 import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileSignupScreen() {
@@ -29,6 +31,15 @@ export default function MobileSignupScreen() {
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const { signInWithGoogle, loading: googleLoading } = useGoogleAuth({
+    onSuccess: () => {
+      router.replace("/(tabs)/home");
+    },
+    onError: (errMsg) => {
+      setError(errMsg);
+    },
+  });
 
   const handleSignup = async () => {
     const trimmedName = name.trim();
@@ -252,16 +263,20 @@ export default function MobileSignupScreen() {
               {/* Google */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => {
-                  setName("Demo Member");
-                  setEmail("member@prayaspariwaar.com");
-                  setPassword("member123");
-                  setPhone("9876543210");
-                }}
+                onPress={signInWithGoogle}
+                disabled={loading || googleLoading}
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.googleCircle]}>
-                  <FontAwesome name="google" size={20} color="#EA4335" />
+                  {googleLoading ? (
+                    <ActivityIndicator size="small" color="#EA4335" />
+                  ) : (
+                    <Image
+                      source={require("../../assets/images/google-logo.png")}
+                      style={{ width: 24, height: 24 }}
+                      resizeMode="contain"
+                    />
+                  )}
                 </View>
                 <Text style={styles.socialLabel}>Google</Text>
               </TouchableOpacity>

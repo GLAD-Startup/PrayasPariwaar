@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,20 +13,37 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { saveAuthSession } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
+import { useGoogleAuth } from "../../lib/googleAuth";
 import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileLoginScreen() {
   const router = useRouter();
+  const searchParams = useLocalSearchParams<{ oauthError?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (searchParams.oauthError) {
+      setError(decodeURIComponent(searchParams.oauthError));
+    }
+  }, [searchParams.oauthError]);
+
+  const { signInWithGoogle, loading: googleLoading } = useGoogleAuth({
+    onSuccess: () => {
+      router.replace("/(tabs)/home");
+    },
+    onError: (errMsg) => {
+      setError(errMsg);
+    },
+  });
 
   const handleLogin = async () => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -210,11 +227,20 @@ export default function MobileLoginScreen() {
               {/* Google */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => handleQuickFill("donor@prayaspariwaar.com", "donor123")}
+                onPress={signInWithGoogle}
+                disabled={loading || googleLoading}
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.googleCircle]}>
-                  <FontAwesome name="google" size={20} color="#EA4335" />
+                  {googleLoading ? (
+                    <ActivityIndicator size="small" color="#EA4335" />
+                  ) : (
+                    <Image
+                      source={require("../../assets/images/google-logo.png")}
+                      style={{ width: 24, height: 24 }}
+                      resizeMode="contain"
+                    />
+                  )}
                 </View>
                 <Text style={styles.socialLabel}>Google</Text>
               </TouchableOpacity>
