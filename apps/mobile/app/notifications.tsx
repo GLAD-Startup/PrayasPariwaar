@@ -89,7 +89,7 @@ const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
     id: "notif-5",
     category: "Free Education",
     title: "🎓 Project Aashayein Remedial Evening Batches",
-    message: "New evening tutoring batches started for underprivileged children. Sponsor a student kit for ₹500/month (80G Tax Exempt).",
+    message: "New evening tutoring batches started for underprivileged children. Sponsor a student kit for ₹500/month (100% Direct Aid).",
     time: "3d ago",
     read: true,
     type: "EDUCATION",

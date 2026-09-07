@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import MobileFooterNav from "@/components/MobileFooterNav";
 import SmoothScroll from "@/components/SmoothScroll";
 
 export default function PublicLayout({
@@ -18,8 +19,10 @@ export default function PublicLayout({
         {/* Main Content */}
         <main className="flex-grow">{children}</main>
 
+        <MobileFooterNav />
+
       {/* Grounded Institutional Footer */}
-      <footer className="bg-[#1C2421] text-[#EFECE6] pt-12 sm:pt-14 pb-10 border-t border-prayas-rule">
+      <footer className="bg-[#1C2421] text-[#EFECE6] pt-12 sm:pt-14 pb-24 lg:pb-10 border-t border-prayas-rule">
         <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 2xl:gap-12 pb-12 border-b border-[#2C3632]">
             {/* Column 1: Institutional Statement */}

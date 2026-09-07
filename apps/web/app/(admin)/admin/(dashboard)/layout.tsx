@@ -140,9 +140,9 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-prayas-paper text-prayas-ink flex flex-col lg:flex-row font-sans">
+    <div className="h-screen overflow-hidden bg-prayas-paper text-prayas-ink flex flex-col lg:flex-row font-sans">
       {/* Mobile Top Navigation Header */}
-      <header className="lg:hidden bg-white text-prayas-ink h-[68px] px-4 border-b border-prayas-rule flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <header className="lg:hidden bg-white text-prayas-ink h-[68px] px-4 border-b border-prayas-rule flex items-center justify-between shrink-0 shadow-sm z-30">
         <Link href="/admin" className="flex items-center gap-2.5">
           <div className="p-1 rounded-lg bg-prayas-stone border border-prayas-rule inline-block">
             <NextImage
@@ -172,9 +172,18 @@ export default function AdminLayout({
         </button>
       </header>
 
+      {/* Mobile Backdrop Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-2xs z-40 lg:hidden transition-opacity"
+          onClick={() => setMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Desktop & Collapsible Mobile Light Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-40 h-screen bg-white text-prayas-ink border-r border-prayas-rule flex flex-col justify-between shadow-subtle transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 overflow-hidden ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 lg:z-40 h-full bg-white text-prayas-ink border-r border-prayas-rule flex flex-col justify-between shadow-subtle transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 overflow-hidden ${
           mobileSidebarOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full lg:translate-x-0"
@@ -381,10 +390,10 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Main Administrative View Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
-        {/* Top Operations Header Bar */}
-        <div className="hidden lg:flex items-center justify-between px-8 h-[68px] bg-white border-b border-prayas-rule shadow-xs shrink-0">
+      {/* Main Administrative View Area (Independently scrollable) */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
+        {/* Top Operations Header Bar (Sticky at top of content area) */}
+        <div className="hidden lg:flex items-center justify-between px-8 h-[68px] bg-white/95 backdrop-blur-md border-b border-prayas-rule shadow-xs shrink-0 sticky top-0 z-30">
           <div className="flex items-center gap-2 text-xs text-prayas-muted">
             <Link href="/admin" className="hover:text-prayas-ink font-semibold">
               Admin Console

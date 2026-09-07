@@ -95,7 +95,7 @@ const SEVA_STREAMS_DATA: SevaStreamItem[] = [
     tag: "Plant Today, Protect Tomorrow",
     tagIcon: "leaf",
     iconName: "leaf-outline",
-    iconType: "material",
+    iconType: "ionicons",
     iconBg: "#F0FDF4",
     iconBorder: "#BBF7D0",
     iconColor: "#15803D",
@@ -671,7 +671,7 @@ export default function SevaScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.modalImpactTitle}>100% Direct Grassroots Seva</Text>
                       <Text style={styles.modalImpactSubtitle}>
-                        Zero administrative deductions. 80G tax exemption receipts issued.
+                        Zero administrative deductions. Official society donation receipts issued.
                       </Text>
                     </View>
                   </View>

@@ -402,7 +402,7 @@ export default function BlogDetailScreen() {
                 onPress={() => router.push("/(tabs)/donate")}
                 activeOpacity={0.88}
               >
-                <Text style={styles.ctaDonateBtnText}>Contribute / 80G Seva</Text>
+                <Text style={styles.ctaDonateBtnText}>Contribute to Seva</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

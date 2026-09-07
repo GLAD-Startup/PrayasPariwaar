@@ -189,7 +189,7 @@ const FILTER_TABS = [
   { id: "all", label: "All Photos", icon: "grid", iconType: "ionicons" },
   { id: "Free Education", label: "Education", icon: "school-outline", iconType: "ionicons" },
   { id: "Blood Donation", label: "Blood Seva", icon: "water-outline", iconType: "ionicons" },
-  { id: "Plantation", label: "Plantation", icon: "leaf-outline", iconType: "material" },
+  { id: "Plantation", label: "Plantation", icon: "leaf-outline", iconType: "ionicons" },
   { id: "Healthcare", label: "Health Camps", icon: "medical-outline", iconType: "ionicons" },
   { id: "Jeev Jal Seva", label: "Jeev Jal", icon: "bird", iconType: "material" },
   { id: "Vocational Training", label: "Vocational", icon: "cog-outline", iconType: "material" },

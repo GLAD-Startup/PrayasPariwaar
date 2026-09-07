@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icon
 import { api } from "../../lib/api";
 import { saveAuthSession } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
+import { useGoogleAuth } from "../../lib/googleAuth";
 import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileSignupScreen() {
@@ -29,6 +31,15 @@ export default function MobileSignupScreen() {
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const { signInWithGoogle, loading: googleLoading } = useGoogleAuth({
+    onSuccess: () => {
+      router.replace("/(tabs)/home");
+    },
+    onError: (errMsg) => {
+      setError(errMsg);
+    },
+  });
 
   const handleSignup = async () => {
     const trimmedName = name.trim();
@@ -110,9 +121,14 @@ export default function MobileSignupScreen() {
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/login"))}
+              activeOpacity={0.8}
             >
-              <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+              <Ionicons name="chevron-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
+
+            <View style={styles.topBadge}>
+              <Text style={styles.topBadgeText}>JOIN SEVA</Text>
+            </View>
           </View>
 
           {/* Heading */}
@@ -129,52 +145,62 @@ export default function MobileSignupScreen() {
             </View>
           ) : null}
 
-          {/* Form Container (Clean 4-Field Form) */}
+          {/* Form Container */}
           <View style={styles.formContainer}>
             {/* Full Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your full name"
-                placeholderTextColor={Colors.textMuted}
-                value={name}
-                onChangeText={setName}
-              />
+              <View style={styles.inputWrapper}>
+                <Ionicons name="person-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your full name"
+                  placeholderTextColor={Colors.textMuted}
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
             </View>
 
             {/* Email Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-              />
+              <View style={styles.inputWrapper}>
+                <Ionicons name="mail-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
             </View>
 
             {/* Phone Number */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Phone Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your phone number"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-              />
+              <View style={styles.inputWrapper}>
+                <Ionicons name="call-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+              </View>
             </View>
 
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
+                <Ionicons name="lock-closed-outline" size={18} color="#64748B" style={styles.inputLeftIcon} />
                 <TextInput
                   style={[styles.input, { paddingRight: 44 }]}
                   placeholder="Create a password"
@@ -191,7 +217,7 @@ export default function MobileSignupScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={Colors.textSecondary}
+                    color="#64748B"
                   />
                 </TouchableOpacity>
               </View>
@@ -204,7 +230,7 @@ export default function MobileSignupScreen() {
               activeOpacity={0.8}
             >
               <View style={[styles.checkbox, agreedTerms && styles.checkboxChecked]}>
-                {agreedTerms && <Ionicons name="checkmark" size={14} color={Colors.white} />}
+                {agreedTerms && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
               </View>
               <Text style={styles.termsText}>
                 I agree to the <Text style={styles.termsLink}>Terms & Conditions</Text>
@@ -216,7 +242,7 @@ export default function MobileSignupScreen() {
               style={[styles.signupBtn, loading && styles.signupBtnDisabled]}
               onPress={handleSignup}
               disabled={loading}
-              activeOpacity={0.85}
+              activeOpacity={0.88}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -232,20 +258,25 @@ export default function MobileSignupScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Enhanced Social Buttons with Authentic Logos & Labels */}
+            {/* Social Buttons */}
             <View style={styles.socialRow}>
               {/* Google */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => {
-                  setName("Demo Member");
-                  setEmail("member@prayaspariwaar.com");
-                  setPassword("member123");
-                  setPhone("9876543210");
-                }}
+                onPress={signInWithGoogle}
+                disabled={loading || googleLoading}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.googleCircle]}>
-                  <FontAwesome name="google" size={22} color="#EA4335" />
+                  {googleLoading ? (
+                    <ActivityIndicator size="small" color="#EA4335" />
+                  ) : (
+                    <Image
+                      source={require("../../assets/images/google-logo.png")}
+                      style={{ width: 24, height: 24 }}
+                      resizeMode="contain"
+                    />
+                  )}
                 </View>
                 <Text style={styles.socialLabel}>Google</Text>
               </TouchableOpacity>
@@ -259,9 +290,10 @@ export default function MobileSignupScreen() {
                   setPassword("fbuser123");
                   setPhone("9876543211");
                 }}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.facebookCircle]}>
-                  <FontAwesome name="facebook" size={22} color="#1877F2" />
+                  <FontAwesome name="facebook" size={20} color="#1877F2" />
                 </View>
                 <Text style={styles.socialLabel}>Facebook</Text>
               </TouchableOpacity>
@@ -275,9 +307,10 @@ export default function MobileSignupScreen() {
                   setPassword("apple123");
                   setPhone("9876543212");
                 }}
+                activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.appleCircle]}>
-                  <FontAwesome name="apple" size={24} color="#000000" />
+                  <FontAwesome name="apple" size={22} color="#000000" />
                 </View>
                 <Text style={styles.socialLabel}>Apple</Text>
               </TouchableOpacity>
@@ -305,7 +338,7 @@ export default function MobileSignupScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
@@ -313,18 +346,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 60,
   },
   topBar: {
     paddingTop: Platform.OS === "android" ? 14 : 6,
-    paddingBottom: 8,
+    paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F8FAFC",
@@ -332,21 +366,35 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
     ...Shadows.soft,
   },
+  topBadge: {
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  topBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#166534",
+    letterSpacing: 0.6,
+  },
   header: {
-    marginTop: 6,
+    marginTop: 4,
     marginBottom: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: "800",
-    color: Colors.textGreenDark,
-    letterSpacing: -0.3,
+    fontWeight: "900",
+    color: "#14532D",
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: "#64748B",
     marginTop: 4,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   errorBox: {
     flexDirection: "row",
@@ -369,27 +417,34 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: Colors.textPrimary,
+    fontSize: 12.5,
+    fontWeight: "800",
+    color: "#334155",
     marginBottom: 6,
   },
   inputWrapper: {
     position: "relative",
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 50,
+    ...Shadows.soft,
+  },
+  inputLeftIcon: {
+    marginRight: 10,
   },
   input: {
-    height: 50,
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: "#0F172A",
+    fontWeight: "600",
   },
   eyeIconBtn: {
     position: "absolute",
@@ -408,28 +463,28 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.inputBg,
+    borderColor: "#CBD5E1",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
   },
   checkboxChecked: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: "#166534",
+    borderColor: "#166534",
   },
   termsText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    fontWeight: "500",
+    fontSize: 12.5,
+    color: "#64748B",
+    fontWeight: "600",
   },
   termsLink: {
-    color: Colors.primary,
-    fontWeight: "700",
+    color: "#166534",
+    fontWeight: "800",
   },
   signupBtn: {
     height: 52,
-    backgroundColor: Colors.primary,
+    backgroundColor: "#166534",
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -439,46 +494,46 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   signupBtnText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
     letterSpacing: 0.3,
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 22,
+    marginVertical: 18,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: "#E2E8F0",
   },
   dividerText: {
     paddingHorizontal: 12,
-    fontSize: 12,
-    color: Colors.textMuted,
-    fontWeight: "600",
+    fontSize: 11.5,
+    color: "#94A3B8",
+    fontWeight: "700",
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 24,
+    gap: 20,
     marginBottom: 16,
   },
   socialCard: {
     alignItems: "center",
   },
   socialCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.2,
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 6,
+    marginBottom: 4,
     ...Shadows.soft,
   },
   googleCircle: {
@@ -492,21 +547,21 @@ const styles = StyleSheet.create({
   },
   socialLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: "600",
+    color: "#64748B",
+    fontWeight: "700",
   },
   footer: {
     marginTop: "auto",
-    paddingTop: 14,
+    paddingTop: 8,
     alignItems: "center",
   },
   footerText: {
     fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: "500",
+    color: "#64748B",
+    fontWeight: "600",
   },
   footerLink: {
-    color: Colors.primary,
-    fontWeight: "800",
+    color: "#166534",
+    fontWeight: "900",
   },
 });

@@ -177,18 +177,18 @@ export default function MyDonationsScreen() {
           activeOpacity={0.85}
         >
           <Ionicons name="document-text-outline" size={16} color="#166534" style={{ marginRight: 6 }} />
-          <Text style={styles.downloadBtnText}>80G Tax Statement</Text>
+          <Text style={styles.downloadBtnText}>Annual Donation Statement</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* 80G Tax Statement ActionDialog */}
+      {/* Annual Donation Statement ActionDialog */}
       <ActionDialog
         visible={statementModalVisible}
         onClose={() => setStatementModalVisible(false)}
         onConfirm={handleDownloadPdf}
-        title="80G Tax Exemption Certificate"
+        title="Annual Donation Statement"
         badge="ANNUAL SEVA STATEMENT"
-        description="All contributions made to Prayas Sanstha Vrindavan are 100% tax-exempted under Section 80G of the Income Tax Act."
+        description="Official annual contribution receipt summary for your records from Prayas Sanstha Vrindavan."
         icon="document-text-outline"
         type="success"
         confirmText="Download PDF"
@@ -206,8 +206,8 @@ export default function MyDonationsScreen() {
             <Text style={styles.statementValHighlight}>₹1,500.00</Text>
           </View>
           <View style={[styles.statementRow, { borderBottomWidth: 0 }]}>
-            <Text style={styles.statementLabel}>Certificate Status:</Text>
-            <Text style={[styles.statementVal, { color: "#16A34A" }]}>✓ 80G Verified & Valid</Text>
+            <Text style={styles.statementLabel}>Receipt Status:</Text>
+            <Text style={[styles.statementVal, { color: "#16A34A" }]}>✓ Verified & Issued</Text>
           </View>
         </View>
       </ActionDialog>
