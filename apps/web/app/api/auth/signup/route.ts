@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   hashPassword,
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, name, phone, role, bloodGroup } = validated.data;
+    const { email, password, name, phone, bloodGroup } = validated.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     const existingUser = await prisma.user.findUnique({
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
         passwordHash,
         name,
         phone: phone || null,
-        role: (role as any) || "DONOR",
+        role: Role.USER,
         bloodGroup: (bloodGroup as any) || null,
       },
     });
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       name: user.name,
-      role: user.role as any,
+      role: user.role,
       bloodGroup: user.bloodGroup,
     };
 

@@ -20,13 +20,33 @@ export async function GET(req: Request) {
         images: { orderBy: { order: "asc" } },
         donations: {
           where: { status: "SUCCESS" },
+          select: {
+            id: true,
+            donorName: true,
+            amount: true,
+            currency: true,
+            createdAt: true,
+            isAnonymous: true,
+          },
           take: 5,
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: projects });
+    const sanitizedProjects = projects.map((project) => ({
+      ...project,
+      donations: project.donations.map((d) => ({
+        id: d.id,
+        donorName: d.isAnonymous ? "Anonymous Donor" : d.donorName,
+        amount: d.amount,
+        currency: d.currency,
+        createdAt: d.createdAt,
+        isAnonymous: d.isAnonymous,
+      })),
+    }));
+
+    return NextResponse.json({ success: true, data: sanitizedProjects });
   } catch (error: any) {
     console.error("[Projects GET Error]", error);
     return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });

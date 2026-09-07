@@ -1,27 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyAccessToken } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    let userId: string | null = null;
-
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
-      const payload = verifyAccessToken(token);
-      if (payload) {
-        userId = payload.userId;
-      }
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
     const queryUserId = searchParams.get("userId");
-    const targetId = userId || queryUserId;
 
-    if (!targetId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Only ADMIN can view another user's profile
+    if (queryUserId && queryUserId !== authUser.userId && authUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden. Cannot access other user profiles." }, { status: 403 });
     }
+
+    const targetId = (authUser.role === "ADMIN" && queryUserId) ? queryUserId : authUser.userId;
 
     const user = await prisma.user.findUnique({
       where: { id: targetId },
@@ -52,23 +48,23 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    let tokenUserId: string | null = null;
-
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
-      const payload = verifyAccessToken(token);
-      if (payload) {
-        tokenUserId = payload.userId;
-      }
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const targetUserId = tokenUserId || body.userId || body.id;
 
-    if (!targetUserId && !body.email) {
-      return NextResponse.json({ error: "User identification required" }, { status: 400 });
+    // Only ADMIN can modify another user's profile
+    if (body.userId && body.userId !== authUser.userId && authUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden. Cannot modify other user profiles." }, { status: 403 });
     }
+
+    if (body.email && body.email.toLowerCase().trim() !== authUser.email.toLowerCase().trim() && authUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden. Cannot modify other user profiles." }, { status: 403 });
+    }
+
+    const targetUserId = (authUser.role === "ADMIN" && body.userId) ? body.userId : authUser.userId;
 
     const updateData: any = {};
     if (typeof body.name === "string" && body.name.trim()) updateData.name = body.name.trim();
@@ -78,37 +74,21 @@ export async function PATCH(req: Request) {
     if (typeof body.city === "string") updateData.city = body.city.trim();
     if (body.bloodGroup) updateData.bloodGroup = body.bloodGroup;
 
-    const user = targetUserId
-      ? await prisma.user.update({
-          where: { id: targetUserId },
-          data: updateData,
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-            avatarUrl: true,
-            bio: true,
-            role: true,
-            bloodGroup: true,
-            city: true,
-          },
-        })
-      : await prisma.user.update({
-          where: { email: body.email.toLowerCase().trim() },
-          data: updateData,
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-            avatarUrl: true,
-            bio: true,
-            role: true,
-            bloodGroup: true,
-            city: true,
-          },
-        });
+    const user = await prisma.user.update({
+      where: { id: targetUserId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        bloodGroup: true,
+        city: true,
+      },
+    });
 
     return NextResponse.json({ success: true, user });
   } catch (error: any) {

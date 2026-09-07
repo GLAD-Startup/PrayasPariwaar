@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { type NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export interface AuthUserPayload {
   userId: string;
@@ -36,19 +35,21 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 export function signAccessToken(payload: AuthUserPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: ACCESS_EXPIRES_IN as any,
   });
 }
 
 export function signRefreshToken(payload: AuthUserPayload): string {
   return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    algorithm: "HS256",
     expiresIn: REFRESH_EXPIRES_IN as any,
   });
 }
 
 export function verifyAccessToken(token: string): AuthUserPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthUserPayload;
+    return jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as AuthUserPayload;
   } catch (error) {
     return null;
   }
@@ -56,7 +57,7 @@ export function verifyAccessToken(token: string): AuthUserPayload | null {
 
 export function verifyRefreshToken(token: string): AuthUserPayload | null {
   try {
-    return jwt.verify(token, JWT_REFRESH_SECRET) as AuthUserPayload;
+    return jwt.verify(token, JWT_REFRESH_SECRET, { algorithms: ["HS256"] }) as AuthUserPayload;
   } catch (error) {
     return null;
   }
@@ -75,32 +76,28 @@ export function extractBearerToken(req: Request | NextRequest): string | null {
 }
 
 export async function getAuthUser(req?: Request | NextRequest): Promise<AuthUserPayload | null> {
-  // 1. Check Authorization header
+  // 1. Check Authorization header for Bearer access token
   if (req) {
     const bearer = extractBearerToken(req);
     if (bearer) {
-      const decoded = verifyAccessToken(bearer) || verifyRefreshToken(bearer);
+      const decoded = verifyAccessToken(bearer);
       if (decoded) return decoded;
     }
   }
 
-  // 2. Check HTTP-only cookies (Access Token & Refresh Token fallback)
+  // 2. Check HTTP-only cookies on the incoming request
   if (req) {
     const cookieHeader = req.headers.get("cookie");
     if (cookieHeader) {
       const matchAccess = cookieHeader.match(/prayas_access_token=([^;]+)/);
       if (matchAccess && matchAccess[1]) {
-        const decoded = verifyAccessToken(matchAccess[1]);
-        if (decoded) return decoded;
-      }
-      const matchRefresh = cookieHeader.match(/prayas_refresh_token=([^;]+)/);
-      if (matchRefresh && matchRefresh[1]) {
-        const decoded = verifyRefreshToken(matchRefresh[1]);
+        const decoded = verifyAccessToken(decodeURIComponent(matchAccess[1]));
         if (decoded) return decoded;
       }
     }
   }
 
+  // 3. Check Next.js server cookieStore if available
   try {
     const cookieStore = cookies();
     const token = cookieStore.get("prayas_access_token")?.value;
@@ -108,36 +105,11 @@ export async function getAuthUser(req?: Request | NextRequest): Promise<AuthUser
       const decoded = verifyAccessToken(token);
       if (decoded) return decoded;
     }
-
-    const refreshToken = cookieStore.get("prayas_refresh_token")?.value;
-    if (refreshToken) {
-      const decoded = verifyRefreshToken(refreshToken);
-      if (decoded) return decoded;
-    }
   } catch (e) {
     // cookies() might not be available in standard request context
   }
 
-  // 3. In local development environment, fallback to seeded admin account
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const admin = await prisma.user.findFirst({
-        where: { role: "ADMIN" },
-      });
-      if (admin) {
-        return {
-          userId: admin.id,
-          email: admin.email,
-          name: admin.name,
-          role: admin.role as any,
-          bloodGroup: admin.bloodGroup,
-        };
-      }
-    } catch (e) {
-      // Prisma error or disconnected
-    }
-  }
-
+  // Unauthenticated: no valid access token supplied
   return null;
 }
 

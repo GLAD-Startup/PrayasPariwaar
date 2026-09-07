@@ -29,25 +29,62 @@ function formatBloodGroup(bg: string): BloodGroup {
 // GET /api/blood-donors - Lookup donor status by email/phone or list all (Admin)
 export async function GET(req: Request) {
   try {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const checkPhone = searchParams.get("phone") || searchParams.get("checkPhone");
     const checkEmail = searchParams.get("email") || searchParams.get("checkEmail");
     const isMe = searchParams.get("me") === "true";
 
-    const authUser = await getAuthUser(req);
+    // 1. Non-admin users: can only access their own donor record
+    if (authUser.role !== "ADMIN") {
+      // Prevent cross-user enumeration/scraping
+      if (checkEmail && checkEmail.toLowerCase().trim() !== authUser.email.toLowerCase().trim()) {
+        return NextResponse.json({ error: "Forbidden. Cannot query other donor records." }, { status: 403 });
+      }
 
-    // 1. Self-service donor lookup
-    if (checkPhone || checkEmail || isMe) {
-      const emailQuery = checkEmail?.toLowerCase().trim() || (isMe && authUser?.email ? authUser.email.toLowerCase().trim() : undefined);
+      // If neither self-lookup nor specific check is present, non-admins cannot list the directory
+      if (!isMe && !checkPhone && !checkEmail) {
+        return NextResponse.json({ error: "Forbidden. Admin privileges required to view donor directory." }, { status: 403 });
+      }
+
+      const donor = await prisma.user.findFirst({
+        where: {
+          id: authUser.userId,
+          bloodGroup: { not: null },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          bloodGroup: true,
+          city: true,
+          isActive: true,
+          createdAt: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        registered: !!donor,
+        data: donor || null,
+      });
+    }
+
+    // 2. Admin: Lookup specific donor by phone/email or list directory
+    if (checkPhone || checkEmail) {
+      const emailQuery = checkEmail?.toLowerCase().trim();
       const phoneQuery = checkPhone?.trim().replace(/[\s-]/g, "");
-      const searchPhone = phoneQuery && phoneQuery.length >= 10 ? phoneQuery.slice(-10) : phoneQuery;
 
       const donor = await prisma.user.findFirst({
         where: {
           OR: [
             ...(emailQuery ? [{ email: emailQuery }] : []),
-            ...(searchPhone ? [{ phone: { contains: searchPhone } }] : []),
-            ...(authUser ? [{ id: authUser.userId }] : []),
+            ...(phoneQuery ? [{ phone: phoneQuery }] : []),
           ],
           bloodGroup: { not: null },
         },
@@ -64,24 +101,11 @@ export async function GET(req: Request) {
         orderBy: { createdAt: "desc" },
       });
 
-      if (donor) {
-        return NextResponse.json({
-          success: true,
-          registered: true,
-          data: donor,
-        });
-      }
-
       return NextResponse.json({
         success: true,
-        registered: false,
-        data: null,
+        registered: !!donor,
+        data: donor || null,
       });
-    }
-
-    // 2. Full Donor Directory (Admin only)
-    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const bloodGroupFilter = searchParams.get("bloodGroup");

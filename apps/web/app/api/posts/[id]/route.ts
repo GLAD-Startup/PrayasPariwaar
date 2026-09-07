@@ -13,7 +13,7 @@ export async function GET(
         OR: [{ id: params.id }, { slug: params.id }],
       },
       include: {
-        author: { select: { name: true, email: true } },
+        author: { select: { name: true } },
         images: { orderBy: { order: "asc" } },
       },
     });

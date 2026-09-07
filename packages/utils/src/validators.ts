@@ -69,7 +69,6 @@ export const SignupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(4, "Password must be at least 4 characters"),
   phone: z.string().optional().or(z.literal("")),
-  role: z.enum(UserRoleValues).default("USER"),
   bloodGroup: z.enum(BloodGroupValues).optional(),
 });
 export type SignupInput = z.infer<typeof SignupSchema>;

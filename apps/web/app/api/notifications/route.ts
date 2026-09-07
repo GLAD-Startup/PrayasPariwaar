@@ -8,7 +8,7 @@ import { BloodGroup } from "@prisma/client";
 export async function GET() {
   try {
     const notifications = await prisma.notification.findMany({
-      include: { createdBy: { select: { name: true, email: true } } },
+      include: { createdBy: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: 30,
     });
@@ -23,6 +23,20 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Unauthorized. Authentication required." },
+        { status: 401 }
+      );
+    }
+
+    if (authUser.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Forbidden. Admin privileges required." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { title, body: notifBody, type, targetBloodGroup, targetCity, relatedPostId } = body;
 
@@ -84,7 +98,7 @@ export async function POST(req: Request) {
 
     // 4. Validate createdById foreign key
     let validCreatorId: string | null = null;
-    if (authUser?.userId) {
+    if (authUser.userId) {
       const userExists = await prisma.user.findUnique({
         where: { id: authUser.userId },
         select: { id: true },

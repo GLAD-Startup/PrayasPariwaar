@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       include: {
         author: {
-          select: { name: true, email: true },
+          select: { name: true },
         },
         images: {
           orderBy: { order: "asc" },

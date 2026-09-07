@@ -1,13 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { jwtVerify } from "jose/jwt/verify";
+import { JWTExpired } from "jose/errors";
 
-export function middleware(request: NextRequest) {
+// Match the JWT secret configuration used by the token issuer (apps/web/lib/auth.ts)
+const JWT_SECRET = process.env.JWT_SECRET || "prayas-default-access-secret-replace-in-prod";
+const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect /admin routes (except /admin/login)
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const token =
       request.cookies.get("prayas_access_token")?.value ||
-      request.headers.get("authorization")?.replace("Bearer ", "");
+      request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
 
     if (!token) {
       const loginUrl = new URL("/admin/login", request.url);
@@ -15,29 +21,29 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Basic JWT segment inspection in Edge middleware
     try {
-      const parts = token.split(".");
-      if (parts.length !== 3) {
-        throw new Error("Invalid JWT format");
-      }
-      const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
-      
-      // Check expiration
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        const loginUrl = new URL("/admin/login", request.url);
-        loginUrl.searchParams.set("error", "session_expired");
-        return NextResponse.redirect(loginUrl);
-      }
+      // Cryptographically verify token signature, algorithm (HS256), and expiration
+      const { payload } = await jwtVerify(token, SECRET_KEY, {
+        algorithms: ["HS256"],
+      });
 
-      // Check role
+      // Verify the cryptographically verified role is ADMIN
       if (payload.role !== "ADMIN") {
         const loginUrl = new URL("/admin/login", request.url);
         loginUrl.searchParams.set("error", "unauthorized_role");
         return NextResponse.redirect(loginUrl);
       }
-    } catch (e) {
+    } catch (err: unknown) {
       const loginUrl = new URL("/admin/login", request.url);
+
+      if (
+        err instanceof JWTExpired ||
+        (err as { code?: string })?.code === "ERR_JWT_EXPIRED"
+      ) {
+        loginUrl.searchParams.set("error", "session_expired");
+        return NextResponse.redirect(loginUrl);
+      }
+
       loginUrl.searchParams.set("error", "invalid_token");
       return NextResponse.redirect(loginUrl);
     }
@@ -47,5 +53,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*"],
 };
+

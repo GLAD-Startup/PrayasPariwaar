@@ -4,16 +4,23 @@ import { getAuthUser } from "@/lib/auth";
 import { EquipmentRequestSchema } from "@prayas/utils";
 
 // GET /api/equipment - List available medical equipment
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const authUser = await getAuthUser(req);
+    const isAdmin = authUser?.role === "ADMIN";
+
     const equipment = await prisma.medicalEquipment.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
-        requests: {
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-      },
+      ...(isAdmin
+        ? {
+            include: {
+              requests: {
+                orderBy: { createdAt: "desc" },
+                take: 10,
+              },
+            },
+          }
+        : {}),
     });
 
     return NextResponse.json({ success: true, data: equipment });

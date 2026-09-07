@@ -3,6 +3,8 @@ import Image from "next/image";
 import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SmoothScroll from "@/components/SmoothScroll";
+import JsonLd from "@/components/JsonLd";
+import { getRootPublicGraph } from "@/lib/schema";
 
 export default function PublicLayout({
   children,
@@ -11,6 +13,7 @@ export default function PublicLayout({
 }) {
   return (
     <SmoothScroll>
+      <JsonLd data={getRootPublicGraph()} />
       <div className="flex flex-col min-h-screen bg-prayas-paper text-prayas-ink">
         {/* Enhanced Masthead & Header Navbar */}
         <Navbar />
@@ -154,7 +157,7 @@ export default function PublicLayout({
               <Link href="/contact" className="hover:text-white">
                 Contact Office
               </Link>
-              <Link href="/admin/login" className="hover:text-white">
+              <Link href="/admin/login" rel="nofollow" className="hover:text-white">
                 Admin Login
               </Link>
             </div>

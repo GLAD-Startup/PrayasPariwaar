@@ -20,10 +20,11 @@ import {
   Sparkles,
   Layers,
   Award,
-  Clock,
   Share2,
 } from "lucide-react";
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { getWebPageGraph, sanitizeMetadataTitle } from "@/lib/schema";
 
 export const revalidate = 60;
 
@@ -40,11 +41,34 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
 
   if (!project) return { title: "Program Not Found" };
 
+  const rawTitle = project.metaTitle || project.title;
+  const cleanTitle = sanitizeMetadataTitle(rawTitle, "Community Program");
+  const cleanDescription = (project.metaDescription || project.description.substring(0, 160))
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
   return {
-    title: project.metaTitle || `${project.title} | Prayas Pariwaar`,
-    description: project.metaDescription || project.description.substring(0, 160),
+    title: cleanTitle,
+    description: cleanDescription,
+    alternates: {
+      canonical: `/projects/${params.slug}`,
+    },
+    openGraph: {
+      title: cleanTitle,
+      description: cleanDescription,
+      url: `/projects/${params.slug}`,
+      ...(project.coverImage ? { images: [project.coverImage] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: cleanTitle,
+      description: cleanDescription,
+      ...(project.coverImage ? { images: [project.coverImage] } : {}),
+    },
   };
 }
+
 
 export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const project = await prisma.project.findUnique({
@@ -100,8 +124,33 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
   const catStyle = categoryColorMap[project.category] || categoryColorMap.OTHER;
 
+  const cleanSchemaTitle = sanitizeMetadataTitle(project.title, "Community Program");
+
+  const schema = getWebPageGraph({
+    title: `${cleanSchemaTitle} | Prayas Pariwaar (Vrindavan)`,
+    description: project.metaDescription || project.description.substring(0, 160),
+    path: `/projects/${project.slug}`,
+    type: "ItemPage",
+    breadcrumbs: [
+      { name: "Home", path: "/" },
+      { name: "Community Projects", path: "/projects" },
+      { name: cleanSchemaTitle, path: `/projects/${project.slug}` },
+    ],
+    mainEntity: {
+      "@type": "Project",
+      name: project.title,
+      description: project.description.substring(0, 300),
+      ...(project.coverImage ? { image: [project.coverImage] } : {}),
+      category: `${project.category} Seva`,
+      funder: {
+        "@id": "https://prayaspariwaar.com/#organization",
+      },
+    },
+  });
+
   return (
     <div className="pb-20 bg-[#FAF8F5]">
+      <JsonLd data={schema} />
       {/* ====================================================================== */}
       {/* HERO BANNER with Generous Padding & High Legibility                   */}
       {/* ====================================================================== */}

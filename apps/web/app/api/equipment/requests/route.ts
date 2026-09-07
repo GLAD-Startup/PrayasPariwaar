@@ -10,12 +10,18 @@ export async function GET(req: Request) {
     const equipmentId = searchParams.get("equipmentId");
 
     const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isAdmin = authUser.role === "ADMIN";
 
     const requests = await prisma.equipmentRequest.findMany({
       where: {
         ...(status ? { status: status as any } : {}),
         ...(equipmentId ? { equipmentId } : {}),
-        // If regular authenticated user (not admin), show their own requests + public view
+        // Non-admins can only view their own requests
+        ...(!isAdmin ? { requesterId: authUser.userId } : {}),
       },
       include: {
         equipment: {

@@ -13,11 +13,41 @@ export async function GET(req: Request) {
     const urgency = searchParams.get("urgency");
     const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
 
+    const authUser = await getAuthUser(req);
+    const isAdmin = authUser?.role === "ADMIN" || authUser?.role === "EDITOR";
+
     const where: any = {};
     if (status && status !== "ALL") where.status = status;
     if (bloodGroup && bloodGroup !== "ALL") where.bloodGroup = bloodGroup;
     if (urgency && urgency !== "ALL") where.urgency = urgency;
 
+    if (isAdmin) {
+      const bloodRequests = await prisma.bloodRequest.findMany({
+        where,
+        orderBy: [
+          { urgency: "desc" },
+          { createdAt: "desc" },
+        ],
+        take: limit,
+        include: {
+          requester: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      return NextResponse.json({ success: true, count: bloodRequests.length, data: bloodRequests });
+    }
+
+    // Public sanitized emergency blood request queue:
+    // Omit requester account details (email, phone, user id)
+    // Omit private medical notes
+    // Mask patient name to prevent public scraping/indexing of medical needs
     const bloodRequests = await prisma.bloodRequest.findMany({
       where,
       orderBy: [
@@ -25,19 +55,27 @@ export async function GET(req: Request) {
         { createdAt: "desc" },
       ],
       take: limit,
-      include: {
-        requester: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
+      select: {
+        id: true,
+        patientName: true,
+        hospitalName: true,
+        city: true,
+        bloodGroup: true,
+        unitsNeeded: true,
+        urgency: true,
+        status: true,
+        contactPhone: true,
+        createdAt: true,
       },
     });
 
-    return NextResponse.json({ success: true, count: bloodRequests.length, data: bloodRequests });
+    const sanitized = bloodRequests.map((r) => ({
+      ...r,
+      patientName: "Emergency Patient",
+      notes: null,
+    }));
+
+    return NextResponse.json({ success: true, count: sanitized.length, data: sanitized });
   } catch (error: any) {
     console.error("[BloodRequests GET Error]", error);
     return NextResponse.json({ error: "Failed to fetch blood requests" }, { status: 500 });

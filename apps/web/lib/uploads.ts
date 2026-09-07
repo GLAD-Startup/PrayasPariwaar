@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 
 /**
  * Returns the primary writable directory for storing uploads.
@@ -41,9 +42,12 @@ export function getUploadsDir(): string {
   return defaultDir;
 }
 
+export const ALLOWED_SERVE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+
 /**
  * Locates an uploaded file across all candidate directory locations.
  * Handles subpath prefixes (like /prayas/uploads/ or /uploads/ or /api/uploads/).
+ * Rejects path traversal, hidden files, non-image files, and internal files.
  * Returns the absolute path if found, or null if not found.
  */
 export function resolveUploadedFilePath(relativeSubpath: string | string[]): string | null {
@@ -59,7 +63,20 @@ export function resolveUploadedFilePath(relativeSubpath: string | string[]): str
     .normalize(path.join(...safeParts))
     .replace(/^(\.\.[\/\\])+/, "");
 
+  // Prevent path traversal
   if (safeRelativePath.includes("..")) {
+    return null;
+  }
+
+  // Prevent accessing hidden files or internal files
+  const baseName = path.basename(safeRelativePath).toLowerCase();
+  if (baseName.startsWith(".") || baseName === "gallery-data.json") {
+    return null;
+  }
+
+  // Strictly enforce safe raster image extensions
+  const ext = path.extname(baseName).toLowerCase();
+  if (!ALLOWED_SERVE_EXTENSIONS.includes(ext)) {
     return null;
   }
 
@@ -73,7 +90,14 @@ export function resolveUploadedFilePath(relativeSubpath: string | string[]): str
   ];
 
   for (const dir of searchDirectories) {
-    const fullPath = path.join(dir, safeRelativePath);
+    const resolvedDir = path.resolve(dir);
+    const fullPath = path.resolve(dir, safeRelativePath);
+
+    // Canonical directory confinement check
+    if (!fullPath.startsWith(resolvedDir + path.sep) && fullPath !== resolvedDir) {
+      continue;
+    }
+
     if (fs.existsSync(fullPath)) {
       try {
         const stat = fs.statSync(fullPath);
@@ -88,51 +112,46 @@ export function resolveUploadedFilePath(relativeSubpath: string | string[]): str
 }
 
 /**
- * Content-Type MIME map for static file streaming
+ * Strict Content-Type MIME map for static image streaming
  */
-const MIME_TYPES: Record<string, string> = {
+const SAFE_MIME_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
-  ".pjpeg": "image/jpeg",
-  ".jfif": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
   ".gif": "image/gif",
-  ".svg": "image/svg+xml",
-  ".avif": "image/avif",
-  ".ico": "image/x-icon",
-  ".pdf": "application/pdf",
-  ".json": "application/json",
 };
 
 export function getMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
-  return MIME_TYPES[ext] || "application/octet-stream";
+  return SAFE_MIME_TYPES[ext] || "application/octet-stream";
 }
 
 /**
- * Sanitizes original filename and generates a unique, timestamped name
+ * Generates a collision-proof, unguessable, server-side filename with a validated safe extension.
+ * Completely isolates the storage path from untrusted client-supplied filenames.
  */
-export function generateUniqueFilename(originalName: string, mimeType?: string): string {
-  let ext = path.extname(originalName).toLowerCase();
-  
-  if (!ext || ext === ".") {
-    // Infer extension from mimeType
+export function generateUniqueFilename(validatedExtOrOriginalName: string, mimeType?: string): string {
+  let ext = path.extname(validatedExtOrOriginalName).toLowerCase();
+
+  // If first argument is directly an extension (e.g. ".jpg", ".png")
+  if (validatedExtOrOriginalName.startsWith(".") && [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(validatedExtOrOriginalName)) {
+    ext = validatedExtOrOriginalName.toLowerCase();
+  } else if (!ext || ext === ".") {
+    // Derive from mimeType if available
     if (mimeType?.includes("png")) ext = ".png";
     else if (mimeType?.includes("webp")) ext = ".webp";
     else if (mimeType?.includes("gif")) ext = ".gif";
-    else if (mimeType?.includes("svg")) ext = ".svg";
-    else if (mimeType?.includes("avif")) ext = ".avif";
-    else if (mimeType?.includes("pdf")) ext = ".pdf";
     else ext = ".jpg";
   }
 
-  const baseName = path
-    .basename(originalName, ext)
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .substring(0, 40) || "photo";
+  // Ensure extension is strictly an allowed raster extension
+  if (!ALLOWED_SERVE_EXTENSIONS.includes(ext)) {
+    ext = ".jpg";
+  }
 
-  return `${Date.now()}-${baseName}${ext}`;
+  // Cryptographically secure 128-bit random token + timestamp
+  const randomHex = crypto.randomBytes(16).toString("hex");
+  return `${Date.now()}-${randomHex}${ext}`;
 }
+

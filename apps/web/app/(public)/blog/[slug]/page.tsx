@@ -4,6 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Calendar, MapPin, Share2, Camera, Heart } from "lucide-react";
 import EventsSidebar from "@/components/EventsSidebar";
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import {
+  CANONICAL_BASE_URL,
+  ORGANIZATION_ID,
+  WEBSITE_ID,
+  LOGO_URL,
+  getBreadcrumbListSchema,
+  sanitizeMetadataTitle,
+} from "@/lib/schema";
 
 export const revalidate = 60;
 
@@ -18,18 +27,36 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     where: { slug: params.slug },
   });
 
-  if (!post) return { title: "Dispatch Not Found" };
+  if (!post || !post.published) return { title: "Dispatch Not Found" };
+
+  const rawTitle = post.metaTitle || post.title;
+  const cleanTitle = sanitizeMetadataTitle(rawTitle, "Field Dispatch");
+  const cleanDescription = (post.metaDescription || post.excerpt || post.content.substring(0, 160))
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
   return {
-    title: `${post.title} | Prayas Pariwaar`,
-    description: post.metaDescription || post.excerpt || post.content.substring(0, 160),
+    title: cleanTitle,
+    description: cleanDescription,
+    alternates: {
+      canonical: `/blog/${params.slug}`,
+    },
     openGraph: {
-      title: post.title,
-      description: post.excerpt || post.content.substring(0, 160),
-      images: post.coverImage ? [post.coverImage] : [],
+      title: cleanTitle,
+      description: cleanDescription,
+      url: `/blog/${params.slug}`,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: cleanTitle,
+      description: cleanDescription,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
     },
   };
 }
+
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await prisma.post.findUnique({
@@ -40,36 +67,65 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     },
   });
 
-  if (!post) {
+  if (!post || !post.published) {
     notFound();
   }
 
-  // JSON-LD Article structured data
-  const jsonLd = {
+  const postUrl = `${CANONICAL_BASE_URL}/blog/${post.slug}`;
+
+  // JSON-LD BlogPosting & Breadcrumbs structured data
+  const jsonLdGraph = {
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: post.title,
-    description: post.excerpt || post.content.substring(0, 160),
-    image: post.coverImage ? [post.coverImage] : [],
-    datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
-    dateModified: post.updatedAt.toISOString(),
-    author: {
-      "@type": "Person",
-      name: post.author?.name || "Prayas Pariwaar Field Desk",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Prayas Pariwaar",
-      url: "https://prayaspariwaar.com",
-    },
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${postUrl}#article`,
+        headline: post.title,
+        description: post.metaDescription || post.excerpt || post.content.substring(0, 160),
+        image: post.coverImage ? [post.coverImage] : [LOGO_URL],
+        datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
+        dateModified: post.updatedAt.toISOString(),
+        author: post.author?.name
+          ? {
+              "@type": "Person",
+              name: post.author.name,
+            }
+          : {
+              "@type": "Organization",
+              "@id": ORGANIZATION_ID,
+              name: "Prayas Pariwaar",
+            },
+        publisher: {
+          "@type": "Organization",
+          "@id": ORGANIZATION_ID,
+          name: "Prayas Pariwaar",
+          logo: {
+            "@type": "ImageObject",
+            url: LOGO_URL,
+          },
+        },
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": postUrl,
+        },
+        isPartOf: {
+          "@id": WEBSITE_ID,
+        },
+        inLanguage: "en-IN",
+      },
+      getBreadcrumbListSchema(
+        [
+          { name: "Home", path: "/" },
+          { name: sanitizeMetadataTitle(post.title, "Field Dispatch"), path: `/blog/${post.slug}` },
+        ],
+        postUrl
+      ),
+    ],
   };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLdGraph} />
 
       <div className="space-y-10 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-10">
         {/* Breadcrumb Back Link */}

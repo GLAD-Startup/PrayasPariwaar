@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     default: "Prayas Pariwaar | 18 Years of Grassroots Community Seva in Vrindavan, UP",
     template: "%s | Prayas Pariwaar (Vrindavan)",
   },
+  alternates: {
+    canonical: "/",
+  },
   description:
     "Registered grassroots non-profit society in Vrindavan, Mathura District, UP. Serving rural communities through free education, 24/7 volunteer emergency blood coordination, medical equipment lending bank, tree plantation, and healthcare camps.",
   keywords: [
@@ -49,11 +52,28 @@ export const metadata: Metadata = {
     description:
       "Grassroots humanitarian NGO in Mathura District, UP. 24/7 Emergency Blood Coordination, Medical Equipment Bank, Rural Education, and Environmental Seva.",
     siteName: "Prayas Pariwaar",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Prayas Pariwaar - 18 Years of Grassroots Community Seva in Vrindavan, UP",
+        type: "image/jpeg",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Prayas Pariwaar | Grassroots Seva in Vrindavan",
     description: "24/7 Emergency Blood Registry, Medical Equipment Bank, and Rural Education in Mathura District.",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Prayas Pariwaar - 18 Years of Grassroots Community Seva in Vrindavan, UP",
+      },
+    ],
   },
   robots: {
     index: true,
@@ -66,43 +86,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "NGO",
-    name: "Prayas Pariwaar",
-    alternateName: "Prayas Sanstha",
-    url: "https://prayaspariwaar.com",
-    description:
-      "18-year-old registered grassroots society in Vrindavan, Mathura District, UP, working in education, blood donation, medical equipment lending, and community awareness.",
-    foundingDate: "2006",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Prayas Seva Karyalaya, Near Raman Reti",
-      addressLocality: "Vrindavan",
-      addressRegion: "Uttar Pradesh",
-      postalCode: "281121",
-      addressCountry: "IN",
-    },
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+91-9412279000",
-      contactType: "Emergency Blood & Seva Helpline",
-      availableLanguage: ["Hindi", "English"],
-      areaServed: "IN",
-    },
-  };
-
   return (
     <html lang="en" className={`${lora.variable} ${sourceSans.variable} scroll-smooth`}>
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </head>
       <body className="min-h-screen flex flex-col font-sans antialiased text-prayas-ink bg-prayas-paper selection:bg-prayas-neem selection:text-white">
         {children}
       </body>
     </html>
   );
 }
+

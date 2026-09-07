@@ -6,58 +6,33 @@ import { VolunteerSchema, formatZodError } from "@prayas/utils";
 // GET /api/volunteers - List volunteers or check individual application status
 export async function GET(req: Request) {
   try {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const checkEmail = searchParams.get("email") || searchParams.get("checkEmail");
     const checkPhone = searchParams.get("phone") || searchParams.get("checkPhone");
     const isMe = searchParams.get("me") === "true";
 
-    // 1. Specific applicant status lookup (User/Self-service by Email or Phone)
-    if (checkEmail || checkPhone) {
-      const emailQuery = checkEmail?.toLowerCase().trim();
-      const phoneQuery = checkPhone?.trim().replace(/[\s-]/g, "");
-      const searchPhone = phoneQuery && phoneQuery.length >= 10 ? phoneQuery.slice(-10) : phoneQuery;
-
-      const whereOr: any[] = [];
-      if (emailQuery) whereOr.push({ email: emailQuery });
-      if (searchPhone) whereOr.push({ phone: { contains: searchPhone } });
-
-      if (whereOr.length === 0) {
-        return NextResponse.json({
-          success: true,
-          registered: false,
-          data: null,
-        });
+    // 1. Non-admin users: can only access their own volunteer application
+    if (authUser.role !== "ADMIN") {
+      // Prevent cross-user enumeration/scraping
+      if (checkEmail && checkEmail.toLowerCase().trim() !== authUser.email.toLowerCase().trim()) {
+        return NextResponse.json({ error: "Forbidden. Cannot query other volunteer applications." }, { status: 403 });
       }
 
-      const volunteer = await prisma.volunteer.findFirst({
-        where: { OR: whereOr },
-        orderBy: { createdAt: "desc" },
-      });
-
-      if (volunteer) {
-        return NextResponse.json({
-          success: true,
-          registered: true,
-          data: volunteer,
-        });
+      // Non-admins cannot dump the full directory
+      if (!isMe && !checkEmail && !checkPhone) {
+        return NextResponse.json({ error: "Forbidden. Admin privileges required to view volunteer directory." }, { status: 403 });
       }
 
-      return NextResponse.json({
-        success: true,
-        registered: false,
-        data: null,
-      });
-    }
-
-    const authUser = await getAuthUser(req);
-
-    // 2. Lookup for logged-in user with "me=true"
-    if (isMe && authUser) {
       const volunteer = await prisma.volunteer.findFirst({
         where: {
           OR: [
-            { email: authUser.email.toLowerCase().trim() },
             { userId: authUser.userId },
+            { email: authUser.email.toLowerCase().trim() },
           ],
         },
         orderBy: { createdAt: "desc" },
@@ -70,7 +45,28 @@ export async function GET(req: Request) {
       });
     }
 
-    // 3. Full roster list (Admin/Editor or dashboard request)
+    // 2. Admin: Specific applicant status lookup by Email or Phone
+    if (checkEmail || checkPhone) {
+      const emailQuery = checkEmail?.toLowerCase().trim();
+      const phoneQuery = checkPhone?.trim().replace(/[\s-]/g, "");
+
+      const whereOr: any[] = [];
+      if (emailQuery) whereOr.push({ email: emailQuery });
+      if (phoneQuery) whereOr.push({ phone: phoneQuery });
+
+      const volunteer = await prisma.volunteer.findFirst({
+        where: { OR: whereOr },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return NextResponse.json({
+        success: true,
+        registered: !!volunteer,
+        data: volunteer || null,
+      });
+    }
+
+    // 3. Admin: Full roster list
     const volunteers = await prisma.volunteer.findMany({
       include: {
         user: {

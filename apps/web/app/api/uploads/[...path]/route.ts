@@ -20,7 +20,10 @@ export async function GET(
     if (!filePath) {
       return new NextResponse("File Not Found", {
         status: 404,
-        headers: { "Content-Type": "text/plain" },
+        headers: {
+          "Content-Type": "text/plain",
+          "X-Content-Type-Options": "nosniff",
+        },
       });
     }
 
@@ -35,10 +38,17 @@ export async function GET(
         "Content-Length": stat.size.toString(),
         "Cache-Control": "public, max-age=31536000, immutable",
         "Accept-Ranges": "bytes",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "Content-Disposition": mimeType.startsWith("image/") ? "inline" : "attachment",
       },
     });
   } catch (error: any) {
     console.error("[Serve API Uploaded File Error]", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse("Internal Server Error", {
+      status: 500,
+      headers: { "X-Content-Type-Options": "nosniff" },
+    });
   }
 }
+
