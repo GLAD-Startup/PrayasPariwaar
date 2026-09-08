@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { api } from "../../lib/api";
+import { getAuthUser } from "../../lib/secureStore";
 import SidebarDrawer from "../../components/SidebarDrawer";
 import ActionDialog from "../../components/ActionDialog";
 
@@ -130,29 +131,59 @@ export default function DonateScreen() {
     const amount = getEffectiveAmount();
 
     try {
-      await api.post("/donations", {
+      const user = await getAuthUser();
+      const donorName = user?.name || "Mobile Seva Donor";
+      const donorEmail = user?.email || "donor@prayas.org";
+      const donorPhone = user?.phone || "+91 94122 79000";
+
+      const res = await api.post("/donations", {
         amount,
         frequency: frequency === "monthly" ? "MONTHLY" : frequency === "yearly" ? "YEARLY" : "ONE_TIME",
-        donorName: "Mobile Seva Donor",
-        donorEmail: "donor@prayas.org",
-        donorPhone: "+91 94122 79000",
-        cause: selectedCause,
+        donorName,
+        donorEmail,
+        donorPhone,
+        projectOrCause: selectedCause === "all" ? "General Fund & Emergency Relief" : selectedCause,
+        paymentMethod: "UPI_MOBILE",
         isAnonymous: false,
       });
-    } catch (e) {
-      console.warn("Donation API recording fallback", e);
-    } finally {
-      setIsProcessing(false);
+
+      if (res.error) {
+        setDonateDialogState({
+          visible: true,
+          title: "Donation Not Recorded",
+          badge: "SEVA TRANSACTION",
+          description: res.error || "Unable to complete donation record. Please check your network connection and try again.",
+          type: "danger",
+          icon: "alert-circle-outline",
+          confirmText: "Close",
+        });
+        return;
+      }
+
+      const receiptNum = res.data?.receiptNumber || res.data?.data?.receiptNumber || `SDT-${new Date().getFullYear()}-REC`;
       setDonateDialogState({
         visible: true,
         title: "Thank You for Your Seva!",
-        badge: "OFFICIAL SEVA RECEIPT",
-        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. An official donation receipt has been generated for your records.`,
+        badge: `RECEIPT: ${receiptNum}`,
+        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. Official donation receipt #${receiptNum} has been recorded for your records.`,
         type: "success",
         icon: "checkmark-circle-outline",
         confirmText: "View Receipts",
         onConfirm: () => setMyDonationsModalVisible(true),
       });
+    } catch (e: any) {
+      console.error("[Donation Error]", e);
+      setDonateDialogState({
+        visible: true,
+        title: "Connection Error",
+        badge: "SEVA TRANSACTION",
+        description: e?.message || "Failed to reach donation server. Please check your internet connection and try again.",
+        type: "danger",
+        icon: "cloud-offline-outline",
+        confirmText: "Close",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 

@@ -5,6 +5,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import FAQAccordion from "@/components/FAQAccordion";
 import JsonLd from "@/components/JsonLd";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
+import { assetPath } from "@/lib/api";
 import {
   GraduationCap,
   Heart,
@@ -101,7 +102,7 @@ export default async function HomePage() {
   const fallbackGalleryPhotos = [
     {
       id: "fb-1",
-      url: "/images/child-hope-vrindavan.jpg",
+      url: assetPath("/images/child-hope-vrindavan.jpg"),
       title: "Hope in Her Eyes",
       caption: "Project Aashayein student Radha with her new notebook at our evening learning center",
       category: "Free Education",
@@ -110,7 +111,7 @@ export default async function HomePage() {
     },
     {
       id: "fb-2",
-      url: "/images/banyan-study-vrindavan.jpg",
+      url: assetPath("/images/banyan-study-vrindavan.jpg"),
       title: "Evening Study Circle",
       caption: "Classroom under the ancient banyan tree along Yamuna riverbank",
       category: "Free Education",
@@ -119,7 +120,7 @@ export default async function HomePage() {
     },
     {
       id: "fb-3",
-      url: "/images/vrindavan-plantation.jpg",
+      url: assetPath("/images/vrindavan-plantation.jpg"),
       title: "Native Neem Afforestation",
       caption: "Native Neem & Kadamba sapling plantation with protective tree guards along Parikrama Marg",
       category: "Plantation",
@@ -128,7 +129,7 @@ export default async function HomePage() {
     },
     {
       id: "fb-4",
-      url: "/images/medical-blood-seva.jpg",
+      url: assetPath("/images/medical-blood-seva.jpg"),
       title: "10L Oxygen Bank Delivery",
       caption: "Emergency medical equipment dispatch for elderly home patient recovery",
       category: "Medical Seva",
@@ -137,7 +138,7 @@ export default async function HomePage() {
     },
     {
       id: "fb-5",
-      url: "/images/health-camp-vrindavan.jpg",
+      url: assetPath("/images/health-camp-vrindavan.jpg"),
       title: "Jan Swasthya Eye Screening",
       caption: "Free geriatric eye screening & cataract surgery diagnosis camp in Raman Reti",
       category: "Health Camps",
@@ -146,7 +147,7 @@ export default async function HomePage() {
     },
     {
       id: "fb-6",
-      url: "/images/youth-skills-vrindavan.jpg",
+      url: assetPath("/images/youth-skills-vrindavan.jpg"),
       title: "Digital Youth Mentorship",
       caption: "Digital literacy & basic computer learning center for rural village youth",
       category: "Free Education",
@@ -231,7 +232,7 @@ export default async function HomePage() {
         <section className="relative overflow-hidden border-b border-prayas-rule pt-12 pb-14 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-28 2xl:pt-32 2xl:pb-36">
         {/* Photographic Background of Classroom under Banyan by Yamuna */}
         <Image
-          src="/images/banyan-study-vrindavan.jpg"
+          src={assetPath("/images/banyan-study-vrindavan.jpg")}
           alt="Informal outdoor classroom in Vrindavan along Yamuna riverbank - Project Aashayein"
           fill
           priority
@@ -462,7 +463,7 @@ export default async function HomePage() {
               {/* Main Primary Image */}
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-[4/3] bg-prayas-stone border border-prayas-rule/60">
                 <Image
-                  src="/images/youth-skills-vrindavan.jpg"
+                  src={assetPath("/images/youth-skills-vrindavan.jpg")}
                   alt="Volunteer mentor guiding students at e-Pathshala center in Vrindavan"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -473,7 +474,7 @@ export default async function HomePage() {
               {/* Overlapping Secondary Portrait (Bottom-Right) */}
               <div className="absolute -bottom-2 sm:-bottom-4 right-0 sm:right-2 w-5/12 sm:w-1/2 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-4 border-white shadow-2xl aspect-[4/3] bg-prayas-stone">
                 <Image
-                  src="/images/child-hope-vrindavan.jpg"
+                  src={assetPath("/images/child-hope-vrindavan.jpg")}
                   alt="Smiling student holding notebook in Vrindavan classroom"
                   fill
                   sizes="(max-width: 1024px) 50vw, 25vw"
@@ -609,7 +610,7 @@ export default async function HomePage() {
               const percent = project.goalAmount > 0
                 ? Math.min(Math.round((project.raisedAmount / project.goalAmount) * 100), 100)
                 : 0;
-              const coverImg = project.coverImage || (project.images && project.images[0]?.url) || "/images/youth-skills-vrindavan.jpg";
+              const coverImg = assetPath(project.coverImage || (project.images && project.images[0]?.url) || "/images/youth-skills-vrindavan.jpg");
 
               return (
                 <ScrollReveal key={project.id} delay={idx * 80}>
@@ -782,7 +783,7 @@ export default async function HomePage() {
                   className="group relative overflow-hidden rounded-2xl bg-prayas-stone border border-prayas-rule shadow-card hover:shadow-xl transition-all duration-300 block aspect-[4/3]"
                 >
                   <Image
-                    src={photo.url || photo.src}
+                    src={assetPath(photo.url || photo.src)}
                     alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -1100,7 +1101,7 @@ export default async function HomePage() {
             {/* Logo in CTA */}
             <div className="flex justify-center">
               <Image
-                src="/images/prayas-logo.png"
+                src={assetPath("/images/prayas-logo.png")}
                 alt="Prayas Pariwaar Logo"
                 width={180}
                 height={50}

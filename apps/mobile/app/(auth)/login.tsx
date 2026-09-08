@@ -11,6 +11,7 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -248,7 +249,13 @@ export default function MobileLoginScreen() {
               {/* Facebook */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => handleQuickFill("volunteer@prayaspariwaar.com", "volunteer123")}
+                onPress={() =>
+                  Alert.alert(
+                    "Facebook Sign-In",
+                    "Facebook Sign-In will be available in the upcoming release. Please sign in with Google or your email credentials.",
+                    [{ text: "OK" }]
+                  )
+                }
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.facebookCircle]}>
@@ -260,7 +267,13 @@ export default function MobileLoginScreen() {
               {/* Apple */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => handleQuickFill("admin@prayaspariwaar.com", "admin123")}
+                onPress={() =>
+                  Alert.alert(
+                    "Sign in with Apple",
+                    "Apple Sign-In will be available in the upcoming release. Please sign in with Google or your email credentials.",
+                    [{ text: "OK" }]
+                  )
+                }
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.appleCircle]}>

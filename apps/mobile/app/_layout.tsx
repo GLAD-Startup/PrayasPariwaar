@@ -1,12 +1,17 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import * as SplashScreen from "expo-splash-screen";
 import { registerForPushNotificationsAsync } from "../lib/notifications";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   useEffect(() => {
-    // Attempt push notification registration on startup
-    registerForPushNotificationsAsync();
+    // Attempt push notification registration on startup and gracefully dismiss splash
+    registerForPushNotificationsAsync().finally(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    });
   }, []);
 
   return (

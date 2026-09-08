@@ -45,7 +45,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
             Our Work in Vrindavan & Mathura District
           </h1>
           <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-2xl 2xl:max-w-3xl leading-relaxed">
-            Four specialized program pillars aimed at breaking cycles of poverty, restoring local ecology, and securing emergency healthcare access.
+            Direct grassroots community initiatives aimed at breaking cycles of poverty, restoring local ecology, and securing emergency healthcare access.
           </p>
         </div>
         <Link

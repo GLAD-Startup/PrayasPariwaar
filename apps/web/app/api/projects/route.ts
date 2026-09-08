@@ -36,9 +36,9 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     });
 
-    const sanitizedProjects = projects.map((project) => ({
+    const sanitizedProjects = projects.map((project: any) => ({
       ...project,
-      donations: project.donations.map((d) => ({
+      donations: (project.donations || []).map((d: any) => ({
         id: d.id,
         donorName: d.isAnonymous ? "Anonymous Donor" : d.donorName,
         amount: d.amount,

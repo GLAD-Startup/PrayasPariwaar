@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { assetPath } from "@/lib/api";
 import {
   ArrowLeft,
   Home,
@@ -58,7 +59,7 @@ export default function NotFound() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="p-1.5 rounded-xl bg-[#EFECE6] border border-[#E2DDD5] shadow-xs inline-flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
-                src="/images/prayas-logo.png"
+                src={assetPath("/images/prayas-logo.png")}
                 alt="Prayas Pariwaar"
                 width={120}
                 height={32}

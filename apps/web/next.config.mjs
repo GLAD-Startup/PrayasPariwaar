@@ -85,6 +85,25 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    if (basePath) {
+      return [
+        {
+          source: "/admin/:path*",
+          destination: `${basePath}/admin/:path*`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/admin",
+          destination: `${basePath}/admin`,
+          permanent: false,
+          basePath: false,
+        },
+      ];
+    }
+    return [];
+  },
 };
 
 export default nextConfig;

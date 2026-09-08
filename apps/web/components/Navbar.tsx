@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { assetPath } from "@/lib/api";
 import {
   Phone,
   Droplet,
@@ -27,21 +28,17 @@ import {
   ArrowRight,
   FileText,
   MessageSquare,
-  Lock,
   Camera,
 } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname() || "";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [educationDropdownOpen, setEducationDropdownOpen] = useState(false);
   const [workDropdownOpen, setWorkDropdownOpen] = useState(false);
-  const [healthDropdownOpen, setHealthDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const [involvedDropdownOpen, setInvolvedDropdownOpen] = useState(false);
 
   // Mobile accordion state
-  const [mobileEducationOpen, setMobileEducationOpen] = useState(false);
   const [mobileProgramsOpen, setMobileProgramsOpen] = useState(false);
   const [mobileInvolvedOpen, setMobileInvolvedOpen] = useState(false);
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
@@ -75,9 +72,7 @@ export default function Navbar() {
       if (delta > 0 && currentScrollY > 80) {
         // Scrolling down: gracefully slide header out of view
         setIsVisible(false);
-        setEducationDropdownOpen(false);
         setWorkDropdownOpen(false);
-        setHealthDropdownOpen(false);
         setAboutDropdownOpen(false);
         setInvolvedDropdownOpen(false);
       } else if (delta < 0) {
@@ -94,12 +89,9 @@ export default function Navbar() {
 
   useEffect(() => {
     setMobileMenuOpen(false);
-    setEducationDropdownOpen(false);
     setWorkDropdownOpen(false);
-    setHealthDropdownOpen(false);
     setAboutDropdownOpen(false);
     setInvolvedDropdownOpen(false);
-    setMobileEducationOpen(false);
     setMobileProgramsOpen(false);
     setMobileInvolvedOpen(false);
     setMobileAboutOpen(false);
@@ -245,7 +237,7 @@ export default function Navbar() {
             {/* Brand Logo: Prayas Pariwaar */}
             <Link href="/" className="flex items-center gap-2 group shrink-0 py-1" onClick={() => setMobileMenuOpen(false)}>
               <Image
-                src="/images/prayas-logo.png"
+                src={assetPath("/images/prayas-logo.png")}
                 alt="Prayas Pariwaar - A Trial to Move Ahead"
                 width={160}
                 height={50}
@@ -268,64 +260,20 @@ export default function Navbar() {
                 Home
               </Link>
 
-              {/* PRIMARY PILLAR: Aashayein Education Dropdown */}
-              <div
-                className="relative group"
-                onMouseEnter={() => setEducationDropdownOpen(true)}
-                onMouseLeave={() => setEducationDropdownOpen(false)}
+              {/* PRIMARY PILLAR: Aashayein Education Direct Tab */}
+              <Link
+                href="/projects/aashayein-education"
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  pathname.includes("aashayein") || pathname.includes("education")
+                    ? "bg-emerald-50 text-emerald-900 font-bold"
+                    : "text-emerald-800 font-bold hover:bg-emerald-50"
+                }`}
               >
-                <button
-                  onClick={() => setEducationDropdownOpen(!educationDropdownOpen)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                    pathname.includes("aashayein") || pathname.includes("education")
-                      ? "bg-emerald-50 text-emerald-900 font-bold"
-                      : "text-emerald-800 font-bold hover:bg-emerald-50"
-                  }`}
-                >
-                  <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Project Aashayein</span>
-                  <ChevronDown className={`w-3 h-3 text-emerald-700 transition-transform duration-200 ${educationDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Project Aashayein</span>
+              </Link>
 
-                {educationDropdownOpen && (
-                  <div className="absolute top-full left-0 pt-1.5 z-50 animate-dropdown">
-                    <div className="w-72 bg-white border border-prayas-rule rounded-xl shadow-xl py-1.5 overflow-hidden">
-                      <Link
-                        href="/projects/aashayein-education"
-                        className="flex items-start gap-2.5 px-4 py-2.5 text-xs hover:bg-prayas-stone text-slate-800 transition-colors"
-                      >
-                        <BookOpen className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="block font-bold">Child Education Overview</strong>
-                          <span className="text-[11px] text-slate-500">Evening centers, school kits & teachers</span>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/donate?project=aashayein-education"
-                        className="flex items-start gap-2.5 px-4 py-2.5 text-xs bg-emerald-50/60 hover:bg-emerald-50 text-slate-800 border-t border-prayas-rule transition-colors"
-                      >
-                        <Heart className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="block font-bold text-emerald-900">Sponsor a Student</strong>
-                          <span className="text-[11px] text-slate-500">₹500/mo covers books, fees & meals</span>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/projects/aadhar-career-counseling"
-                        className="flex items-start gap-2.5 px-4 py-2.5 text-xs hover:bg-prayas-stone text-slate-800 border-t border-prayas-rule transition-colors"
-                      >
-                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="block font-bold">Project Aadhar</strong>
-                          <span className="text-[11px] text-slate-500">Youth career & digital skills</span>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* All Community Programs Dropdown */}
+              {/* Programs & Services Dropdown */}
               <div
                 className="relative group"
                 onMouseEnter={() => setWorkDropdownOpen(true)}
@@ -334,18 +282,20 @@ export default function Navbar() {
                 <button
                   onClick={() => setWorkDropdownOpen(!workDropdownOpen)}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                    isActive("/projects") && !pathname.includes("aashayein")
+                    (isActive("/projects") && !pathname.includes("aashayein")) ||
+                    isActive("/blood-donation") ||
+                    isActive("/medical-equipment")
                       ? "bg-prayas-stone text-slate-900 font-bold"
                       : "hover:bg-prayas-stone text-slate-700 hover:text-slate-900"
                   }`}
                 >
-                  <span>Programs</span>
+                  <span>Programs & Services</span>
                   <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${workDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {workDropdownOpen && (
                   <div className="absolute top-full left-0 pt-1.5 z-50 animate-dropdown">
-                    <div className="w-64 bg-white border border-prayas-rule rounded-xl shadow-xl py-1.5 overflow-hidden">
+                    <div className="w-72 bg-white border border-prayas-rule rounded-xl shadow-xl py-1.5 overflow-hidden">
                       <Link
                         href="/projects"
                         className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-slate-800 transition-colors"
@@ -354,6 +304,26 @@ export default function Navbar() {
                         <div>
                           <strong className="block font-bold">All 4 Program Pillars</strong>
                           <span className="text-[11px] text-slate-500">Education, Plantation, Health, Awareness</span>
+                        </div>
+                      </Link>
+                      <Link
+                        href="/blood-donation"
+                        className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-rose-50 text-slate-800 border-t border-prayas-rule transition-colors"
+                      >
+                        <Droplet className="w-4 h-4 fill-current text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block font-bold text-rose-900">24/7 Blood Registry</strong>
+                          <span className="text-[11px] text-slate-500">Voluntary donor network & emergency support</span>
+                        </div>
+                      </Link>
+                      <Link
+                        href="/medical-equipment"
+                        className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-slate-800 border-t border-prayas-rule transition-colors"
+                      >
+                        <Stethoscope className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block font-bold">Medical Equipment Bank</strong>
+                          <span className="text-[11px] text-slate-500">Free oxygen & hospital bed loans</span>
                         </div>
                       </Link>
                       <Link
@@ -368,7 +338,7 @@ export default function Navbar() {
                       </Link>
                       <Link
                         href="/projects/jan-swasthya-raksha"
-                        className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-slate-800 transition-colors"
+                        className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-slate-800 border-t border-prayas-rule transition-colors"
                       >
                         <Stethoscope className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                         <div>
@@ -382,53 +352,6 @@ export default function Navbar() {
                       >
                         <Images className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                         <span>Field Photo Gallery</span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* SECONDARY PILLARS: Health & Blood Dropdown */}
-              <div
-                className="relative group"
-                onMouseEnter={() => setHealthDropdownOpen(true)}
-                onMouseLeave={() => setHealthDropdownOpen(false)}
-              >
-                <button
-                  onClick={() => setHealthDropdownOpen(!healthDropdownOpen)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                    isActive("/blood-donation") || isActive("/medical-equipment")
-                      ? "bg-rose-50 text-rose-800 font-bold border border-rose-200"
-                      : "hover:bg-prayas-stone text-slate-700 hover:text-slate-900"
-                  }`}
-                >
-                  <Droplet className="w-3.5 h-3.5 text-rose-600 fill-current" />
-                  <span>Blood & Medical</span>
-                  <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${healthDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {healthDropdownOpen && (
-                  <div className="absolute top-full left-0 pt-1.5 z-50 animate-dropdown">
-                    <div className="w-64 bg-white border border-prayas-rule rounded-xl shadow-xl py-1.5 overflow-hidden">
-                      <Link
-                        href="/blood-donation"
-                        className="flex items-start gap-2.5 px-4 py-2.5 text-xs hover:bg-rose-50 text-rose-800 transition-colors"
-                      >
-                        <Droplet className="w-4 h-4 fill-current text-rose-600 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="block font-bold">24/7 Blood Registry</strong>
-                          <span className="text-[11px] text-slate-500">Hospital blood requirement board</span>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/medical-equipment"
-                        className="flex items-start gap-2.5 px-4 py-2.5 text-xs hover:bg-prayas-stone text-slate-800 border-t border-prayas-rule transition-colors"
-                      >
-                        <Stethoscope className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="block font-bold">Medical Equipment Bank</strong>
-                          <span className="text-[11px] text-slate-500">Free oxygen & bed loans</span>
-                        </div>
                       </Link>
                     </div>
                   </div>
@@ -587,17 +510,8 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* Direct Action Buttons: Staff Portal & Sponsor a Child / Donate */}
+            {/* Direct Action Buttons: Sponsor a Child / Donate */}
             <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href="/admin/login"
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-slate-700 hover:text-emerald-900 hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-200 transition-all shadow-2xs whitespace-nowrap"
-                title="Staff Portal (Restricted Access)"
-              >
-                <Lock className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden xs:inline">Staff Portal</span>
-              </Link>
-
               <Link
                 href="/donate?project=aashayein-education"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[#1E5338] hover:bg-[#16432B] text-white transition-all shadow-sm whitespace-nowrap"
@@ -688,47 +602,22 @@ export default function Navbar() {
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
 
-                {/* Mobile Accordion: Project Aashayein */}
-                <div className="border border-slate-200/80 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setMobileEducationOpen(!mobileEducationOpen)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-left text-xs font-bold text-emerald-900 bg-emerald-50/50 hover:bg-emerald-50 transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-emerald-700" />
-                      <span>Project Aashayein (Child Education)</span>
-                    </span>
-                    <ChevronDown className={`w-4 h-4 text-emerald-700 transition-transform ${mobileEducationOpen ? "rotate-180" : ""}`} />
-                  </button>
+                {/* Mobile: Project Aashayein (Direct Tab) */}
+                <Link
+                  href="/projects/aashayein-education"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-emerald-200/80 bg-emerald-50/60 hover:bg-emerald-50 text-xs font-bold text-emerald-900 transition-colors ${
+                    pathname.includes("aashayein") || pathname.includes("education") ? "bg-emerald-100/80" : ""
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4 text-emerald-700" />
+                    <span>Project Aashayein</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-emerald-700" />
+                </Link>
 
-                  {mobileEducationOpen && (
-                    <div className="p-2 space-y-1 bg-white border-t border-slate-100 text-xs animate-accordion">
-                      <Link
-                        href="/projects/aashayein-education"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700"
-                      >
-                        Child Education Overview
-                      </Link>
-                      <Link
-                        href="/donate?project=aashayein-education"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block px-3 py-2 rounded-lg hover:bg-emerald-50 text-emerald-800 font-semibold"
-                      >
-                        Sponsor a Student
-                      </Link>
-                      <Link
-                        href="/projects/aadhar-career-counseling"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700"
-                      >
-                        Project Aadhar (Career & Digital Skills)
-                      </Link>
-                    </div>
-                  )}
-                </div>
-
-                {/* Mobile Accordion: Programs */}
+                {/* Mobile Accordion: Programs & Services */}
                 <div className="border border-slate-200/80 rounded-xl overflow-hidden">
                   <button
                     onClick={() => setMobileProgramsOpen(!mobileProgramsOpen)}
@@ -736,7 +625,7 @@ export default function Navbar() {
                   >
                     <span className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-emerald-700" />
-                      <span>All Programs & Causes</span>
+                      <span>Programs & Services</span>
                     </span>
                     <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${mobileProgramsOpen ? "rotate-180" : ""}`} />
                   </button>
@@ -749,6 +638,20 @@ export default function Navbar() {
                         className="block px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-slate-900"
                       >
                         All 4 Program Pillars
+                      </Link>
+                      <Link
+                        href="/blood-donation"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2 rounded-lg hover:bg-rose-50 text-rose-800 font-semibold"
+                      >
+                        🩸 24/7 Blood Registry
+                      </Link>
+                      <Link
+                        href="/medical-equipment"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700"
+                      >
+                        Medical Equipment Bank
                       </Link>
                       <Link
                         href="/projects/vrindavan-harit-kranti"
@@ -914,14 +817,7 @@ export default function Navbar() {
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
                 <span>Prayas Pariwaar (Reg. 142/2006-07)</span>
-                <Link
-                  href="/admin/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-slate-700 font-semibold hover:underline flex items-center gap-1"
-                >
-                  <Lock className="w-3 h-3 text-slate-400" />
-                  <span>Staff Portal</span>
-                </Link>
+                <span className="text-emerald-700 font-semibold">18+ Years of Seva</span>
               </div>
             </div>
           </div>

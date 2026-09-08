@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, assetPath } from "@/lib/api";
 import {
   Lock,
   Mail,
@@ -23,10 +23,23 @@ import {
   Activity,
   ArrowRight,
   Shield,
+  Clock,
 } from "lucide-react";
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get("error");
+
+  const sessionNotice =
+    errorParam === "session_expired"
+      ? "Your administrative session has expired. Please sign in again to continue."
+      : errorParam === "unauthorized_role"
+      ? "Access restricted. Administrative privileges are required."
+      : errorParam === "invalid_token"
+      ? "Your session is invalid. Please sign in again."
+      : null;
+
   const [email, setEmail] = useState("admin@prayaspariwaar.com");
   const [password, setPassword] = useState("admin123");
   const [showPassword, setShowPassword] = useState(false);
@@ -96,7 +109,7 @@ export default function AdminLoginPage() {
           <div className="flex items-center gap-3.5">
             <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs inline-flex items-center justify-center">
               <Image
-                src="/images/prayas-logo.png"
+                src={assetPath("/images/prayas-logo.png")}
                 alt="Prayas Pariwaar Logo"
                 width={160}
                 height={40}
@@ -230,7 +243,7 @@ export default function AdminLoginPage() {
           <div className="lg:hidden text-center space-y-3 pb-2">
             <div className="inline-block p-2 rounded-2xl bg-white border border-slate-200 shadow-sm">
               <Image
-                src="/images/prayas-logo.png"
+                src={assetPath("/images/prayas-logo.png")}
                 alt="Prayas Pariwaar Logo"
                 width={160}
                 height={44}
@@ -257,6 +270,17 @@ export default function AdminLoginPage() {
               Enter your authorized staff credentials to manage emergency dispatches, inventory, and seva records.
             </p>
           </div>
+
+          {/* Session Notice Alert Box */}
+          {sessionNotice && !error && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <Clock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold">Session Notice</p>
+                <p className="text-amber-800 leading-snug">{sessionNotice}</p>
+              </div>
+            </div>
+          )}
 
           {/* Error Alert Box */}
           {error && (
@@ -407,5 +431,13 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

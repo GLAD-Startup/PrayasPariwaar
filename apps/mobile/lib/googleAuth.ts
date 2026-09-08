@@ -2,14 +2,17 @@ import { useEffect, useState, useCallback } from "react";
 import { Linking } from "react-native";
 import { saveAuthSession } from "./secureStore";
 import { registerForPushNotificationsAsync } from "./notifications";
-
+import { getApiBaseUrl } from "./api";
 import { generateCodeVerifier, generateCodeChallenge } from "./pkce";
 
 const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
   "258806422821-dme2jv73q5cn9ehk8d01i58324qp8n9r.apps.googleusercontent.com";
 
-const REDIRECT_URI = "http://localhost:3005/api/auth/google/callback";
+function getGoogleRedirectUri(): string {
+  const base = getApiBaseUrl().replace(/\/api\/?$/, "");
+  return `${base}/api/auth/google/callback`;
+}
 
 export interface UseGoogleAuthOptions {
   onSuccess?: (user: any) => void;
@@ -115,7 +118,7 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
         GOOGLE_WEB_CLIENT_ID
       )}&redirect_uri=${encodeURIComponent(
-        REDIRECT_URI
+        getGoogleRedirectUri()
       )}&response_type=code&scope=openid%20profile%20email&code_challenge=${encodeURIComponent(
         codeChallenge
       )}&code_challenge_method=S256&state=${state}&prompt=select_account`;

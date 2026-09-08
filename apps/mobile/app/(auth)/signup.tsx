@@ -11,6 +11,7 @@ import {
   Platform,
   StatusBar,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -284,12 +285,13 @@ export default function MobileSignupScreen() {
               {/* Facebook */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => {
-                  setName("Facebook Seva User");
-                  setEmail("fb.user@prayaspariwaar.com");
-                  setPassword("fbuser123");
-                  setPhone("9876543211");
-                }}
+                onPress={() =>
+                  Alert.alert(
+                    "Facebook Sign-Up",
+                    "Facebook Registration will be available in the upcoming release. Please sign up using Google or email.",
+                    [{ text: "OK" }]
+                  )
+                }
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.facebookCircle]}>
@@ -301,12 +303,13 @@ export default function MobileSignupScreen() {
               {/* Apple */}
               <TouchableOpacity
                 style={styles.socialCard}
-                onPress={() => {
-                  setName("Apple User");
-                  setEmail("apple.user@prayaspariwaar.com");
-                  setPassword("apple123");
-                  setPhone("9876543212");
-                }}
+                onPress={() =>
+                  Alert.alert(
+                    "Sign up with Apple",
+                    "Apple Registration will be available in the upcoming release. Please sign up using Google or email.",
+                    [{ text: "OK" }]
+                  )
+                }
                 activeOpacity={0.8}
               >
                 <View style={[styles.socialCircle, styles.appleCircle]}>

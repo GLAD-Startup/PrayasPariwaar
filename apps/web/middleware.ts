@@ -16,7 +16,8 @@ export async function middleware(request: NextRequest) {
       request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
 
     if (!token) {
-      const loginUrl = new URL("/admin/login", request.url);
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -29,12 +30,14 @@ export async function middleware(request: NextRequest) {
 
       // Verify the cryptographically verified role is ADMIN
       if (payload.role !== "ADMIN") {
-        const loginUrl = new URL("/admin/login", request.url);
+        const loginUrl = request.nextUrl.clone();
+        loginUrl.pathname = "/admin/login";
         loginUrl.searchParams.set("error", "unauthorized_role");
         return NextResponse.redirect(loginUrl);
       }
     } catch (err: unknown) {
-      const loginUrl = new URL("/admin/login", request.url);
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
 
       if (
         err instanceof JWTExpired ||

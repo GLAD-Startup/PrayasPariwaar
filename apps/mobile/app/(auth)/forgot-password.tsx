@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
+import { api } from "../../lib/api";
 
 export default function MobileForgotPasswordScreen() {
   const router = useRouter();
@@ -38,11 +39,24 @@ export default function MobileForgotPasswordScreen() {
     setLoading(true);
     setError("");
 
-    // Simulate reset link dispatch
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await api.post(
+        "/auth/forgot-password",
+        { email: trimmedEmail },
+        { skipAuth: true }
+      );
+
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+
       setSubmitted(true);
-    }, 900);
+    } catch (err: any) {
+      setError(err?.message || "Failed to submit recovery request. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

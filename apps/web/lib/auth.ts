@@ -129,3 +129,21 @@ export const REFRESH_COOKIE_OPTIONS = {
   ...AUTH_COOKIE_OPTIONS,
   maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
 };
+
+export function signPasswordResetToken(email: string, userId: string): string {
+  return jwt.sign({ email, userId, type: "password_reset" }, JWT_SECRET, {
+    algorithm: "HS256",
+    expiresIn: "1h",
+  });
+}
+
+export function verifyPasswordResetToken(token: string): { email: string; userId: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as any;
+    if (payload?.type !== "password_reset") return null;
+    return { email: payload.email, userId: payload.userId };
+  } catch {
+    return null;
+  }
+}
+

@@ -7,20 +7,12 @@ import {
   Heart,
   Calendar,
   Users,
-  CheckCircle2,
   MapPin,
   ArrowRight,
   ShieldCheck,
   Camera,
   ExternalLink,
   Target,
-  GraduationCap,
-  Compass,
-  BookOpen,
-  Sparkles,
-  Layers,
-  Award,
-  Share2,
 } from "lucide-react";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
@@ -237,169 +229,45 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                   </h2>
                 </div>
 
-                <div className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal space-y-4">
-                  <p>{project.description}</p>
+                <div className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal space-y-4 whitespace-pre-line">
+                  {project.description.split("\n\n").map((para, idx) => (
+                    <p key={idx} className="leading-relaxed">
+                      {para}
+                    </p>
+                  ))}
                 </div>
 
-                {/* Impact Metric Chips */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                {/* Verified Program Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
                     <span className="text-[10px] uppercase font-bold text-slate-500 block">
-                      Target Audience
+                      Program Category
                     </span>
                     <p className="text-xs font-bold text-slate-900">
-                      Rural Students & Youth
+                      {project.category} Seva
                     </p>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
                     <span className="text-[10px] uppercase font-bold text-slate-500 block">
-                      Geographic Reach
+                      Operational Area
                     </span>
                     <p className="text-xs font-bold text-slate-900">
-                      Mathura & Braj Villages
+                      Vrindavan & Mathura District
                     </p>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
                     <span className="text-[10px] uppercase font-bold text-slate-500 block">
-                      Governance
+                      Registered Non-Profit
                     </span>
                     <p className="text-xs font-bold text-slate-900">
-                      100% Audited Seva
+                      Reg. 142/2006-07
                     </p>
                   </div>
                 </div>
               </div>
             </ScrollReveal>
 
-            {/* 2. Key Focus Areas & Methodology Pillars */}
-            <ScrollReveal>
-              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
-                <div className="space-y-1 border-b border-prayas-rule pb-4">
-                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                    Core Delivery Methodology
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-prayas-ink">
-                    Key Focus Areas & On-Ground Initiatives
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    How Prayas Pariwaar coordinates direct, structured impact for this initiative.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                      <GraduationCap className="w-5 h-5" />
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Skill Development & Practical Literacy
-                    </h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Hands-on workshops, computer basics, and vocational skill seminars tailored for marginalized rural students.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                      <Compass className="w-5 h-5" />
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Aptitude & Career Pathways
-                    </h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Personalized guidance for civil exams, polytechnic diplomas, technical trades, and higher education avenues.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                      <BookOpen className="w-5 h-5" />
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Resource Kits & Mentorship
-                    </h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Free distribution of educational course material, career guides, and access to experienced volunteer mentors.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-2 hover:border-emerald-600 transition-colors">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                      <ShieldCheck className="w-5 h-5" />
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900">
-                      Community & Youth Empowerment
-                    </h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Anti-substance abuse seminars, health awareness, and civic motivation camps organized across government schools.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 3. On-Ground Seva Implementation Roadmap */}
-            <ScrollReveal>
-              <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
-                <div className="space-y-1 border-b border-prayas-rule pb-4">
-                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                    Execution Framework
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-prayas-ink">
-                    On-Ground Seva Implementation Roadmap
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Step-by-step field execution process followed by Prayas volunteers in Mathura district.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      1
-                    </div>
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">
-                        Needs Assessment & Village Outreach
-                      </h4>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Liaising directly with government school teachers, village heads, and local families to identify students most in need of guidance and support.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      2
-                    </div>
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">
-                        Interactive Guidance Camps & Resource Distribution
-                      </h4>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Conducting structured weekend workshops, aptitude screenings, and supplying free study and vocational reference materials.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      3
-                    </div>
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">
-                        Ongoing Mentorship & Outcome Tracking
-                      </h4>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Maintaining long-term contact with students to assist with scholarship applications, entrance coaching, and apprenticeship admissions.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 4. Photo Gallery & Field Documentation */}
+            {/* 2. Photo Gallery & Field Documentation */}
             <ScrollReveal>
               <div className="border border-prayas-rule bg-white rounded-2xl p-6 sm:p-8 shadow-card space-y-6">
                 <div className="border-b border-prayas-rule pb-3 flex items-center justify-between">
@@ -409,7 +277,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                       <span>Field Photography & On-Ground Documentation</span>
                     </h3>
                     <p className="text-xs text-prayas-muted mt-0.5">
-                      Verified photographs documenting transparent seva activities across Vrindavan & Mathura.
+                      Photographic records documenting transparent seva activities across Vrindavan & Mathura.
                     </p>
                   </div>
 
@@ -453,10 +321,10 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                     <Camera className="w-8 h-8 text-slate-400 mx-auto" />
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-800">
-                        Active Field Work Photologs in Ongoing Curation
+                        Field Documentation Archive
                       </p>
                       <p className="text-[11px] text-slate-500 max-w-md mx-auto">
-                        Photographs from our recent batches in Mathura government schools are logged in the central field gallery archive.
+                        Photographs documenting Prayas field activities are cataloged in our central Seva gallery.
                       </p>
                     </div>
                     <Link
@@ -592,7 +460,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                   <span>Participate on the Ground</span>
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  We welcome teachers, educators, professionals, and students to join this program as weekend volunteers in Mathura & Vrindavan.
+                  Join Prayas Pariwaar as an on-ground volunteer in Mathura & Vrindavan to support our community initiatives.
                 </p>
                 <Link
                   href="/volunteer"

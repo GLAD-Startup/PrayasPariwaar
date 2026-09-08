@@ -75,7 +75,7 @@ interface LiveBloodRequest {
   hospital: string;
   bloodGroup: string;
   units: string;
-  urgency: "CRITICAL" | "URGENT" | "NORMAL";
+  urgency: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
   postedTime: string;
   attendantPhone: string;
   donorsResponding: {
@@ -117,7 +117,7 @@ const INITIAL_LIVE_REQUESTS: LiveBloodRequest[] = [
     hospital: "Ramakrishna Mission Hospital, Vrindavan",
     bloodGroup: "B+",
     units: "1 Unit",
-    urgency: "URGENT",
+    urgency: "HIGH",
     postedTime: "1 hour ago",
     attendantPhone: "+91 98765 99001",
     donorsResponding: [
@@ -140,7 +140,7 @@ export default function BloodRequestScreen() {
   const [hospital, setHospital] = useState("");
   const [bloodGroup, setBloodGroup] = useState("O+");
   const [units, setUnits] = useState("1 Unit");
-  const [urgency, setUrgency] = useState<"CRITICAL" | "URGENT" | "NORMAL">("CRITICAL");
+  const [urgency, setUrgency] = useState<"CRITICAL" | "HIGH" | "MEDIUM" | "LOW">("CRITICAL");
   const [attendantPhone, setAttendantPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [bgModalVisible, setBgModalVisible] = useState(false);
@@ -223,8 +223,19 @@ export default function BloodRequestScreen() {
         city: "Mathura",
       });
 
+      if (res.error) {
+        setDialogState({
+          visible: true,
+          title: "Submission Failed",
+          description: res.error || "Could not submit blood request. Please verify your details and try again.",
+          type: "danger",
+          icon: "alert-circle-outline",
+        });
+        return;
+      }
+
       const newReq: LiveBloodRequest = {
-        id: `req-${Date.now()}`,
+        id: res.data?.data?.id || `req-${Date.now()}`,
         patientName,
         hospital,
         bloodGroup,
@@ -244,9 +255,15 @@ export default function BloodRequestScreen() {
 
       setLiveRequests([newReq, ...liveRequests]);
       setSuccessModalVisible(true);
-    } catch (e) {
-      console.error(e);
-      setSuccessModalVisible(true);
+    } catch (e: any) {
+      console.error("[BloodRequest Error]", e);
+      setDialogState({
+        visible: true,
+        title: "Network Error",
+        description: e?.message || "Failed to reach server. Please check your network and try again.",
+        type: "danger",
+        icon: "cloud-offline-outline",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -399,37 +416,52 @@ export default function BloodRequestScreen() {
                     urgency === "CRITICAL" && styles.urgencyTextActive,
                   ]}
                 >
-                  🚨 Critical (&lt;1h)
+                  🚨 Critical
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.urgencyChip, urgency === "URGENT" && styles.urgencyUrgent]}
-                onPress={() => setUrgency("URGENT")}
+                style={[styles.urgencyChip, urgency === "HIGH" && styles.urgencyHigh]}
+                onPress={() => setUrgency("HIGH")}
                 activeOpacity={0.8}
               >
                 <Text
                   style={[
                     styles.urgencyText,
-                    urgency === "URGENT" && styles.urgencyTextActive,
+                    urgency === "HIGH" && styles.urgencyTextActive,
                   ]}
                 >
-                  ⚡ Today
+                  ⚡ High
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.urgencyChip, urgency === "NORMAL" && styles.urgencyNormal]}
-                onPress={() => setUrgency("NORMAL")}
+                style={[styles.urgencyChip, urgency === "MEDIUM" && styles.urgencyMedium]}
+                onPress={() => setUrgency("MEDIUM")}
                 activeOpacity={0.8}
               >
                 <Text
                   style={[
                     styles.urgencyText,
-                    urgency === "NORMAL" && styles.urgencyTextActive,
+                    urgency === "MEDIUM" && styles.urgencyTextActive,
                   ]}
                 >
-                  🗓️ Scheduled
+                  ⏱️ Medium
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.urgencyChip, urgency === "LOW" && styles.urgencyLow]}
+                onPress={() => setUrgency("LOW")}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.urgencyText,
+                    urgency === "LOW" && styles.urgencyTextActive,
+                  ]}
+                >
+                  🗓️ Low
                 </Text>
               </TouchableOpacity>
             </View>
@@ -813,11 +845,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#DC2626",
     borderColor: "#DC2626",
   },
-  urgencyUrgent: {
+  urgencyHigh: {
+    backgroundColor: "#EA580C",
+    borderColor: "#EA580C",
+  },
+  urgencyMedium: {
     backgroundColor: "#D97706",
     borderColor: "#D97706",
   },
-  urgencyNormal: {
+  urgencyLow: {
     backgroundColor: "#166534",
     borderColor: "#166534",
   },
