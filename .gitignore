@@ -35,6 +35,7 @@ web-build/
 .env.test
 .env.production
 !.env.example
+client_secret*.json
 
 # Database & SQLite temporary files
 *.sqlite

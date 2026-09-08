@@ -1,25 +1,25 @@
 export const Colors = {
-  // Primary Royal / Cobalt Blue Palette (Matching Official Prayas Blue Brand)
-  primary: "#1D4ED8", // Deep royal blue for primary buttons & accents
-  primaryDark: "#1E3A8A", // Deep navy blue for headings & brand text
-  primaryLight: "#3B82F6", // Vibrant sapphire blue for highlights & badges
-  primarySoft: "#EFF6FF", // Soft ice blue tint for surfaces & pills
-  primaryBorder: "#BFDBFE", // Light blue border
-  primaryMuted: "#2563EB",
+  // Primary Forest Green Palette (Official Prayas Pariwaar Brand)
+  primary: "#166534", // Deep forest green for primary buttons & active states
+  primaryDark: "#14532D", // Deep neem green for headings & brand text
+  primaryLight: "#22C55E", // Vibrant leaf green for accents
+  primarySoft: "#F0FDF4", // Soft neem tint for surfaces & pills
+  primaryBorder: "#BBF7D0", // Light green border
+  primaryMuted: "#15803D",
 
   // Secondary & Accents
-  secondary: "#1E40AF",
-  accent: "#0284C7",
+  secondary: "#1E3A8A", // Royal Navy
+  accent: "#D97706", // Warm Amber / Mustard
 
   // Backgrounds & Surfaces
   background: "#FFFFFF",
-  backgroundSecondary: "#F8FAFC",
+  backgroundSecondary: "#F8FAF9",
   card: "#FFFFFF",
-  surface: "#F8FAFC",
+  surface: "#F8FAF9",
 
   // Text Colors
   textPrimary: "#0F172A",
-  textSecondary: "#64748B",
+  textSecondary: "#475569",
   textMuted: "#94A3B8",
   textBlue: "#1D4ED8",
   textBlueDark: "#1E3A8A",
@@ -32,10 +32,10 @@ export const Colors = {
   borderLight: "#F1F5F9",
   borderBlue: "#93C5FD",
   borderGreen: "#86EFAC",
-  borderFocus: "#1D4ED8",
+  borderFocus: "#166534",
 
   // Input styling
-  inputBg: "#F8FAFC",
+  inputBg: "#FFFFFF",
 
   // Status & Alerts
   error: "#DC2626",
@@ -66,7 +66,7 @@ export const Shadows = {
     elevation: 3,
   },
   primaryBtn: {
-    shadowColor: "#1D4ED8",
+    shadowColor: "#166534",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,

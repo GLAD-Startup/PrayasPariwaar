@@ -24,10 +24,12 @@ import {
   RefreshCw,
   Search,
   Sparkles,
+  Layers,
 } from "lucide-react";
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export default function AdminPostsPage() {
     coverImage: string;
     galleryImages: string[];
     published: boolean;
+    albumId: string;
   }>({
     title: "",
     slug: "",
@@ -60,6 +63,7 @@ export default function AdminPostsPage() {
     coverImage: "",
     galleryImages: [],
     published: true,
+    albumId: "",
   });
 
   useEffect(() => {
@@ -69,10 +73,17 @@ export default function AdminPostsPage() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/api/posts?all=true");
+      const [res, albumRes] = await Promise.all([
+        apiFetch("/api/posts?all=true"),
+        apiFetch("/api/gallery"),
+      ]);
       const data = await res.json();
       if (data.success) {
         setPosts(data.data);
+      }
+      const albumData = await albumRes.json();
+      if (albumData.success && albumData.data) {
+        setAlbums(albumData.data.albums || []);
       }
     } catch (e) {
       console.error("Failed to load posts", e);
@@ -108,6 +119,7 @@ export default function AdminPostsPage() {
       coverImage: post.coverImage || "",
       galleryImages: Array.isArray(post.images) ? post.images.map((img: any) => img.url) : [],
       published: post.published ?? true,
+      albumId: post.albumId || "",
     });
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -127,6 +139,7 @@ export default function AdminPostsPage() {
       coverImage: "",
       galleryImages: [],
       published: true,
+      albumId: "",
     });
     setErrorMsg(null);
   };
@@ -154,6 +167,7 @@ export default function AdminPostsPage() {
         coverImage: formData.coverImage || (formData.galleryImages[0] || null),
         imageUrls: formData.galleryImages,
         published: formData.published,
+        albumId: formData.albumId || null,
       };
 
       let res;
@@ -443,8 +457,36 @@ export default function AdminPostsPage() {
               </div>
             </div>
 
-            {/* MODULAR IMAGE UPLOADS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 rounded-2xl bg-prayas-stone/30 border border-prayas-rule">
+            {/* LINK EVENT TO GALLERY ALBUM */}
+            <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-emerald-950 text-xs flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-emerald-700" />
+                  <span>Link to Photo Gallery Album</span>
+                </label>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Auto-Sync Photos to Gallery
+                </span>
+              </div>
+              <select
+                value={formData.albumId}
+                onChange={(e) => setFormData({ ...formData, albumId: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-emerald-300 bg-white text-prayas-ink text-xs focus:ring-2 focus:ring-emerald-600 outline-none font-medium"
+              >
+                <option value="">-- No Linked Album (Standalone Event) --</option>
+                {albums.map((alb) => (
+                  <option key={alb.id} value={alb.id}>
+                    📁 {alb.title} ({alb.category})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-emerald-800 leading-tight">
+                💡 When an album is linked, all cover and gallery photos uploaded below will automatically appear in that album and across the public photo gallery!
+              </p>
+            </div>
+
+            {/* Direct Image Uploads */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-prayas-stone/40 border border-prayas-rule">
               <div>
                 <ImageUpload
                   label="Primary Cover Photo"

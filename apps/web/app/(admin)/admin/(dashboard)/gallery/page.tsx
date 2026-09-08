@@ -173,7 +173,7 @@ export default function AdminGalleryPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
             <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Visual Seva Archive • Seva Dham Trust</span>
+            <span>Visual Seva Archive • Prayas Pariwaar</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
             Photo Gallery & Field Albums
@@ -296,7 +296,7 @@ export default function AdminGalleryPage() {
                     </button>
                   </div>
                   <p className="text-[11px] text-prayas-muted line-clamp-2 leading-relaxed">
-                    {album.description || "Field documentation from Seva Dham Trust initiatives."}
+                    {album.description || "Field documentation from Prayas Pariwaar initiatives."}
                   </p>
                 </div>
               </div>

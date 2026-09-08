@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { syncImagesToAlbum } from "@/lib/gallery-sync";
 
 // PATCH /api/projects/[id] - Update project
 export async function PATCH(
@@ -26,6 +27,7 @@ export async function PATCH(
       metaTitle,
       metaDescription,
       imageUrls,
+      albumId,
     } = body;
 
     // Update images if provided
@@ -44,7 +46,7 @@ export async function PATCH(
       }
     }
 
-    const project = await prisma.project.update({
+    const project: any = await prisma.project.update({
       where: { id: params.id },
       data: {
         ...(title && { title }),
@@ -57,11 +59,30 @@ export async function PATCH(
         ...(coverImage !== undefined && { coverImage }),
         ...(metaTitle !== undefined && { metaTitle }),
         ...(metaDescription !== undefined && { metaDescription }),
-      },
+        ...(albumId !== undefined && { albumId: albumId || null }),
+      } as any,
       include: {
         images: true,
-      },
+        album: true,
+      } as any,
     });
+
+    // Auto-sync images to linked album if albumId is provided or project has one
+    const targetAlbumId = albumId || project.albumId;
+    if (targetAlbumId) {
+      const allImages = [
+        coverImage || project.coverImage,
+        ...(imageUrls || project.images?.map((i: any) => i.url) || []),
+      ].filter((url): url is string => typeof url === "string" && url.trim().length > 0);
+
+      if (allImages.length > 0) {
+        await syncImagesToAlbum({
+          albumId: targetAlbumId,
+          title: project.title,
+          imageUrls: allImages,
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, data: project });
   } catch (error: any) {

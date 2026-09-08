@@ -28,6 +28,7 @@ import {
   FileText,
   MessageSquare,
   Lock,
+  Camera,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -183,15 +184,6 @@ export default function Navbar() {
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                 <span>18-Yr Registered Society (Reg. 142/2006-07)</span>
               </span>
-
-              <span className="text-slate-300 select-none">•</span>
-
-              <Link
-                href="/admin/login"
-                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 underline font-medium"
-              >
-                <span>Staff Portal</span>
-              </Link>
             </div>
 
             {/* Second sequence (Identical duplicate for seamless continuous marquee loop) */}
@@ -241,15 +233,6 @@ export default function Navbar() {
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                 <span>18-Yr Registered Society (Reg. 142/2006-07)</span>
               </span>
-
-              <span className="text-slate-300 select-none">•</span>
-
-              <Link
-                href="/admin/login"
-                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 underline font-medium"
-              >
-                <span>Staff Portal</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -554,6 +537,19 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Photo Gallery */}
+              <Link
+                href="/gallery"
+                className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                  isActive("/gallery")
+                    ? "bg-prayas-stone text-slate-900 font-bold"
+                    : "hover:bg-prayas-stone text-slate-700 hover:text-slate-900"
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Gallery</span>
+              </Link>
+
               {/* Media */}
               <Link
                 href="/media"
@@ -591,8 +587,17 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* Direct Action Button: Sponsor a Child / Donate */}
+            {/* Direct Action Buttons: Staff Portal & Sponsor a Child / Donate */}
             <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/admin/login"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-slate-700 hover:text-emerald-900 hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-200 transition-all shadow-2xs whitespace-nowrap"
+                title="Staff Portal (Restricted Access)"
+              >
+                <Lock className="w-3.5 h-3.5 text-slate-500" />
+                <span className="hidden xs:inline">Staff Portal</span>
+              </Link>
+
               <Link
                 href="/donate?project=aashayein-education"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[#1E5338] hover:bg-[#16432B] text-white transition-all shadow-sm whitespace-nowrap"
@@ -844,6 +849,18 @@ export default function Navbar() {
                 </div>
 
                 {/* Standalone Links */}
+                <Link
+                  href="/gallery"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-emerald-50/70 text-slate-700 text-xs font-bold transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-emerald-700" />
+                    <span>Field Seva Photo Gallery</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </Link>
+
                 <Link
                   href="/media"
                   onClick={() => setMobileMenuOpen(false)}

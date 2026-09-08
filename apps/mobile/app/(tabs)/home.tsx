@@ -96,7 +96,7 @@ const SERVICE_STREAMS = [
     title: "Tree\nPlantation",
     label: "Plantation",
     icon: "leaf-outline",
-    iconType: "material",
+    iconType: "ionicons",
     bgColor: "#F0FDF4",
     borderColor: "#86EFAC",
     iconColor: "#15803D",

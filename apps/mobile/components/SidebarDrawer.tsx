@@ -182,7 +182,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
       title: "Tree Plantation",
       subtitle: "Harit Kranti Braj Parikrama",
       icon: "leaf-outline",
-      iconType: "material",
+      iconType: "ionicons",
       route: "/seva/plantation",
     },
     {
@@ -234,7 +234,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
       subtitle: "Empower Grassroots Seva",
       icon: "heart-outline",
       iconType: "ionicons",
-      badge: "80G Tax Exemption",
+      badge: "100% Direct Seva",
       badgeBg: "#DCFCE7",
       badgeColor: "#166534",
       route: "/(tabs)/donate",

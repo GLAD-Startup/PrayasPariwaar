@@ -18,6 +18,7 @@ import {
   Edit2,
   Save,
   ImageIcon,
+  Layers,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -32,6 +33,7 @@ const CATEGORIES = [
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +53,7 @@ export default function AdminProjectsPage() {
     status: "ACTIVE",
     coverImage: "",
     galleryImages: [] as string[],
+    albumId: "",
   });
 
   // New Project Form State
@@ -66,6 +69,7 @@ export default function AdminProjectsPage() {
     galleryImages: [] as string[],
     metaTitle: "",
     metaDescription: "",
+    albumId: "",
   });
 
   useEffect(() => {
@@ -75,10 +79,17 @@ export default function AdminProjectsPage() {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/api/projects");
+      const [res, albumRes] = await Promise.all([
+        apiFetch("/api/projects"),
+        apiFetch("/api/gallery"),
+      ]);
       const json = await res.json();
       if (json.success) {
         setProjects(json.data);
+      }
+      const albumJson = await albumRes.json();
+      if (albumJson.success && albumJson.data) {
+        setAlbums(albumJson.data.albums || []);
       }
     } catch (e) {
       console.error(e);
@@ -113,6 +124,7 @@ export default function AdminProjectsPage() {
         status: formData.status,
         coverImage: formData.coverImage || (formData.galleryImages[0] || null),
         imageUrls: formData.galleryImages,
+        albumId: formData.albumId || null,
         metaTitle: formData.metaTitle || `${formData.title} | Prayas Pariwaar`,
         metaDescription: formData.metaDescription || formData.description.substring(0, 150),
       };
@@ -128,7 +140,7 @@ export default function AdminProjectsPage() {
         throw new Error(json.error || "Failed to create project.");
       }
 
-      setSuccessMsg("Program / cause created successfully!");
+      setSuccessMsg("Program / cause created successfully and photos synced to gallery!");
       setIsCreating(false);
       setFormData({
         title: "",
@@ -142,6 +154,7 @@ export default function AdminProjectsPage() {
         galleryImages: [],
         metaTitle: "",
         metaDescription: "",
+        albumId: "",
       });
       fetchProjects();
     } catch (err: any) {
@@ -164,6 +177,7 @@ export default function AdminProjectsPage() {
       status: project.status || "ACTIVE",
       coverImage: project.coverImage || "",
       galleryImages: existingImages,
+      albumId: project.albumId || "",
     });
   };
 
@@ -184,6 +198,7 @@ export default function AdminProjectsPage() {
         status: editFormData.status,
         coverImage: editFormData.coverImage || null,
         imageUrls: editFormData.galleryImages,
+        albumId: editFormData.albumId || null,
       };
 
       const res = await apiFetch(`/api/projects/${editingProject.id}`, {
@@ -384,6 +399,34 @@ export default function AdminProjectsPage() {
               </div>
             </div>
 
+            {/* LINK PROJECT TO GALLERY ALBUM */}
+            <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-emerald-950 text-xs flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-emerald-700" />
+                  <span>Link to Photo Gallery Album</span>
+                </label>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Auto-Sync Photos to Gallery
+                </span>
+              </div>
+              <select
+                value={formData.albumId}
+                onChange={(e) => setFormData({ ...formData, albumId: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-emerald-300 bg-white text-prayas-ink text-xs focus:ring-2 focus:ring-emerald-600 outline-none font-medium"
+              >
+                <option value="">-- No Linked Album (Standalone Project) --</option>
+                {albums.map((alb) => (
+                  <option key={alb.id} value={alb.id}>
+                    📁 {alb.title} ({alb.category})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-emerald-800 leading-tight">
+                💡 When an album is linked, all cover and gallery photos uploaded below will automatically appear in that album and across the public photo gallery!
+              </p>
+            </div>
+
             {/* DIRECT FILE UPLOADS: COVER & GALLERY */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-xl bg-prayas-stone/40 border border-prayas-rule">
               <div>
@@ -497,6 +540,13 @@ export default function AdminProjectsPage() {
                     <span className="text-[10px] font-semibold text-prayas-ink bg-prayas-stone px-2 py-0.5 rounded-md border border-prayas-rule">
                       📷 {p.images && p.images.length > 0 ? `${p.images.length} photos` : "1 cover"}
                     </span>
+
+                    {p.album && (
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                        <Layers className="w-3 h-3 text-emerald-600" />
+                        <span>{p.album.title}</span>
+                      </span>
+                    )}
                   </div>
 
                   <select
@@ -579,7 +629,7 @@ export default function AdminProjectsPage() {
                 <th className="p-4 min-w-[110px]">Category</th>
                 <th className="p-4 min-w-[200px]">Funding Progress (₹)</th>
                 <th className="p-4 min-w-[120px]">Status</th>
-                <th className="p-4 min-w-[100px]">Gallery Photos</th>
+                <th className="p-4 min-w-[140px]">Gallery & Album</th>
                 <th className="p-4 min-w-[140px] text-right">Actions</th>
               </tr>
             </thead>
@@ -659,13 +709,23 @@ export default function AdminProjectsPage() {
                     </td>
 
                     <td className="p-4 text-prayas-muted text-[11px]">
-                      {p.images && p.images.length > 0 ? (
-                        <span className="font-semibold text-prayas-ink">
-                          📷 {p.images.length} photos
-                        </span>
-                      ) : (
-                        <span>1 cover</span>
-                      )}
+                      <div className="space-y-1">
+                        <div>
+                          {p.images && p.images.length > 0 ? (
+                            <span className="font-semibold text-prayas-ink">
+                              📷 {p.images.length} photos
+                            </span>
+                          ) : (
+                            <span>1 cover</span>
+                          )}
+                        </div>
+                        {p.album && (
+                          <div className="inline-flex items-center gap-1 text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium">
+                            <Layers className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[130px]">{p.album.title}</span>
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     <td className="p-4 text-right space-x-2">
@@ -802,6 +862,34 @@ export default function AdminProjectsPage() {
                   onChange={(e) => setEditFormData({ ...editFormData, raisedAmount: Number(e.target.value) })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/30 focus:bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-700 font-mono"
                 />
+              </div>
+
+              {/* LINK PROJECT TO GALLERY ALBUM IN EDIT MODAL */}
+              <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-emerald-950 text-xs flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Link to Photo Gallery Album</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Auto-Sync
+                  </span>
+                </div>
+                <select
+                  value={editFormData.albumId}
+                  onChange={(e) => setEditFormData({ ...editFormData, albumId: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-emerald-300 bg-white text-prayas-ink text-xs focus:ring-2 focus:ring-emerald-600 outline-none font-medium"
+                >
+                  <option value="">-- No Linked Album (Standalone Project) --</option>
+                  {albums.map((alb) => (
+                    <option key={alb.id} value={alb.id}>
+                      📁 {alb.title} ({alb.category})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-emerald-800">
+                  Saving will automatically sync all cover and gallery photos into this album in the public gallery.
+                </p>
               </div>
 
               {/* DIRECT FILE UPLOADER FOR EDIT MODAL */}

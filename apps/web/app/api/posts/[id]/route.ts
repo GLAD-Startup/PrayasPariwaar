@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { syncImagesToAlbum } from "@/lib/gallery-sync";
 
 // GET /api/posts/[id] - Fetch single post by id or slug with author and images
 export async function GET(
@@ -15,7 +16,8 @@ export async function GET(
       include: {
         author: { select: { name: true } },
         images: { orderBy: { order: "asc" } },
-      },
+        album: true,
+      } as any,
     });
 
     if (!post) {
@@ -54,6 +56,7 @@ export async function PATCH(
       metaDescription,
       published,
       imageUrls,
+      albumId,
     } = body;
 
     // Update images if provided
@@ -72,7 +75,7 @@ export async function PATCH(
       }
     }
 
-    const post = await prisma.post.update({
+    const post: any = await prisma.post.update({
       where: { id: params.id },
       data: {
         ...(title && { title }),
@@ -86,11 +89,31 @@ export async function PATCH(
         ...(metaTitle !== undefined && { metaTitle }),
         ...(metaDescription !== undefined && { metaDescription }),
         ...(published !== undefined && { published }),
-      },
+        ...(albumId !== undefined && { albumId: albumId || null }),
+      } as any,
       include: {
         images: true,
-      },
+        album: true,
+      } as any,
     });
+
+    // Auto-sync images to linked album
+    const targetAlbumId = albumId || post.albumId;
+    if (targetAlbumId) {
+      const allImages = [
+        coverImage || post.coverImage,
+        ...(imageUrls || post.images?.map((i: any) => i.url) || []),
+      ].filter((url): url is string => typeof url === "string" && url.trim().length > 0);
+
+      if (allImages.length > 0) {
+        await syncImagesToAlbum({
+          albumId: targetAlbumId,
+          title: post.title,
+          imageUrls: allImages,
+          location: location || post.location || undefined,
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, data: post });
   } catch (error: any) {

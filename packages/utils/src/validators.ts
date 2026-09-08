@@ -198,6 +198,7 @@ export const PostSchema = z.object({
   metaDescription: z.string().optional().nullable(),
   published: z.boolean().default(true),
   imageUrls: z.array(z.string()).optional(),
+  albumId: z.string().optional().nullable(),
 });
 export type PostInput = z.infer<typeof PostSchema>;
 
@@ -215,6 +216,7 @@ export const ProjectSchema = z.object({
   metaTitle: z.string().optional().nullable(),
   metaDescription: z.string().optional().nullable(),
   status: z.enum(ProjectStatusValues).default("ACTIVE"),
+  albumId: z.string().optional().nullable(),
 });
 export type ProjectInput = z.infer<typeof ProjectSchema>;
 
