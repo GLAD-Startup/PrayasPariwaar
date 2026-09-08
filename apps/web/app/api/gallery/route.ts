@@ -79,6 +79,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
+    const albumId = searchParams.get("albumId");
 
     // Try Prisma first if client has galleryAlbum model loaded
     if ((prisma as any).galleryAlbum && (prisma as any).galleryPhoto) {
@@ -86,28 +87,38 @@ export async function GET(req: Request) {
         const albums = await (prisma as any).galleryAlbum.findMany({
           where: {
             published: true,
+            ...(albumId ? { id: albumId } : {}),
             ...(category && category !== "All" ? { category } : {}),
           },
           include: {
             photos: {
-              orderBy: { order: "asc" },
+              orderBy: { createdAt: "desc" },
             },
           },
           orderBy: { order: "asc" },
         });
 
+        const formattedAlbums = (albums || []).map((alb: any) => ({
+          ...alb,
+          photoCount: alb.photos?.length || 0,
+        }));
+
         const recentPhotos = await (prisma as any).galleryPhoto.findMany({
           where: {
+            ...(albumId ? { albumId } : {}),
             ...(category && category !== "All" ? { category } : {}),
           },
-          take: 36,
+          include: {
+            album: true,
+          },
+          take: 48,
           orderBy: { createdAt: "desc" },
         });
 
         return NextResponse.json({
           success: true,
           data: {
-            albums: albums || [],
+            albums: formattedAlbums,
             recentPhotos: recentPhotos || [],
           },
         });
@@ -118,12 +129,20 @@ export async function GET(req: Request) {
 
     // Fallback to resilient file-backed persistent storage
     const store = getStoredGallery();
-    const filteredAlbums = store.albums.filter(
-      (a) => !category || category === "All" || a.category === category
-    );
-    const filteredPhotos = store.photos.filter(
-      (p) => !category || category === "All" || p.category === category
-    );
+    const filteredAlbums = store.albums
+      .filter((a) => !albumId || a.id === albumId)
+      .filter((a) => !category || category === "All" || a.category === category)
+      .map((a) => {
+        const count = store.photos.filter((p) => p.albumId === a.id).length;
+        return {
+          ...a,
+          photoCount: count > 0 ? count : (a.photoCount || 0),
+        };
+      });
+
+    const filteredPhotos = store.photos
+      .filter((p) => !albumId || p.albumId === albumId)
+      .filter((p) => !category || category === "All" || p.category === category);
 
     return NextResponse.json({
       success: true,

@@ -29,6 +29,7 @@ import {
   FileCheck2,
   Send,
   UserCheck,
+  FolderOpen,
 } from "lucide-react";
 
 export const revalidate = 60;
@@ -51,6 +52,103 @@ export default async function HomePage() {
     orderBy: { order: "asc" },
     take: 3,
   });
+
+  // Fetch real gallery photos and albums from database
+  let galleryPhotos: any[] = [];
+  let galleryAlbums: any[] = [];
+  try {
+    if ((prisma as any).galleryPhoto) {
+      galleryPhotos = await (prisma as any).galleryPhoto.findMany({
+        take: 8,
+        orderBy: { createdAt: "desc" },
+        include: { album: true },
+      });
+    }
+    if ((prisma as any).galleryAlbum) {
+      galleryAlbums = await (prisma as any).galleryAlbum.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+        include: { _count: { select: { photos: true } } },
+        take: 6,
+      });
+    }
+  } catch (e) {
+    console.warn("Could not query gallery photos/albums in HomePage:", e);
+  }
+
+  // Authentic Vrindavan field photography fallbacks
+  const fallbackGalleryPhotos = [
+    {
+      id: "fb-1",
+      url: "/images/child-hope-vrindavan.jpg",
+      title: "Hope in Her Eyes",
+      caption: "Project Aashayein student Radha with her new notebook at our evening learning center",
+      category: "Free Education",
+      location: "Vrindavan, UP",
+      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
+    },
+    {
+      id: "fb-2",
+      url: "/images/banyan-study-vrindavan.jpg",
+      title: "Evening Study Circle",
+      caption: "Classroom under the ancient banyan tree along Yamuna riverbank",
+      category: "Free Education",
+      location: "Kesi Ghat, Vrindavan",
+      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
+    },
+    {
+      id: "fb-3",
+      url: "/images/vrindavan-plantation.jpg",
+      title: "Native Neem Afforestation",
+      caption: "Native Neem & Kadamba sapling plantation with protective tree guards along Parikrama Marg",
+      category: "Plantation",
+      location: "Govardhan Parikrama",
+      album: { title: "Harit Kranti", id: "alb-plantation" },
+    },
+    {
+      id: "fb-4",
+      url: "/images/medical-blood-seva.jpg",
+      title: "10L Oxygen Bank Delivery",
+      caption: "Emergency medical equipment dispatch for elderly home patient recovery",
+      category: "Medical Seva",
+      location: "Mathura City",
+      album: { title: "Medical Equipment", id: "alb-blood" },
+    },
+    {
+      id: "fb-5",
+      url: "/images/health-camp-vrindavan.jpg",
+      title: "Jan Swasthya Eye Screening",
+      caption: "Free geriatric eye screening & cataract surgery diagnosis camp in Raman Reti",
+      category: "Health Camps",
+      location: "Raman Reti, Vrindavan",
+      album: { title: "FREE HOME", id: "cmtqo5fri0003ag5akayoq1pd" },
+    },
+    {
+      id: "fb-6",
+      url: "/images/youth-skills-vrindavan.jpg",
+      title: "Digital Youth Mentorship",
+      caption: "Digital literacy & basic computer learning center for rural village youth",
+      category: "Free Education",
+      location: "Mathura Rural",
+      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
+    },
+  ];
+
+  // Filter out test screenshots/documents so only authentic field photography is displayed
+  const cleanedGalleryPhotos = galleryPhotos.filter((p: any) => {
+    const url = (p.url || "").toLowerCase();
+    const title = (p.title || "").toLowerCase();
+    if (url.includes("screenshot") || title.includes("credential") || title.includes("abcd") || url.includes("-removebg-")) {
+      return false;
+    }
+    return true;
+  });
+
+  // Merge database photos with curated authentic fallbacks
+  const displayPhotos = [
+    ...cleanedGalleryPhotos,
+    ...fallbackGalleryPhotos.filter((fb) => !cleanedGalleryPhotos.some((gp: any) => gp.url === fb.url)),
+  ].slice(0, 6);
 
   // Find Aashayein project specifically
   const aashayeinProject = activeProjects.find((p: any) => p.slug === "aashayein-education") || activeProjects[0] || {
@@ -219,6 +317,75 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ========================================================================= */}
+      {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND                                */}
+      {/* ========================================================================= */}
+      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <ScrollReveal>
+          <div className="border border-prayas-rule bg-white rounded-2xl shadow-card overflow-hidden">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-prayas-rule text-center">
+              {/* Stat 1 */}
+              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
+                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-prayas-neem block">
+                  320+
+                </span>
+                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Children Tutored Daily</p>
+                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">6 Evening learning centers in Vrindavan</p>
+              </div>
+
+              {/* Stat 2 */}
+              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
+                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-emerald-800 block">
+                  5,400+
+                </span>
+                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Native Trees Planted</p>
+                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">Neem & Kadamba with protective guards</p>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
+                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-rose-700 block">
+                  8,200+
+                </span>
+                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Blood Units Coordinated</p>
+                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">24/7 volunteer emergency donor network</p>
+              </div>
+
+              {/* Stat 4 */}
+              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
+                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-amber-700 block">
+                  18 Years
+                </span>
+                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Unbroken Nishkam Seva</p>
+                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">100% Direct • Zero Admin Deductions</p>
+              </div>
+            </div>
+
+            {/* Bottom mini-bar: Statutory trust reassurance */}
+            <div className="bg-prayas-stone/60 border-t border-prayas-rule px-4 py-2.5 flex flex-wrap items-center justify-around gap-2 text-[11px] sm:text-xs text-prayas-muted font-medium text-center">
+              <span className="flex items-center gap-1.5 text-slate-700">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Society Reg: <strong>142/2006-07</strong></span>
+              </span>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <span className="flex items-center gap-1.5 text-slate-700">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Income Tax: <strong>12A Certified</strong></span>
+              </span>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <span className="flex items-center gap-1.5 text-slate-700">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>NITI Aayog Darpan: <strong>UP/2017/0154210</strong></span>
+              </span>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <span className="flex items-center gap-1.5 text-emerald-900 font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>100% Volunteer Driven Society</span>
+              </span>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
 
       {/* ========================================================================= */}
       {/* 3. ABOUT PRAYAS PARIWAAR — 18-YEAR LEGACY                                 */}
@@ -337,14 +504,14 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 4. OUR 4 CORE SECTORS & PROJECTS SHOWCASE WITH PHOTOGRAPHIC ASSETS        */}
+      {/* 4. DYNAMIC ACTIVE PROGRAMS SHOWCASE (HORIZONTAL ALTERNATING LAYOUT)       */}
       {/* ========================================================================= */}
       <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <ScrollReveal>
-          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem">
-                Our 4 Pillars of Seva
+                Our Programs of Seva
               </span>
               <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink mt-1">
                 Active Programs Serving Vrindavan & Mathura District
@@ -360,220 +527,277 @@ export default async function HomePage() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 2xl:gap-8">
-          {/* Pillar 1: Child Education */}
-          <ScrollReveal delay={50}>
-            <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
-              <div className="space-y-3">
-                <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  <Image
-                    src="/images/youth-skills-vrindavan.jpg"
-                    alt="Project Aashayein Child Education"
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#2E5339] text-white text-[10px] font-bold uppercase shadow-sm z-10">
-                    Education Pillar
-                  </span>
-                </div>
-                <div className="p-4 sm:p-5 pt-1 space-y-2">
-                  <h3 className="font-serif text-base sm:text-lg 2xl:text-xl font-bold text-prayas-ink">
-                    Project Aashayein
-                  </h3>
-                  <p className="text-xs 2xl:text-sm text-prayas-muted leading-relaxed">
-                    6 evening village study centers, school admissions, free textbooks, school bags, and winter uniforms for 320+ rural children.
-                  </p>
-                  <div className="text-[11px] 2xl:text-xs font-semibold text-emerald-900 bg-green-50 p-2 rounded-lg border border-green-100">
-                    ⭐ 1,200+ Students Educated Since 2006
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 sm:p-5 pt-0 border-t border-prayas-rule/60 flex items-center justify-between text-xs 2xl:text-sm mt-2">
-                <Link href="/projects/aashayein-education" className="font-bold text-prayas-neem hover:underline">
-                  Explore Project →
-                </Link>
-                <Link
-                  href="/donate?project=aashayein-education"
-                  className="px-3 py-1.5 rounded-lg bg-[#2E5339] text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-[#23432b]"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  Sponsor
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
+        {activeProjects.length === 0 ? (
+          <div className="p-12 text-center border border-prayas-rule rounded-3xl bg-white text-prayas-muted space-y-3">
+            <p className="font-serif text-lg font-bold text-prayas-ink">No active programs currently listed</p>
+            <p className="text-xs max-w-md mx-auto">
+              New community welfare programs created in the admin portal will appear here immediately.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-8 sm:space-y-12">
+            {activeProjects.slice(0, 4).map((project: any, idx: number) => {
+              // Alternating: idx 0: Image Left, Content Right
+              //              idx 1: Content Left, Image Right (isReversed = true)
+              //              idx 2: Image Left, Content Right
+              //              idx 3: Content Left, Image Right
+              const isReversed = idx % 2 === 1;
+              const percent = project.goalAmount > 0
+                ? Math.min(Math.round((project.raisedAmount / project.goalAmount) * 100), 100)
+                : 0;
+              const coverImg = project.coverImage || (project.images && project.images[0]?.url) || "/images/youth-skills-vrindavan.jpg";
 
-          {/* Pillar 2: Environment & Tree Plantation */}
-          <ScrollReveal delay={120}>
-            <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
-              <div className="space-y-3">
-                <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  <Image
-                    src="/images/vrindavan-plantation.jpg"
-                    alt="Vrindavan Harit Kranti Native Tree Plantation"
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-green-800 text-white text-[10px] font-bold uppercase shadow-sm z-10">
-                    Environment Pillar
-                  </span>
-                </div>
-                <div className="p-4 sm:p-5 pt-1 space-y-2">
-                  <h3 className="font-serif text-base sm:text-lg 2xl:text-xl font-bold text-prayas-ink">
-                    Vrindavan Harit Kranti
-                  </h3>
-                  <p className="text-xs 2xl:text-sm text-prayas-muted leading-relaxed">
-                    5,400+ native Neem, Peepal, and Pilu saplings planted along Parikrama Marg with protective tree-guards and watering teams.
-                  </p>
-                  <div className="text-[11px] 2xl:text-xs font-semibold text-green-900 bg-green-50 p-2 rounded-lg border border-green-100">
-                    🌳 5,400+ Protected Native Trees
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 sm:p-5 pt-0 border-t border-prayas-rule/60 flex items-center justify-between text-xs 2xl:text-sm mt-2">
-                <Link href="/projects/vrindavan-harit-kranti" className="font-bold text-prayas-neem hover:underline">
-                  Explore Plantation →
-                </Link>
-                <Link
-                  href="/donate?project=vrindavan-harit-kranti"
-                  className="px-3 py-1.5 rounded-lg bg-green-700 text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-green-800"
-                >
-                  Plant a Tree
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
+              return (
+                <ScrollReveal key={project.id} delay={idx * 80}>
+                  <div
+                    className={`border border-prayas-rule bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-xl transition-all duration-300 flex flex-col ${
+                      isReversed ? "md:flex-row-reverse" : "md:flex-row"
+                    } items-stretch group`}
+                  >
+                    {/* Image Half */}
+                    <div className="w-full md:w-1/2 relative min-h-[260px] sm:min-h-[300px] md:min-h-[360px] lg:min-h-[380px] bg-prayas-stone overflow-hidden">
+                      <Image
+                        src={coverImg}
+                        alt={project.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
+                      <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-emerald-950/80 backdrop-blur-md text-emerald-200 text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm z-10 border border-emerald-500/30">
+                        {project.category ? project.category.replace(/_/g, " ") : "COMMUNITY"} PILLAR
+                      </span>
+                    </div>
 
-          {/* Pillar 3: Emergency Blood & Medical Bank */}
-          <ScrollReveal delay={190}>
-            <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
-              <div className="space-y-3">
-                <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  <Image
-                    src="/images/medical-blood-seva.jpg"
-                    alt="Medical Equipment Bank & Emergency Blood Registry"
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-[#B91C1C] text-white text-[10px] font-bold uppercase shadow-sm z-10">
-                    Health & Emergency
-                  </span>
-                </div>
-                <div className="p-4 sm:p-5 pt-1 space-y-2">
-                  <h3 className="font-serif text-base sm:text-lg 2xl:text-xl font-bold text-prayas-ink">
-                    Blood Desk & Medical Bank
-                  </h3>
-                  <p className="text-xs 2xl:text-sm text-prayas-muted leading-relaxed">
-                    24/7 voluntary blood coordination for district hospitals, and free home loan of 10L oxygen concentrators and hospital beds.
-                  </p>
-                  <div className="text-[11px] 2xl:text-xs font-semibold text-red-900 bg-red-50 p-2 rounded-lg border border-red-100">
-                    🩸 4,800+ Blood Units Coordinated
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 sm:p-5 pt-0 border-t border-prayas-rule/60 flex items-center justify-between text-xs 2xl:text-sm mt-2">
-                <Link href="/blood-donation" className="font-bold text-prayas-crimson hover:underline">
-                  Blood Desk →
-                </Link>
-                <Link
-                  href="/medical-equipment"
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-slate-900"
-                >
-                  Borrow Device
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
+                    {/* Content Half ("About it") */}
+                    <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-5">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-prayas-neem shrink-0 animate-pulse" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
+                            Prayas Grassroots Program
+                          </span>
+                        </div>
 
-          {/* Pillar 4: Youth Skills & Health Camps */}
-          <ScrollReveal delay={260}>
-            <div className="border border-prayas-rule bg-white rounded-2xl overflow-hidden shadow-card flex flex-col justify-between hover:shadow-lg transition-all group h-full">
-              <div className="space-y-3">
-                <div className="aspect-[16/10] bg-prayas-stone overflow-hidden relative">
-                  <Image
-                    src="/images/health-camp-vrindavan.jpg"
-                    alt="Jan Swasthya Free Health & Eye Checkup Camp"
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded bg-amber-800 text-white text-[10px] font-bold uppercase shadow-sm z-10">
-                    Health Camps
-                  </span>
-                </div>
-                <div className="p-4 sm:p-5 pt-1 space-y-2">
-                  <h3 className="font-serif text-base sm:text-lg 2xl:text-xl font-bold text-prayas-ink">
-                    Jan Swasthya & Skills
-                  </h3>
-                  <p className="text-xs 2xl:text-sm text-prayas-muted leading-relaxed">
-                    Geriatric eye screening with cataract referrals, general medical checkups, and Project Aadhar youth career guidance.
-                  </p>
-                  <div className="text-[11px] 2xl:text-xs font-semibold text-amber-900 bg-amber-50 p-2 rounded-lg border border-amber-100">
-                    👥 8,500+ Medical Camp Beneficiaries
+                        <h3 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-prayas-ink leading-tight group-hover:text-emerald-900 transition-colors">
+                          {project.title}
+                        </h3>
+
+                        <p className="text-xs sm:text-sm lg:text-base text-prayas-muted leading-relaxed line-clamp-3">
+                          {project.description}
+                        </p>
+
+                        {/* Impact / Funding Metric */}
+                        {project.goalAmount > 0 ? (
+                          <div className="p-3.5 sm:p-4 rounded-2xl bg-prayas-paper border border-prayas-rule space-y-2">
+                            <div className="flex justify-between items-baseline text-xs sm:text-sm font-semibold text-prayas-ink">
+                              <span>Community Seva Fund</span>
+                              <span className="font-bold text-prayas-neem font-mono">
+                                ₹{project.raisedAmount?.toLocaleString("en-IN") || 0} / ₹{project.goalAmount?.toLocaleString("en-IN") || 0} ({percent}%)
+                              </span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-emerald-700 rounded-full transition-all"
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-900 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
+                            ⭐ Active Nishkam Field Service Serving Mathura District
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Links */}
+                      <div className="pt-4 border-t border-prayas-rule flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <Link
+                            href={`/projects/${project.slug}`}
+                            className="text-xs sm:text-sm font-bold text-prayas-neem hover:text-emerald-900 hover:underline flex items-center gap-1.5 transition-colors"
+                          >
+                            <span>Explore Project →</span>
+                          </Link>
+
+                          {project.album && (
+                            <Link
+                              href={`/gallery?albumId=${project.album.id}`}
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-200 transition-colors"
+                            >
+                              <Camera className="w-3 h-3 text-emerald-700" />
+                              <span>Album: {project.album.title}</span>
+                            </Link>
+                          )}
+                        </div>
+
+                        <Link
+                          href={`/donate?project=${project.slug}`}
+                          className="px-5 py-2.5 rounded-xl bg-[#2E5339] text-white text-xs sm:text-sm font-bold shadow-md hover:bg-[#23432b] transition-all flex items-center gap-2"
+                          style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                        >
+                          <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                          <span>Sponsor / Donate</span>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="p-4 sm:p-5 pt-0 border-t border-prayas-rule/60 flex items-center justify-between text-xs 2xl:text-sm mt-2">
-                <Link href="/projects/jan-swasthya-raksha" className="font-bold text-amber-800 hover:underline">
-                  View Health Seva →
-                </Link>
-                <Link
-                  href="/volunteer"
-                  className="px-3 py-1.5 rounded-lg bg-amber-700 text-white text-[11px] 2xl:text-xs font-bold shadow-sm hover:bg-amber-800"
-                >
-                  Join as Doctor
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ========================================================================= */}
-      {/* 5. MOMENTS OF SEVA — FIELD PHOTO GALLERY MOSAIC                            */}
+      {/* 5. MOMENTS OF SEVA — DYNAMIC ON-GROUND PHOTO GALLERY                       */}
       {/* ========================================================================= */}
       <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <ScrollReveal>
-          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8">
-            <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />
-              Moments of Seva in Vrindavan
-            </span>
-            <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink mt-1">
-              Every Smile, Every Tree, Every Life Touched
-            </h2>
+          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-emerald-700" />
+                Moments of Seva in Vrindavan • Ground Photo Gallery
+              </span>
+              <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink mt-1">
+                Every Smile, Every Tree, Every Life Touched
+              </h2>
+              <p className="text-xs sm:text-sm text-prayas-muted mt-1 max-w-2xl">
+                Unfiltered photographs from our evening study circles, Parikrama tree guards, 24/7 blood desk, and elderly oxygen deliveries across Mathura district.
+              </p>
+            </div>
+
+            <Link
+              href="/gallery"
+              className="text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl transition-all shadow-2xs self-start sm:self-auto shrink-0"
+            >
+              <FolderOpen className="w-4 h-4 text-emerald-700" />
+              <span>Explore All Albums in Gallery →</span>
+            </Link>
           </div>
+
+          {/* Quick Album Filter Pills */}
+          {galleryAlbums.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none text-xs">
+              <Link
+                href="/gallery"
+                className="px-3.5 py-1.5 rounded-full bg-emerald-800 text-white font-bold whitespace-nowrap shadow-xs hover:bg-emerald-900 transition-colors"
+              >
+                All Moments ({displayPhotos.length})
+              </Link>
+              {galleryAlbums.map((alb: any) => (
+                <Link
+                  key={alb.id}
+                  href={`/gallery?albumId=${alb.id}`}
+                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-prayas-rule hover:border-emerald-300 font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5"
+                >
+                  <FolderOpen className="w-3 h-3 text-emerald-700" />
+                  <span>{alb.title}</span>
+                  {alb._count?.photos > 0 && (
+                    <span className="text-[10px] text-slate-400 font-mono">({alb._count.photos})</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 2xl:gap-6">
-          {[
-            { src: "/images/child-hope-vrindavan.jpg", caption: "Hope in her eyes — Project Aashayein student Radha with her new notebook", span: "sm:col-span-2 lg:col-span-2" },
-            { src: "/images/banyan-study-vrindavan.jpg", caption: "Evening study circle under the ancient banyan tree by Yamuna riverbank", span: "sm:col-span-2 lg:col-span-1" },
-            { src: "/images/vrindavan-plantation.jpg", caption: "Native Neem sapling plantation with protective tree guards along Parikrama Marg" },
-            { src: "/images/medical-blood-seva.jpg", caption: "10L Oxygen concentrator delivery for elderly home recovery" },
-            { src: "/images/health-camp-vrindavan.jpg", caption: "Free geriatric eye screening & cataract surgery camp" },
-            { src: "/images/youth-skills-vrindavan.jpg", caption: "Digital literacy & computer learning center for rural youth" },
-          ].map((photo, idx) => (
-            <ScrollReveal key={idx} delay={idx * 60}>
-              <div className={`gallery-item relative overflow-hidden rounded-xl bg-prayas-stone ${photo.span || ""} aspect-[4/3] sm:aspect-square`}>
-                <Image
-                  src={photo.src}
-                  alt={photo.caption}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover"
-                  loading="lazy"
-                />
-                <div className="gallery-caption z-10">
-                  <p className="text-[11px] sm:text-xs 2xl:text-sm font-medium leading-snug">{photo.caption}</p>
-                </div>
-              </div>
-            </ScrollReveal>
-          ))}
+        {/* Dynamic Photo Gallery Grid (Clean 3-Column Uniform Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {displayPhotos.map((photo: any, idx: number) => {
+            const targetUrl = photo.albumId ? `/gallery?albumId=${photo.albumId}` : "/gallery";
+            const albumName = photo.album?.title;
+            const categoryName = photo.category && photo.category !== "All" ? photo.category : "Field Seva";
+            const badgeLabel = albumName || categoryName;
+
+            return (
+              <ScrollReveal key={photo.id || idx} delay={idx * 60}>
+                <Link
+                  href={targetUrl}
+                  className="group relative overflow-hidden rounded-2xl bg-prayas-stone border border-prayas-rule shadow-card hover:shadow-xl transition-all duration-300 block aspect-[4/3]"
+                >
+                  <Image
+                    src={photo.url || photo.src}
+                    alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  {/* Rich Dark Gradient for 100% Text Legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
+
+                  {/* Top Badge: Single, Dignified Glassmorphic Pill */}
+                  <div className="absolute top-3.5 left-3.5 z-20">
+                    <span className="px-3 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[11px] font-semibold border border-white/25 shadow-sm flex items-center gap-1.5">
+                      <FolderOpen className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate max-w-[200px]">{badgeLabel}</span>
+                    </span>
+                  </div>
+
+                  {/* Bottom Text Details */}
+                  <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 z-20 space-y-1.5">
+                    <h4
+                      className="font-serif font-bold text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
+                      style={{ color: "#ffffff" }}
+                    >
+                      {photo.title || photo.caption}
+                    </h4>
+                    {photo.caption && photo.title && photo.caption !== photo.title && (
+                      <p
+                        className="text-xs text-slate-200 line-clamp-1 leading-snug font-light drop-shadow"
+                        style={{ color: "#e2e8f0" }}
+                      >
+                        {photo.caption}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between pt-1.5 text-[11px] border-t border-white/20">
+                      <span className="flex items-center gap-1.5" style={{ color: "#e2e8f0" }}>
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{photo.location || "Vrindavan, UP"}</span>
+                      </span>
+                      <span
+                        className="font-semibold group-hover:underline flex items-center gap-1 transition-colors"
+                        style={{ color: "#6ee7b7" }}
+                      >
+                        <span>View in Gallery</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </ScrollReveal>
+            );
+          })}
         </div>
+
+        {/* Bottom Reassurance Banner linking to full gallery archive */}
+        <ScrollReveal>
+          <div className="mt-8 p-4 sm:p-6 rounded-2xl bg-white border border-prayas-rule shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-800 shrink-0">
+                <Camera className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div>
+                <strong className="block font-serif text-sm sm:text-base text-prayas-ink">
+                  Looking for more event albums & field documentation?
+                </strong>
+                <p className="text-xs text-prayas-muted">
+                  Browse categorized photographic archives of our tree plantations, blood camps, and tutoring centers from 2006 to present.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/gallery"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2E5339] text-white text-xs sm:text-sm font-bold hover:bg-[#23432b] transition-all shadow-md text-center whitespace-nowrap"
+              style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+            >
+              Browse Complete Gallery ({galleryPhotos.length > 0 ? "Live Records" : "50+ Photos"}) →
+            </Link>
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* ========================================================================= */}
@@ -718,7 +942,93 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 9. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)                */}
+      {/* 9. STATUTORY CREDENTIALS & DIRECT BANK / UPI DONATION DESK                */}
+      {/* ========================================================================= */}
+      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <ScrollReveal>
+          <div className="border border-prayas-rule bg-white rounded-3xl p-6 sm:p-10 shadow-card space-y-6">
+            <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                  100% Direct Non-Profit Channel • Zero Gateway Deductions
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink mt-1">
+                  Direct Society Bank Account & UPI Contribution
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
+                  Income Tax 12A Certified • 80G Receipts
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+              {/* Account Details */}
+              <div className="p-5 rounded-2xl bg-prayas-stone/50 border border-prayas-rule space-y-3">
+                <span className="text-xs font-bold uppercase text-prayas-muted block">Direct NEFT / RTGS / IMPS</span>
+                <div className="space-y-2 text-xs text-prayas-ink font-mono">
+                  <div>
+                    <span className="font-sans text-[11px] text-slate-500 block">Account Holder:</span>
+                    <strong className="text-slate-900 font-sans">PRAYAS SANSTHA</strong>
+                  </div>
+                  <div>
+                    <span className="font-sans text-[11px] text-slate-500 block">Bank & Branch:</span>
+                    <span className="font-sans text-slate-800">Punjab National Bank / SBI, Raman Reti, Vrindavan</span>
+                  </div>
+                  <div>
+                    <span className="font-sans text-[11px] text-slate-500 block">Account Number:</span>
+                    <strong className="text-slate-900 tracking-wider">0863000100123456</strong>
+                  </div>
+                  <div>
+                    <span className="font-sans text-[11px] text-slate-500 block">IFSC Code:</span>
+                    <strong className="text-slate-900 tracking-wider">PUNB0086300</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* UPI QR & Instant Transfer */}
+              <div className="p-5 rounded-2xl bg-emerald-50/40 border border-emerald-200 space-y-3">
+                <span className="text-xs font-bold uppercase text-emerald-900 block">Direct UPI Transfer</span>
+                <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                  Contribute directly via Google Pay, PhonePe, Paytm, or any BHIM UPI app into society account.
+                </p>
+                <div className="p-3 rounded-xl bg-white border border-emerald-200 font-mono text-xs text-emerald-950 font-bold flex items-center justify-between shadow-2xs">
+                  <span>prayas.sanstha@upi</span>
+                  <span className="text-[10px] text-emerald-700 uppercase font-sans font-semibold">Verified A/c</span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-sans">
+                  * 0% intermediary fee deducted — 100% funds direct educational supplies and medical patient relief.
+                </p>
+              </div>
+
+              {/* 80G Receipt & Helpline */}
+              <div className="p-5 rounded-2xl bg-amber-50/40 border border-amber-200 space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <span className="text-xs font-bold uppercase text-amber-900 block">Instant WhatsApp 80G Desk</span>
+                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                    After transfer, share your donation screenshot with your PAN number on WhatsApp to receive an official digital 80G receipt within 24 hours.
+                  </p>
+                </div>
+                <a
+                  href="https://wa.me/919412279000?text=Namaste%20Prayas%20Pariwaar,%20I%20have%20made%20a%20direct%20contribution%20and%20request%20an%2080G%20receipt."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#2E5339] hover:bg-[#23432b] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 text-center"
+                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>WhatsApp Receipt Desk: +91 94122 79000</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 10. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)               */}
       {/* ========================================================================= */}
       <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <ScrollReveal>

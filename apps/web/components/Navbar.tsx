@@ -28,6 +28,7 @@ import {
   FileText,
   MessageSquare,
   Lock,
+  Camera,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -536,6 +537,19 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Photo Gallery */}
+              <Link
+                href="/gallery"
+                className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                  isActive("/gallery")
+                    ? "bg-prayas-stone text-slate-900 font-bold"
+                    : "hover:bg-prayas-stone text-slate-700 hover:text-slate-900"
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Gallery</span>
+              </Link>
+
               {/* Media */}
               <Link
                 href="/media"
@@ -835,6 +849,18 @@ export default function Navbar() {
                 </div>
 
                 {/* Standalone Links */}
+                <Link
+                  href="/gallery"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-emerald-50/70 text-slate-700 text-xs font-bold transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-emerald-700" />
+                    <span>Field Seva Photo Gallery</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </Link>
+
                 <Link
                   href="/media"
                   onClick={() => setMobileMenuOpen(false)}

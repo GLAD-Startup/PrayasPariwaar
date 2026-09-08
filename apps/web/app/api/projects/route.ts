@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { ProjectSchema, formatZodError } from "@prayas/utils";
+import { syncImagesToAlbum } from "@/lib/gallery-sync";
 
 // GET /api/projects - List projects
 export async function GET(req: Request) {
@@ -18,18 +19,19 @@ export async function GET(req: Request) {
       where,
       include: {
         images: { orderBy: { order: "asc" } },
+        album: true,
         donations: {
           where: { status: "SUCCESS" },
           take: 5,
         },
-      },
+      } as any,
       orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({ success: true, data: projects });
   } catch (error: any) {
     console.error("[Projects GET Error]", error);
-    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch projects", details: error?.message }, { status: 500 });
   }
 }
 
@@ -61,9 +63,12 @@ export async function POST(req: Request) {
       coverImage,
       metaTitle,
       metaDescription,
+      albumId,
     } = validated.data;
 
-    const project = await prisma.project.create({
+    const selectedAlbumId = albumId || body.albumId || null;
+
+    const project: any = await prisma.project.create({
       data: {
         title,
         slug: slug.toLowerCase().trim().replace(/\s+/g, "-"),
@@ -75,6 +80,7 @@ export async function POST(req: Request) {
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
         status: body.status || "ACTIVE",
+        albumId: selectedAlbumId,
         createdById: authUser.userId,
         images: body.imageUrls && body.imageUrls.length > 0
           ? {
@@ -84,11 +90,26 @@ export async function POST(req: Request) {
               })),
             }
           : undefined,
-      },
+      } as any,
       include: {
         images: true,
-      },
+        album: true,
+      } as any,
     });
+
+    // Auto-sync images to linked album
+    if (selectedAlbumId) {
+      const allImages = [coverImage, ...(body.imageUrls || [])].filter(
+        (url): url is string => typeof url === "string" && url.trim().length > 0
+      );
+      if (allImages.length > 0) {
+        await syncImagesToAlbum({
+          albumId: selectedAlbumId,
+          title: project.title,
+          imageUrls: allImages,
+        });
+      }
+    }
 
     return NextResponse.json(
       { success: true, message: "Project created successfully", data: project },

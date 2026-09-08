@@ -1,6 +1,28 @@
 {
   "albums": [
     {
+      "id": "album-1788750982924-bgxo9",
+      "title": "FREE HOME",
+      "slug": "free-home",
+      "category": "Free Education",
+      "coverImage": "/prayas/uploads/1788750943226-images.jpeg",
+      "description": "",
+      "photoCount": 0,
+      "published": true,
+      "createdAt": "2026-09-07T03:16:22.924Z"
+    },
+    {
+      "id": "album-1788750943075-wno6o",
+      "title": "Education",
+      "slug": "education",
+      "category": "Free Education",
+      "coverImage": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
+      "description": "",
+      "photoCount": 0,
+      "published": true,
+      "createdAt": "2026-09-07T03:15:43.075Z"
+    },
+    {
       "id": "alb-education",
       "title": "Free Education & Evening Tutoring Centers",
       "slug": "free-education-centers",
@@ -32,6 +54,76 @@
     }
   ],
   "photos": [
+    {
+      "id": "photo-1788753823295-oxd9y",
+      "albumId": "cmtqo5fri0003ag5akayoq1pd",
+      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "url": "/prayas/uploads/1788753816527-screenshot-2026-08-31-141506-removebg-pr.png",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:03:43.296Z"
+    },
+    {
+      "id": "photo-1788753823269-l0oz9",
+      "albumId": "cmtqo5fri0003ag5akayoq1pd",
+      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:03:43.269Z"
+    },
+    {
+      "id": "photo-1788753823208-33ddj",
+      "albumId": "cmtqo5fri0003ag5akayoq1pd",
+      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
+      "url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:03:43.208Z"
+    },
+    {
+      "id": "photo-1788753739283-nx0y8",
+      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
+      "title": "Aadhar Career & Digital Vocational Counseling",
+      "caption": "Aadhar Career & Digital Vocational Counseling",
+      "url": "/prayas/uploads/1788753738379-bhagwat-logo.jpeg",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:02:19.283Z"
+    },
+    {
+      "id": "photo-1788753727756-t0ooq",
+      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
+      "title": "Aadhar Career & Digital Vocational Counseling",
+      "caption": "Aadhar Career & Digital Vocational Counseling",
+      "url": "/uploads/1788333527612-screenshot-2024-04-29-221513.png",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:02:07.756Z"
+    },
+    {
+      "id": "photo-1788753727697-8g9vo",
+      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
+      "title": "Aadhar Career & Digital Vocational Counseling",
+      "caption": "Aadhar Career & Digital Vocational Counseling",
+      "url": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T04:02:07.697Z"
+    },
+    {
+      "id": "photo-1788750965684-w9yfs",
+      "albumId": null,
+      "title": "ABCD",
+      "caption": "",
+      "url": "/prayas/uploads/1788750958006-bhagwat-logo.jpeg",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-07T03:16:05.684Z"
+    },
     {
       "id": "photo-1788338422213-x60iw",
       "albumId": null,

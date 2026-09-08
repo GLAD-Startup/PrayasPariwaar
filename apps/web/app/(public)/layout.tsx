@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope } from "lucide-react";
+import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope, Camera } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import MobileFooterNav from "@/components/MobileFooterNav";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -107,6 +107,12 @@ export default function PublicLayout({
                   <Link href="/media" className="hover:text-white transition-colors flex items-center gap-1.5">
                     <Newspaper className="w-3.5 h-3.5 text-blue-400" />
                     Media Centre & Press Clips
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/gallery" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                    Field Seva Photo Gallery
                   </Link>
                 </li>
                 <li>

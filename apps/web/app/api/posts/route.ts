@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { PostSchema, formatZodError } from "@prayas/utils";
+import { syncImagesToAlbum } from "@/lib/gallery-sync";
 
 // GET /api/posts - Public posts or filter
 export async function GET(req: Request) {
@@ -19,6 +20,7 @@ export async function GET(req: Request) {
         images: {
           orderBy: { order: "asc" },
         },
+        album: true,
       },
     });
 
@@ -61,7 +63,10 @@ export async function POST(req: Request) {
       metaDescription,
       published,
       imageUrls,
+      albumId,
     } = validated.data;
+
+    const selectedAlbumId = albumId || body.albumId || null;
 
     const post = await prisma.post.create({
       data: {
@@ -76,6 +81,7 @@ export async function POST(req: Request) {
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
         published: published ?? true,
+        albumId: selectedAlbumId,
         authorId: authUser.userId,
         images: imageUrls && imageUrls.length > 0
           ? {
@@ -88,8 +94,24 @@ export async function POST(req: Request) {
       },
       include: {
         images: true,
+        album: true,
       },
     });
+
+    // Auto-sync images to linked album
+    if (selectedAlbumId) {
+      const allImages = [coverImage, ...(imageUrls || [])].filter(
+        (url): url is string => typeof url === "string" && url.trim().length > 0
+      );
+      if (allImages.length > 0) {
+        await syncImagesToAlbum({
+          albumId: selectedAlbumId,
+          title: post.title,
+          imageUrls: allImages,
+          location: location || undefined,
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, data: post }, { status: 201 });
   } catch (error: any) {
