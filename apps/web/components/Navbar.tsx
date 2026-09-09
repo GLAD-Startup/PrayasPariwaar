@@ -44,15 +44,52 @@ export default function Navbar() {
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
 
   // Smooth scroll-driven visibility state
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/" && window.scrollY < 80) {
+      return false;
+    }
+    return true;
+  });
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    // Immediately configure navbar on homepage if user is at top of page
+    if (pathname === "/") {
+      document.documentElement.classList.add("is-home");
+      const p = parseFloat(document.documentElement.dataset.heroVideoProgress || "0");
+      if (window.scrollY < 120 && p < 0.18) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+      } else {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+      }
+    } else {
+      document.documentElement.classList.remove("is-home");
+      document.documentElement.classList.remove("hero-video-fullscreen");
+      setIsVisible(true);
+    }
+
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const isHome = pathname === "/";
+      const heroProgressRaw = document.documentElement.dataset.heroVideoProgress;
+      const heroProgress = heroProgressRaw ? parseFloat(heroProgressRaw) : 0;
+      const heroRunwayEnd = 800; // Must match hero runway
 
-      // Always display when at or near the top of the page
-      if (currentScrollY <= 40) {
+      // On homepage: in fullscreen intro mode (< 0.18 progress)
+      if (isHome && heroProgress < 0.18 && currentScrollY < 140 && !mobileMenuOpen) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      document.documentElement.classList.remove("hero-video-fullscreen");
+
+      // While hero is settling or fully settled on homepage (scrollY <= heroRunwayEnd + 80),
+      // ensure the header is VISIBLE. Do not hide on scroll-down!
+      if (isHome && currentScrollY <= heroRunwayEnd + 80) {
         setIsVisible(true);
         lastScrollY.current = currentScrollY;
         return;
@@ -69,7 +106,7 @@ export default function Navbar() {
       // Filter out micro-scroll jitters
       if (Math.abs(delta) < 8) return;
 
-      if (delta > 0 && currentScrollY > 80) {
+      if (delta > 0 && currentScrollY > 120) {
         // Scrolling down: gracefully slide header out of view
         setIsVisible(false);
         setWorkDropdownOpen(false);
@@ -83,9 +120,26 @@ export default function Navbar() {
       lastScrollY.current = currentScrollY;
     };
 
+    const handleHeroProgress = (e: any) => {
+      if (pathname !== "/") return;
+      const p = e?.detail?.progress ?? 0;
+      if (p >= 0.18) {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+      } else if (p < 0.15 && window.scrollY < 140 && !mobileMenuOpen) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+      }
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [mobileMenuOpen]);
+    window.addEventListener("hero-video-scroll", handleHeroProgress);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("hero-video-scroll", handleHeroProgress);
+    };
+  }, [mobileMenuOpen, pathname]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -117,8 +171,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-transform duration-500 ease-in-out will-change-transform ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
+      className={`sticky top-0 z-40 w-full transition-all duration-500 ease-in-out will-change-transform ${
+        isVisible
+          ? "translate-y-0 opacity-100 pointer-events-auto"
+          : "-translate-y-full opacity-0 pointer-events-none"
       }`}
     >
       {/* Top Ledger Strip: Flowing Marquee Ticker */}

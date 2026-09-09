@@ -88,6 +88,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${lora.variable} ${sourceSans.variable} scroll-smooth`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(window.location.pathname==='/'){document.documentElement.classList.add('is-home');if(window.scrollY<80){document.documentElement.classList.add('hero-video-fullscreen');}}}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-screen flex flex-col font-sans antialiased text-prayas-ink bg-prayas-paper selection:bg-prayas-neem selection:text-white">
         {children}
       </body>

@@ -19,7 +19,7 @@
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
   }
 
@@ -424,3 +424,52 @@ html, body {
     transform: translateY(0);
   }
 }
+
+/* Homepage Fixed Header: stays fixed at top of viewport so it never pushes the hero section down */
+html.is-home header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 40 !important;
+}
+
+html.hero-video-fullscreen header {
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-in-out !important;
+}
+
+html.hero-video-fullscreen nav[aria-label="Mobile bottom navigation"] {
+  transform: translateY(100%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-in-out !important;
+}
+
+/* Animated Scrolling Mouse Icon */
+@keyframes mouseWheelScroll {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.2;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.animate-mouse-wheel {
+  animation: mouseWheelScroll 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+ 

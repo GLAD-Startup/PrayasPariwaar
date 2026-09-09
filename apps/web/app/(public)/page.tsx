@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import FAQAccordion from "@/components/FAQAccordion";
 import JsonLd from "@/components/JsonLd";
+import HeroVideoScroll, { StudentDeskCard } from "@/components/HeroVideoScroll";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
 import { assetPath } from "@/lib/api";
 import {
@@ -225,167 +226,27 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={homeSchema} />
-      <div className="space-y-12 sm:space-y-16 lg:space-y-24 2xl:space-y-28 pb-20">
-        {/* ========================================================================= */}
-        {/* 1. HERO SECTION: Emotional, Heartfelt Seva on the Holy Soil of Vrindavan   */}
-        {/* ========================================================================= */}
-        <section className="relative overflow-hidden border-b border-prayas-rule pt-12 pb-14 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-28 2xl:pt-32 2xl:pb-36">
-        {/* Photographic Background of Classroom under Banyan by Yamuna */}
-        <Image
-          src={assetPath("/images/banyan-study-vrindavan.jpg")}
-          alt="Informal outdoor classroom in Vrindavan along Yamuna riverbank - Project Aashayein"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center z-0 scale-105"
+      {/* ========================================================================= */}
+      {/* 1. HERO SECTION: Full-Screen Video Intro & Scroll-Driven Hero Settlement  */}
+      {/* ========================================================================= */}
+      <HeroVideoScroll
+        aashayeinProject={aashayeinProject}
+        percentAashayein={percentAashayein}
+      />
+
+      {/* Mobile Student Desk Card: Displays seamlessly in mobile document flow right below hero without clipping */}
+      <div className="block lg:hidden px-4 pt-6 max-w-lg mx-auto">
+        <StudentDeskCard
+          aashayeinProject={aashayeinProject}
+          percentAashayein={percentAashayein}
         />
-        {/* Soft, rich dark vignette overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/60 z-0" />
-        <div className="absolute inset-0 bg-black/25 z-0" />
+      </div>
 
-        <div className="relative z-10 max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 2xl:gap-16 items-center">
-            {/* Left Narrative: The Emotional Calling */}
-            <div className="lg:col-span-7 2xl:col-span-7 space-y-4 sm:space-y-6 2xl:space-y-8 text-left text-white">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/85 border border-emerald-500/40 text-xs 2xl:text-sm font-bold text-emerald-300 backdrop-blur-md shadow-md max-w-full">
-                <GraduationCap className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="truncate">Project Aashayein • 18 Years of Nishkam Seva in Vrindavan</span>
-              </div>
-
-              <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl 2xl:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-md">
-                In the holy soil of Vrindavan, no child's dream should end for want of a notebook.
-              </h1>
-
-              <p className="text-sm sm:text-base md:text-lg 2xl:text-xl text-slate-100 leading-relaxed max-w-2xl 2xl:max-w-3xl font-light drop-shadow">
-                For 18 years, <strong>Prayas Pariwaar</strong> has stood beside daily-wage and rural families across Mathura district — ensuring free evening study centers, school supplies, emergency blood coordination, and home oxygen support with <strong>zero administrative deductions</strong>.
-              </p>
-
-              {/* Direct Emotional Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                <Link
-                  href="/donate?project=aashayein-education"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 sm:py-4 2xl:px-8 2xl:py-5 rounded-xl text-xs sm:text-sm 2xl:text-base font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 text-center"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  <Heart className="w-4 h-4 2xl:w-5 2xl:h-5 fill-white text-white shrink-0" />
-                  <span>Sponsor a Child's Education — ₹500/mo</span>
-                </Link>
-
-                <Link
-                  href="/projects/aashayein-education"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-4 2xl:px-7 2xl:py-5 rounded-xl text-xs sm:text-sm 2xl:text-base font-semibold bg-white/15 text-white border border-white/30 hover:bg-white/25 transition-all backdrop-blur-md text-center"
-                >
-                  <BookOpen className="w-4 h-4 2xl:w-5 2xl:h-5 text-emerald-300 shrink-0" />
-                  <span>Explore Project Aashayein</span>
-                </Link>
-              </div>
-
-              {/* Trust & Emergency Blood Link */}
-              <div className="pt-4 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs 2xl:text-sm text-slate-200 border-t border-white/20">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  Registered Non-Profit Society
-                </span>
-                <span className="flex items-center gap-1.5 font-medium">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  100% Direct to Beneficiaries
-                </span>
-                <Link
-                  href="/blood-donation"
-                  className="flex items-center gap-1 font-semibold text-rose-300 hover:text-rose-200 underline decoration-rose-400/50"
-                >
-                  <Droplet className="w-3.5 h-3.5 fill-current text-rose-400 shrink-0" />
-                  24/7 Emergency Blood Registry →
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Column: Live Student Sponsorship Desk */}
-            <div className="lg:col-span-5 2xl:col-span-5 w-full">
-              <div className="border border-prayas-rule bg-white rounded-2xl p-4 sm:p-6 2xl:p-8 shadow-2xl space-y-4 sm:space-y-5 text-prayas-ink">
-                <div className="flex items-center justify-between border-b border-prayas-rule pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-prayas-neem animate-pulse shrink-0" />
-                    <span className="text-[11px] sm:text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem">
-                      Project Aashayein Student Desk
-                    </span>
-                  </div>
-                  <span className="text-[10px] sm:text-[11px] 2xl:text-xs text-prayas-muted font-mono">Academic Year 2026</span>
-                </div>
-
-                {/* Progress Snapshot */}
-                <div className="p-3 sm:p-4 2xl:p-5 rounded-xl bg-prayas-paper border border-prayas-rule space-y-2 sm:space-y-2.5 text-prayas-ink">
-                  <div className="flex flex-wrap justify-between items-baseline gap-1 sm:gap-2">
-                    <span className="text-xs 2xl:text-sm font-bold text-prayas-ink">Children in 6 Evening Centers</span>
-                    <span className="font-serif text-lg sm:text-xl 2xl:text-2xl font-bold text-prayas-neem shrink-0">320 Students</span>
-                  </div>
-                  <div className="flex flex-wrap justify-between items-baseline text-xs 2xl:text-sm text-prayas-muted gap-1 sm:gap-2">
-                    <span>Awaiting Educational Sponsors:</span>
-                    <span className="font-bold text-amber-800 shrink-0">85 Children</span>
-                  </div>
-                  <div className="w-full h-2 bg-prayas-stone rounded-full overflow-hidden border border-prayas-rule">
-                    <div
-                      className="h-full bg-prayas-neem rounded-full"
-                      style={{ width: `${percentAashayein}%` }}
-                    />
-                  </div>
-                  <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
-                    ₹{aashayeinProject.raisedAmount?.toLocaleString("en-IN") || "2,15,000"} raised of ₹{aashayeinProject.goalAmount?.toLocaleString("en-IN") || "3,50,000"} target for notebooks, uniforms, and volunteer teacher honorariums.
-                  </p>
-                </div>
-
-                {/* Sponsorship Tiers */}
-                <div className="space-y-2 text-xs 2xl:text-sm">
-                  <span className="font-bold text-prayas-ink block">Transparent Sponsorship Options:</span>
-                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
-                    <Link
-                      href="/donate?project=aashayein-education&amount=500"
-                      className="p-2 sm:p-2.5 rounded-lg border border-prayas-rule bg-prayas-stone hover:bg-green-50 hover:border-prayas-neem transition-colors block text-prayas-ink"
-                    >
-                      <strong className="block font-serif text-[11px] xs:text-xs sm:text-sm 2xl:text-base font-bold text-prayas-ink">₹500/mo</strong>
-                      <span className="text-[9px] sm:text-[10px] 2xl:text-xs text-prayas-muted block leading-tight mt-0.5">Books & Tuition</span>
-                    </Link>
-                    <Link
-                      href="/donate?project=aashayein-education&amount=1100"
-                      className="p-2 sm:p-2.5 rounded-lg border border-prayas-neem bg-green-50/80 hover:bg-green-100 transition-colors block ring-1 ring-prayas-neem/40 text-prayas-ink"
-                    >
-                      <strong className="block font-serif text-[11px] xs:text-xs sm:text-sm 2xl:text-base font-bold text-prayas-neem">₹1,100/mo</strong>
-                      <span className="text-[9px] sm:text-[10px] 2xl:text-xs text-green-900 font-semibold block leading-tight mt-0.5">Full Care</span>
-                    </Link>
-                    <Link
-                      href="/donate?project=aashayein-education&amount=6000"
-                      className="p-2 sm:p-2.5 rounded-lg border border-prayas-rule bg-prayas-stone hover:bg-green-50 hover:border-prayas-neem transition-colors block text-prayas-ink"
-                    >
-                      <strong className="block font-serif text-[11px] xs:text-xs sm:text-sm 2xl:text-base font-bold text-prayas-ink">₹6,000/yr</strong>
-                      <span className="text-[9px] sm:text-[10px] 2xl:text-xs text-prayas-muted block leading-tight mt-0.5">Full Year</span>
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <Link
-                    href="/donate?project=aashayein-education"
-                    className="w-full py-3 sm:py-3.5 2xl:py-4 px-4 rounded-xl text-center font-bold text-xs sm:text-sm 2xl:text-base bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md flex items-center justify-center gap-2"
-                    style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                  >
-                    <Heart className="w-4 h-4 fill-white text-white shrink-0" />
-                    <span className="font-bold text-white">Sponsor a Student Today →</span>
-                  </Link>
-                </div>
-
-                <div className="border-t border-prayas-rule pt-2 text-[10px] sm:text-[11px] 2xl:text-xs text-prayas-muted text-center">
-                  Donors receive quarterly student progress report cards and handwritten letters.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND                                */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <div className="space-y-12 sm:space-y-16 lg:space-y-24 2xl:space-y-28 pb-20 pt-8 sm:pt-12">
+        {/* ========================================================================= */}
+        {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND                                */}
+        {/* ========================================================================= */}
+        <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <ScrollReveal>
           <div className="border border-prayas-rule bg-white rounded-2xl shadow-card overflow-hidden">
             <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-prayas-rule text-center">
