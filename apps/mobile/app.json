@@ -29,12 +29,13 @@
       "package": "org.prayassanstha.mobile",
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES",
-        "POST_NOTIFICATIONS",
-        "NOTIFICATIONS"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -67,13 +68,13 @@
       "typedRoutes": true
     },
     "extra": {
-      "eas": {
-        "projectId": "c14d5e45-50f8-43f9-bd25-2a77cbd2aee5"
-      },
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "1a8fd611-0fb6-4041-a714-9f6784dca6dc"
       }
     },
-    "owner": "glad-studio"
+    "owner": "arjun23"
   }
 }
