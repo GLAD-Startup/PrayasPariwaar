@@ -53,11 +53,20 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    const isHeroSettled = () => {
+      if (typeof window === "undefined") return false;
+      return (
+        sessionStorage.getItem("prayas_hero_settled") === "1" ||
+        document.documentElement.dataset.heroVideoSettled === "true"
+      );
+    };
+
     // Immediately configure navbar on homepage if user is at top of page
     if (pathname === "/") {
       document.documentElement.classList.add("is-home");
-      const p = parseFloat(document.documentElement.dataset.heroVideoProgress || "0");
-      if (window.scrollY < 120 && p < 0.18) {
+      const settled = isHeroSettled();
+      const p = settled ? 1 : parseFloat(document.documentElement.dataset.heroVideoProgress || "0");
+      if (!settled && window.scrollY < 120 && p < 0.18) {
         setIsVisible(false);
         document.documentElement.classList.add("hero-video-fullscreen");
       } else {
@@ -73,12 +82,13 @@ export default function Navbar() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const isHome = pathname === "/";
+      const settled = isHeroSettled();
       const heroProgressRaw = document.documentElement.dataset.heroVideoProgress;
-      const heroProgress = heroProgressRaw ? parseFloat(heroProgressRaw) : 0;
+      const heroProgress = settled ? 1 : (heroProgressRaw ? parseFloat(heroProgressRaw) : 0);
       const heroRunwayEnd = 800; // Must match hero runway
 
       // On homepage: in fullscreen intro mode (< 0.18 progress)
-      if (isHome && heroProgress < 0.18 && currentScrollY < 140 && !mobileMenuOpen) {
+      if (!settled && isHome && heroProgress < 0.18 && currentScrollY < 140 && !mobileMenuOpen) {
         setIsVisible(false);
         document.documentElement.classList.add("hero-video-fullscreen");
         lastScrollY.current = currentScrollY;
@@ -122,6 +132,11 @@ export default function Navbar() {
 
     const handleHeroProgress = (e: any) => {
       if (pathname !== "/") return;
+      if (isHeroSettled()) {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+        return;
+      }
       const p = e?.detail?.progress ?? 0;
       if (p >= 0.18) {
         setIsVisible(true);

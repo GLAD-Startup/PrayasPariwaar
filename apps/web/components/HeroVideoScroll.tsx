@@ -9,7 +9,6 @@ import {
   BookOpen,
   GraduationCap,
   ShieldCheck,
-  ChevronDown,
 } from "lucide-react";
 
 interface HeroVideoScrollProps {
@@ -31,6 +30,25 @@ export default function HeroVideoScroll({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPinned, setIsPinned] = useState(true);
+  const [hasCompletedHero, setHasCompletedHero] = useState(false);
+  const hasCompletedHeroRef = useRef(false);
+
+  // Initialize flag from sessionStorage or current scroll position on client
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedSettled = sessionStorage.getItem("prayas_hero_settled") === "1";
+      if (storedSettled || window.scrollY >= 800) {
+        hasCompletedHeroRef.current = true;
+        setHasCompletedHero(true);
+        setProgress(1);
+        setIsPinned(window.scrollY < 800);
+        document.documentElement.dataset.heroVideoSettled = "true";
+        document.documentElement.dataset.heroVideoProgress = "1.000";
+        document.documentElement.classList.remove("hero-video-fullscreen");
+      }
+    }
+  }, []);
+
   const [logoPos, setLogoPos] = useState({
     left: "90.6%",
     top: "83.3%",
@@ -110,10 +128,13 @@ export default function HeroVideoScroll({
     };
   }, []);
 
-  // Initial fullscreen check on mount
+  // Initial fullscreen check on mount: only add fullscreen if hero has not completed
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.pathname === "/" && window.scrollY < 80) {
-      document.documentElement.classList.add("hero-video-fullscreen");
+      const storedSettled = sessionStorage.getItem("prayas_hero_settled") === "1";
+      if (!storedSettled && !hasCompletedHeroRef.current) {
+        document.documentElement.classList.add("hero-video-fullscreen");
+      }
     }
   }, []);
 
@@ -126,15 +147,37 @@ export default function HeroVideoScroll({
       const scrollY = window.scrollY;
       const runwayDistance = 800; // Generous distance for video settle, header appearance & reading time
 
-      const currentProgress = Math.min(Math.max(scrollY / runwayDistance, 0), 1);
-      setProgress(currentProgress);
-      setIsPinned(scrollY < runwayDistance);
+      // Once the user has scrolled through the hero section once, lock the flag
+      if (scrollY >= runwayDistance) {
+        if (!hasCompletedHeroRef.current) {
+          hasCompletedHeroRef.current = true;
+          setHasCompletedHero(true);
+          try {
+            sessionStorage.setItem("prayas_hero_settled", "1");
+          } catch (e) {}
+          document.documentElement.dataset.heroVideoSettled = "true";
+        }
+      }
 
-      // Manage html class for header visibility
-      if (currentProgress < 0.18 && scrollY < 140) {
-        document.documentElement.classList.add("hero-video-fullscreen");
-      } else {
+      let currentProgress: number;
+      if (hasCompletedHeroRef.current) {
+        // Flag active: reverse animation should NOT run upon scrolling to the top.
+        // Lock progress at 1.0 (settled hero state), header remains permanently visible
+        currentProgress = 1;
+        setProgress(1);
+        setIsPinned(scrollY < runwayDistance);
         document.documentElement.classList.remove("hero-video-fullscreen");
+      } else {
+        currentProgress = Math.min(Math.max(scrollY / runwayDistance, 0), 1);
+        setProgress(currentProgress);
+        setIsPinned(scrollY < runwayDistance);
+
+        // Manage html class for header visibility
+        if (currentProgress < 0.18 && scrollY < 140) {
+          document.documentElement.classList.add("hero-video-fullscreen");
+        } else {
+          document.documentElement.classList.remove("hero-video-fullscreen");
+        }
       }
 
       // Broadcast progress to Navbar
@@ -231,23 +274,10 @@ export default function HeroVideoScroll({
     };
   }, []);
 
-  // Smooth scroll down to settled hero section
-  const scrollToHero = useCallback(() => {
-    const targetScrollY = 800;
-    if ((window as any).lenis?.scrollTo) {
-      (window as any).lenis.scrollTo(targetScrollY, { duration: 1.2 });
-    } else {
-      window.scrollTo({ top: targetScrollY, behavior: "smooth" });
-    }
-  }, []);
-
   // =========================================================================
   // ANIMATION CALCULATIONS (800px runway)
   // =========================================================================
-  // 1. Fullscreen intro prompt fades out quickly (0px to 120px)
-  const promptOpacity = Math.max(1 - progress / 0.15, 0);
-
-  // 2. Video Dims as you scroll: from 0.15 to 0.60 (120px to 480px, stays gently dimmed 480px..800px)
+  // 1. Video Dims as you scroll: from 0.15 to 0.60 (120px to 480px, stays gently dimmed 480px..800px)
   // Subtle balanced dimming so the video remains alive, colorful, and clearly visible with strong text contrast
   const rawDimProgress = Math.min(Math.max((progress - 0.15) / 0.45, 0), 1);
   const dimOpacity = rawDimProgress * 0.85;
@@ -347,32 +377,6 @@ export default function HeroVideoScroll({
           style={{ opacity: dimOpacity }}
         />
 
-        {/* ===================================================================== */}
-        {/* Fullscreen Initial Prompt (Animated Mouse Wheel Icon)                 */}
-        {/* ===================================================================== */}
-        <div
-          className={`absolute inset-0 z-30 pointer-events-none flex flex-col justify-end p-6 sm:p-10 transition-opacity duration-1000 delay-500`}
-          style={{
-            opacity: isVideoLoaded ? promptOpacity : 0,
-            visibility: promptOpacity > 0.01 && isVideoLoaded ? "visible" : "hidden",
-          }}
-        >
-          <div className="w-full flex flex-col items-center justify-center pb-8 sm:pb-12">
-            <button
-              onClick={scrollToHero}
-              type="button"
-              className="pointer-events-auto flex flex-col items-center transition-all transform hover:scale-110 active:scale-95 group focus:outline-none"
-              aria-label="Scroll down to explore"
-              title="Scroll down to explore"
-            >
-              {/* Outer mouse frame */}
-              <div className="w-6 h-10 rounded-full border-2 border-white/80 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-2 shadow-xl group-hover:border-white transition-colors">
-                {/* Scrolling wheel pill */}
-                <div className="w-1 h-2.5 rounded-full bg-white animate-mouse-wheel shadow-sm" />
-              </div>
-            </button>
-          </div>
-        </div>
 
         {/* ===================================================================== */}
         {/* Settled Hero Content (Starts appearing on top of the dimmed video)    */}

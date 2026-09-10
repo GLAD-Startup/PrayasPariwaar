@@ -30,6 +30,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   description:
     "Registered grassroots non-profit society in Vrindavan, Mathura District, UP. Serving rural communities through free education, 24/7 volunteer emergency blood coordination, medical equipment lending bank, tree plantation, and healthcare camps.",
   keywords: [
@@ -91,7 +95,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(window.location.pathname==='/'){document.documentElement.classList.add('is-home');if(window.scrollY<80){document.documentElement.classList.add('hero-video-fullscreen');}}}catch(e){}`,
+            __html: `try{if(window.location.pathname==='/'){document.documentElement.classList.add('is-home');if(window.scrollY<80 && sessionStorage.getItem('prayas_hero_settled')!=='1'){document.documentElement.classList.add('hero-video-fullscreen');}}}catch(e){}`,
           }}
         />
       </head>
@@ -100,5 +104,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
-
+} 
