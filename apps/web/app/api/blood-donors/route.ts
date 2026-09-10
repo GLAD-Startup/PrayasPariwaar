@@ -110,11 +110,22 @@ export async function GET(req: Request) {
 
     const bloodGroupFilter = searchParams.get("bloodGroup");
     const cityFilter = searchParams.get("city");
+    const searchQuery = searchParams.get("q") || searchParams.get("search");
 
     const donors = await prisma.user.findMany({
       where: {
         bloodGroup: bloodGroupFilter ? formatBloodGroup(bloodGroupFilter) : { not: null },
         ...(cityFilter ? { city: { contains: cityFilter, mode: "insensitive" } } : {}),
+        ...(searchQuery
+          ? {
+              OR: [
+                { name: { contains: searchQuery, mode: "insensitive" } },
+                { email: { contains: searchQuery, mode: "insensitive" } },
+                { phone: { contains: searchQuery, mode: "insensitive" } },
+                { city: { contains: searchQuery, mode: "insensitive" } },
+              ],
+            }
+          : {}),
       },
       select: {
         id: true,

@@ -25,6 +25,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Image as ImageIcon,
+  HeartHandshake,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -58,6 +59,14 @@ export default function AdminLayout({
           label: "Emergency Blood Queue",
           icon: Droplet,
           badge: "Live",
+          badgeColor: "bg-red-50 text-red-700 border-red-200",
+          color: "text-rose-600",
+        },
+        {
+          href: "/admin/blood-donors",
+          label: "Voluntary Blood Donors",
+          icon: HeartHandshake,
+          badge: "Registry",
           badgeColor: "bg-red-50 text-red-700 border-red-200",
           color: "text-rose-600",
         },
