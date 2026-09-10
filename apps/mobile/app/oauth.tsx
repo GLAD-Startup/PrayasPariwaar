@@ -1,20 +1,34 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { saveAuthSession } from "../lib/secureStore";
+import { saveAuthSession, getAuthUser } from "../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../lib/notifications";
+import { redeemGoogleAuthCode } from "../lib/googleAuth";
 
 export default function OAuthCallbackScreen() {
   const router = useRouter();
+  const [statusMessage, setStatusMessage] = useState("Completing Google sign-in...");
   const params = useLocalSearchParams<{
     accessToken?: string;
     refreshToken?: string;
     user?: string;
     error?: string;
+    code?: string;
+    state?: string;
   }>();
 
   useEffect(() => {
+    let isMounted = true;
+
     async function handleAuth() {
+      // If user is already authenticated, directly enter the app
+      const existingUser = await getAuthUser().catch(() => null);
+      if (existingUser?.id) {
+        if (isMounted) setStatusMessage("Sign-in successful! Entering app...");
+        router.replace("/(tabs)/home");
+        return;
+      }
+
       if (params.error) {
         router.replace({
           pathname: "/(auth)/login",
@@ -23,6 +37,7 @@ export default function OAuthCallbackScreen() {
         return;
       }
 
+      // Case 1: Direct tokens from backend redirect
       if (params.accessToken && params.refreshToken) {
         let user: any = null;
         if (params.user) {
@@ -43,6 +58,37 @@ export default function OAuthCallbackScreen() {
           registerForPushNotificationsAsync(user.id);
         }
 
+        if (isMounted) setStatusMessage("Sign-in successful! Entering app...");
+        router.replace("/(tabs)/home");
+        return;
+      }
+
+      // Case 2: Authorization code returned from Google / Expo Auth proxy
+      if (params.code) {
+        try {
+          if (isMounted) setStatusMessage("Verifying credentials with Prayas server...");
+          await redeemGoogleAuthCode(params.code, params.state);
+
+          if (isMounted) setStatusMessage("Sign-in successful! Entering app...");
+          router.replace("/(tabs)/home");
+          return;
+        } catch (err: any) {
+          const user = await getAuthUser().catch(() => null);
+          if (user?.id) {
+            router.replace("/(tabs)/home");
+            return;
+          }
+          console.error("[OAuth Screen] Authentication failed:", err);
+          router.replace({
+            pathname: "/(auth)/login",
+            params: { oauthError: err?.message || "Failed to complete Google sign-in." },
+          });
+          return;
+        }
+      }
+
+      // Neither tokens nor code found: check if already logged in
+      if (existingUser?.id) {
         router.replace("/(tabs)/home");
       } else {
         router.replace("/(auth)/login");
@@ -50,12 +96,16 @@ export default function OAuthCallbackScreen() {
     }
 
     handleAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, [params]);
 
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#166534" />
-      <Text style={styles.text}>Completing Google sign-in...</Text>
+      <Text style={styles.text}>{statusMessage}</Text>
     </View>
   );
 }

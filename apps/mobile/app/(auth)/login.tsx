@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { saveAuthSession } from "../../lib/secureStore";
+import { saveAuthSession, getAuthUser } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
 import { useGoogleAuth } from "../../lib/googleAuth";
 import { Colors, Shadows } from "../../lib/theme";
@@ -33,7 +33,17 @@ export default function MobileLoginScreen() {
 
   useEffect(() => {
     if (searchParams.oauthError) {
-      setError(decodeURIComponent(searchParams.oauthError));
+      getAuthUser()
+        .then((user) => {
+          if (user?.id) {
+            router.replace("/(tabs)/home");
+          } else {
+            setError(decodeURIComponent(searchParams.oauthError!));
+          }
+        })
+        .catch(() => {
+          setError(decodeURIComponent(searchParams.oauthError!));
+        });
     }
   }, [searchParams.oauthError]);
 
@@ -42,7 +52,17 @@ export default function MobileLoginScreen() {
       router.replace("/(tabs)/home");
     },
     onError: (errMsg) => {
-      setError(errMsg);
+      getAuthUser()
+        .then((user) => {
+          if (user?.id) {
+            router.replace("/(tabs)/home");
+          } else {
+            setError(errMsg);
+          }
+        })
+        .catch(() => {
+          setError(errMsg);
+        });
     },
   });
 
