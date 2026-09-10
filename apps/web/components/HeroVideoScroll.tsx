@@ -382,7 +382,7 @@ export default function HeroVideoScroll({
         {/* Settled Hero Content (Starts appearing on top of the dimmed video)    */}
         {/* ===================================================================== */}
         <div
-          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[90px] xs:pt-[94px] sm:pt-24 lg:pt-24 2xl:pt-28 pb-20 sm:pb-24 lg:pb-12"
+          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[120px] xs:pt-[124px] sm:pt-36 lg:pt-24 2xl:pt-28 pb-20 sm:pb-24 lg:pb-12"
           style={{
             pointerEvents: isContentInteractive ? "auto" : "none",
           }}
