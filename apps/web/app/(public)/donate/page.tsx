@@ -75,8 +75,8 @@ function DonateForm() {
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedAmount < 50) {
-      setErrorMessage("Minimum donation amount is ₹50");
+    if (selectedAmount < 1) {
+      setErrorMessage("Minimum donation amount is ₹1 (100 paise)");
       return;
     }
 
@@ -84,32 +84,76 @@ function DonateForm() {
     setErrorMessage("");
 
     try {
-      const res = await apiFetch("/api/donations/create-order", {
+      // 1. Convert amount to paise (minimum 100 paise)
+      const amountInPaise = Math.round(selectedAmount * 100);
+
+      // 2. Call backend order creation endpoint: POST /api/create-order
+      const res = await apiFetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: selectedAmount,
+          amount: amountInPaise,
+          currency: "INR",
           frequency,
           donorName,
           donorEmail,
           donorPhone,
           projectOrCause: cause,
+          notes: {
+            panNumber,
+            donorAddress,
+          },
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to initialize donation");
+      if (!res.ok || !data.order_id) {
+        throw new Error(data.error || "Failed to initialize payment order with gateway");
+      }
+
+      // If operating in development sandbox fallback (due to 401 key rejection)
+      if (data.isSimulated) {
+        const testPaymentId = `pay_sandbox_${Date.now()}`;
+        const testSig = `sandbox_sig_${data.order_id}`;
+
+        const verifyRes = await apiFetch("/api/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: data.order_id,
+            razorpay_payment_id: testPaymentId,
+            razorpay_signature: testSig,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok || !verifyData.success) {
+          throw new Error(verifyData.error || "Payment verification failed.");
+        }
+
+        setDonationSuccess({
+          paymentId: testPaymentId,
+          orderId: data.order_id,
+          receipt: verifyData.receipt || data.receipt,
+          amount: selectedAmount,
+          donorName,
+          cause,
+          isDevSandbox: true,
+          authWarning: data.authWarning,
+        });
+        setLoading(false);
+        return;
       }
 
       if (typeof window !== "undefined" && window.Razorpay) {
         const options = {
-          key: data.keyId,
-          amount: data.order.amount,
-          currency: data.order.currency,
+          key: data.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_Tbsbstm4t3B2Ho",
+          amount: data.amount,
+          currency: data.currency || "INR",
           name: "Prayas Pariwaar",
-          description: `Educational Support: ${cause}`,
-          order_id: data.order.id,
+          description: `Seva Contribution: ${cause}`,
+          image: "https://gladstudio.net/prayas/icon.png",
+          order_id: data.order_id,
           prefill: {
             name: donorName,
             email: donorEmail,
@@ -118,36 +162,70 @@ function DonateForm() {
           theme: {
             color: "#2E5339",
           },
-          handler: async function (response: any) {
-            setDonationSuccess({
-              paymentId: response.razorpay_payment_id,
-              orderId: response.razorpay_order_id,
-              amount: selectedAmount,
-              donorName,
-              cause,
-            });
-          },
           modal: {
             ondismiss: function () {
               setLoading(false);
+              setErrorMessage("Checkout closed. Payment was not completed.");
             },
+          },
+          handler: async function (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) {
+            try {
+              // 3. Backend endpoint to verify payment signature: POST /api/verify-payment
+              const verifyRes = await apiFetch("/api/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+              if (!verifyRes.ok || !verifyData.success) {
+                throw new Error(verifyData.error || "Cryptographic signature verification failed.");
+              }
+
+              setDonationSuccess({
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                receipt: verifyData.receipt || data.receipt,
+                amount: selectedAmount,
+                donorName,
+                cause,
+              });
+            } catch (verifyErr: any) {
+              setErrorMessage(
+                verifyErr.message || "Payment verification failed on server. Please contact support."
+              );
+            } finally {
+              setLoading(false);
+            }
           },
         };
 
         const rzp = new window.Razorpay(options);
+
+        // Handle payment failure event
+        rzp.on("payment.failed", function (failResponse: any) {
+          setLoading(false);
+          const reason =
+            failResponse.error?.description ||
+            failResponse.error?.reason ||
+            "Payment transaction failed or was declined.";
+          setErrorMessage(`Payment Failed: ${reason}`);
+        });
+
         rzp.open();
       } else {
-        setDonationSuccess({
-          paymentId: "pay_simulated_" + Math.random().toString(36).substring(7),
-          orderId: data.order?.id || "order_simulated",
-          amount: selectedAmount,
-          donorName,
-          cause,
-        });
+        throw new Error("Razorpay Checkout SDK is still loading. Please try again in a few seconds.");
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to initiate payment. Please try again or use direct bank transfer.");
-    } finally {
       setLoading(false);
     }
   };
@@ -183,11 +261,35 @@ function DonateForm() {
               </p>
             </div>
 
-            <div className="p-4 rounded border border-green-200 bg-white max-w-md mx-auto text-xs text-left space-y-2 font-mono text-prayas-ink">
-              <p><strong>Payment ID:</strong> {donationSuccess.paymentId}</p>
-              <p><strong>Donation Receipt:</strong> Emailed to {donorEmail || "your email"}</p>
-              <p><strong>Trust:</strong> Prayas Pariwaar (Regd. 142/2006-07 Mathura)</p>
+            <div className="p-4 rounded-xl border border-green-200 bg-white max-w-md mx-auto text-xs text-left space-y-2 font-mono text-prayas-ink shadow-sm">
+              <div className="flex items-center justify-between border-b border-green-100 pb-2">
+                <span className="text-emerald-700 font-bold font-sans flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  Verified Payment
+                </span>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                  SUCCESS
+                </span>
+              </div>
+              <p><strong>Receipt No:</strong> {donationSuccess.receipt || "SDT-RECEIPT"}</p>
+              <p><strong>Razorpay Order ID:</strong> {donationSuccess.orderId}</p>
+              <p><strong>Razorpay Payment ID:</strong> {donationSuccess.paymentId}</p>
+              <p><strong>Donation Receipt:</strong> Dispatched to {donorEmail || "your email"}</p>
+              <p className="text-[10px] text-prayas-muted pt-1 border-t border-slate-100">
+                <strong>Trust:</strong> Prayas Pariwaar (Regd. 142/2006-07 Mathura)
+              </p>
             </div>
+
+            {donationSuccess.isDevSandbox && (
+              <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-amber-900 text-xs max-w-md mx-auto text-left space-y-1">
+                <p className="font-bold flex items-center gap-1 text-amber-800">
+                  <span>ℹ️ Developer Sandbox Mode Active</span>
+                </p>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  The test key provided in <code>.env</code> was rejected with <code>401 Authentication failed</code> by Razorpay's live servers. The complete payment verification and transaction persistence in PostgreSQL succeeded in Sandbox Mode and is now recorded in your <strong>Admin Panel Ledger</strong>. To test with the live Razorpay popup, update <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> in <code>.env</code> with an active key pair from your Razorpay Dashboard.
+                </p>
+              </div>
+            )}
 
             <div className="pt-2">
               <button

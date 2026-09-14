@@ -73,10 +73,12 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       orderId: razorpayOrderId,
+      order_id: razorpayOrderId,
       receiptNumber,
       amount: Math.round(amount * 100),
       currency,
       keyId: process.env.RAZORPAY_KEY_ID || "rzp_test_mock_key",
+      key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_mock_key",
       donationId: donation.id,
     });
   } catch (error: any) {
