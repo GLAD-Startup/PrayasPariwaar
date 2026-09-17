@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { jwtVerify } from "jose/jwt/verify";
-import { JWTExpired } from "jose/errors";
+import { jwtVerify, errors } from "jose";
 
 // Match the JWT secret configuration used by the token issuer (apps/web/lib/auth.ts)
 const JWT_SECRET = process.env.JWT_SECRET || "prayas-default-access-secret-replace-in-prod";
@@ -40,7 +39,7 @@ export async function middleware(request: NextRequest) {
       loginUrl.pathname = "/admin/login";
 
       if (
-        err instanceof JWTExpired ||
+        err instanceof errors.JWTExpired ||
         (err as { code?: string })?.code === "ERR_JWT_EXPIRED"
       ) {
         loginUrl.searchParams.set("error", "session_expired");

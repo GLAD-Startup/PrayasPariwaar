@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   FolderPlus,
   Plus,
+  HeartHandshake,
 } from "lucide-react";
 
 import fs from "fs";
@@ -52,6 +53,7 @@ async function getGalleryOverview() {
 export default async function AdminDashboardPage() {
   const [
     pendingBloodCount,
+    totalDonorsCount,
     pendingEquipmentCount,
     pendingVolunteersCount,
     pendingInquiriesCount,
@@ -64,6 +66,7 @@ export default async function AdminDashboardPage() {
     galleryOverview,
   ] = await Promise.all([
     prisma.bloodRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.user.count({ where: { bloodGroup: { not: null } } }).catch(() => 0),
     prisma.equipmentRequest.count({ where: { status: "PENDING" } }).catch(() => 0),
     prisma.volunteer.count({ where: { status: "PENDING" } }).catch(() => 0),
     prisma.partnershipInquiry.count({ where: { status: "PENDING" } }).catch(() => 0),
@@ -104,6 +107,17 @@ export default async function AdminDashboardPage() {
       bgAccent: "bg-rose-50 border-rose-200",
       pill: pendingBloodCount > 0 ? `${pendingBloodCount} Pending` : "Clear",
       pillColor: pendingBloodCount > 0 ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-emerald-100 text-emerald-800 border-emerald-200",
+    },
+    {
+      title: "Voluntary Donors",
+      count: totalDonorsCount,
+      subtitle: `${totalDonorsCount} Registered in Registry`,
+      href: "/admin/blood-donors",
+      icon: HeartHandshake,
+      accent: "text-rose-600",
+      bgAccent: "bg-rose-50 border-rose-200",
+      pill: "Registry",
+      pillColor: "bg-rose-100 text-rose-800 border-rose-200",
     },
     {
       title: "Equipment Leases",
@@ -190,32 +204,32 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* 2. Top Metric KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <Link
               key={idx}
               href={kpi.href}
-              className="border border-prayas-rule bg-white hover:border-[#2E5339]/50 rounded-2xl p-5 shadow-card hover:shadow-lg transition-all duration-200 flex flex-col justify-between space-y-4 group"
+              className="border border-prayas-rule bg-white hover:border-[#2E5339]/50 rounded-2xl p-4 sm:p-4.5 2xl:p-5 shadow-card hover:shadow-lg transition-all duration-200 flex flex-col justify-between space-y-3 group"
             >
-              <div className="flex items-start justify-between">
-                <div className={`w-11 h-11 rounded-xl ${kpi.bgAccent} border flex items-center justify-center ${kpi.accent} group-hover:scale-105 transition-transform`}>
-                  <Icon className="w-5 h-5" />
+              <div className="flex items-start justify-between gap-1">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${kpi.bgAccent} border flex items-center justify-center ${kpi.accent} group-hover:scale-105 transition-transform shrink-0`}>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${kpi.pillColor}`}>
+                <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border uppercase tracking-wider truncate max-w-[100px] ${kpi.pillColor}`}>
                   {kpi.pill}
                 </span>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-prayas-muted block">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-prayas-muted block truncate">
                   {kpi.title}
                 </span>
-                <p className="font-serif text-2xl 2xl:text-3xl font-bold text-prayas-ink group-hover:text-[#2E5339] transition-colors">
+                <p className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink group-hover:text-[#2E5339] transition-colors">
                   {kpi.count}
                 </p>
-                <span className="text-[11px] text-prayas-muted block">
+                <span className="text-[11px] text-prayas-muted block truncate">
                   {kpi.subtitle}
                 </span>
               </div>

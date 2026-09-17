@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Droplet,
   CheckCircle,
@@ -17,6 +18,7 @@ import {
   ExternalLink,
   MessageCircle,
   Filter,
+  HeartHandshake,
 } from "lucide-react";
 import { BloodGroupValues, BloodGroupDisplayMap } from "@prayas/utils";
 import { apiFetch } from "@/lib/api";
@@ -104,29 +106,46 @@ export default function AdminBloodRequestsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header with Stats Ribbon */}
-      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-xs font-bold text-prayas-crimson">
-            <Droplet className="w-3.5 h-3.5 fill-current" />
-            <span>24/7 Voluntary Blood Donor Desk</span>
+      {/* 1. Header with Stats Ribbon & Navigation Tabs */}
+      <div className="border border-prayas-rule bg-white rounded-2xl p-6 shadow-card space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-xs font-bold text-prayas-crimson">
+              <Droplet className="w-3.5 h-3.5 fill-current" />
+              <span>24/7 Voluntary Blood Donor Desk</span>
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
+              Emergency Blood Requests Queue
+            </h1>
+            <p className="text-xs text-prayas-muted max-w-2xl">
+              Review incoming hospital blood requests, coordinate voluntary donors across Mathura, Vrindavan, and Agra, and manage dispatch statuses.
+            </p>
           </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
-            Emergency Blood Requests Queue
-          </h1>
-          <p className="text-xs text-prayas-muted max-w-2xl">
-            Review incoming hospital blood requests, coordinate voluntary donors across Mathura, Vrindavan, and Agra, and manage dispatch statuses.
-          </p>
+
+          <button
+            onClick={fetchRequests}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-prayas-stone hover:bg-prayas-paper text-prayas-ink font-semibold text-xs rounded-xl border border-prayas-rule shadow-sm transition-colors self-start md:self-auto disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-prayas-crimson" : ""}`} />
+            <span>Refresh Live Queue</span>
+          </button>
         </div>
 
-        <button
-          onClick={fetchRequests}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-prayas-stone hover:bg-prayas-paper text-prayas-ink font-semibold text-xs rounded-xl border border-prayas-rule shadow-sm transition-colors self-start md:self-auto disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-prayas-crimson" : ""}`} />
-          <span>Refresh Live Queue</span>
-        </button>
+        {/* Navigation Tabs between Blood Requests and Voluntary Donors */}
+        <div className="flex items-center gap-2 pt-2 border-t border-prayas-rule">
+          <div className="px-4 py-2 rounded-xl text-xs font-bold bg-prayas-crimson text-white shadow-sm flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Emergency Blood Requests (Patients)</span>
+          </div>
+          <Link
+            href="/admin/blood-donors"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-prayas-muted hover:text-prayas-ink hover:bg-prayas-stone transition-all flex items-center gap-2"
+          >
+            <HeartHandshake className="w-3.5 h-3.5 text-slate-500" />
+            <span>Voluntary Donors Registry</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. Top Stats Counter */}
