@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import ScrollReveal from "@/components/ScrollReveal";
 import FAQAccordion from "@/components/FAQAccordion";
 import JsonLd from "@/components/JsonLd";
-import HeroVideoScroll, { StudentDeskCard } from "@/components/HeroVideoScroll";
+import HeroVideoScroll from "@/components/HeroVideoScroll";
+import ProgramsCarousel from "@/components/ProgramsCarousel";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
 import { assetPath } from "@/lib/api";
 import {
@@ -68,7 +69,7 @@ export default async function HomePage() {
     where: { status: "ACTIVE" },
     include: { images: true },
     orderBy: { createdAt: "desc" },
-    take: 4,
+    take: 8,
   });
   const testimonials = await prisma.testimonial.findMany({
     where: { published: true },
@@ -155,6 +156,24 @@ export default async function HomePage() {
       location: "Mathura Rural",
       album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
     },
+    {
+      id: "fb-7",
+      url: assetPath("/images/hero-education-vrindavan.jpg"),
+      title: "Classroom Learning Circle",
+      caption: "Children engaging in evening foundation literacy and math classes",
+      category: "Free Education",
+      location: "Vrindavan Learning Center",
+      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
+    },
+    {
+      id: "fb-8",
+      url: assetPath("/images/child-hero-portrait.jpg"),
+      title: "Nurturing Young Aspirations",
+      caption: "Providing school stationery and uniform support to daily-wage family children",
+      category: "Free Education",
+      location: "Mathura Rural",
+      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
+    },
   ];
 
   // Filter out test screenshots/documents so only authentic field photography is displayed
@@ -167,11 +186,11 @@ export default async function HomePage() {
     return true;
   });
 
-  // Merge database photos with curated authentic fallbacks
+  // Merge database photos with curated authentic fallbacks (4 photos per row, 2 rows)
   const displayPhotos = [
     ...cleanedGalleryPhotos,
     ...fallbackGalleryPhotos.filter((fb) => !cleanedGalleryPhotos.some((gp: any) => gp.url === fb.url)),
-  ].slice(0, 6);
+  ].slice(0, 8);
 
   // Find Aashayein project specifically
   const aashayeinProject = activeProjects.find((p: any) => p.slug === "aashayein-education") || activeProjects[0] || {
@@ -233,14 +252,6 @@ export default async function HomePage() {
         aashayeinProject={aashayeinProject}
         percentAashayein={percentAashayein}
       />
-
-      {/* Mobile Student Desk Card: Displays seamlessly in mobile document flow right below hero without clipping */}
-      <div className="block lg:hidden px-4 pt-6 max-w-lg mx-auto">
-        <StudentDeskCard
-          aashayeinProject={aashayeinProject}
-          percentAashayein={percentAashayein}
-        />
-      </div>
 
       <div className="space-y-12 sm:space-y-16 lg:space-y-24 2xl:space-y-28 pb-20 pt-8 sm:pt-12">
         {/* ========================================================================= */}
@@ -430,149 +441,37 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 4. DYNAMIC ACTIVE PROGRAMS SHOWCASE (HORIZONTAL ALTERNATING LAYOUT)       */}
+      {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
-        <ScrollReveal>
-          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-            <div>
-              <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem">
-                Our Programs of Seva
-              </span>
-              <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink mt-1">
-                Active Programs Serving Vrindavan & Mathura District
-              </h2>
+      <section className="w-full overflow-hidden py-4 sm:py-6 bg-gradient-to-b from-transparent via-emerald-950/[0.02] to-transparent">
+        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+          <ScrollReveal>
+            <div className="border-b border-prayas-rule pb-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-2">
+                  <span className="w-2 h-2 bg-prayas-neem shrink-0" />
+                  Our Programs of Seva • Vrindavan Grassroots
+                </span>
+                <h2 className="font-serif text-2xl sm:text-3xl 2xl:text-4xl font-bold text-prayas-ink mt-1">
+                  Active Programs Serving Vrindavan & Mathura District
+                </h2>
+                <p className="text-xs sm:text-sm text-prayas-muted mt-1 max-w-2xl font-normal">
+                  Explore our core grassroots initiatives in education, native afforestation, emergency blood network, and free healthcare camps across Vrindavan.
+                </p>
+              </div>
+              <Link
+                href="/projects"
+                className="text-xs 2xl:text-sm font-bold text-prayas-neem hover:text-emerald-950 flex items-center gap-1.5 transition-colors self-start sm:self-auto shrink-0"
+              >
+                <span>View All Programs</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <Link
-              href="/projects"
-              className="text-xs 2xl:text-sm font-semibold text-prayas-neem hover:underline self-start sm:self-auto flex items-center gap-1"
-            >
-              <span>View All Programs</span>
-              <ArrowRight className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />
-            </Link>
-          </div>
-        </ScrollReveal>
+          </ScrollReveal>
+        </div>
 
-        {activeProjects.length === 0 ? (
-          <div className="p-12 text-center border border-prayas-rule rounded-3xl bg-white text-prayas-muted space-y-3">
-            <p className="font-serif text-lg font-bold text-prayas-ink">No active programs currently listed</p>
-            <p className="text-xs max-w-md mx-auto">
-              New community welfare programs created in the admin portal will appear here immediately.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-8 sm:space-y-12">
-            {activeProjects.slice(0, 4).map((project: any, idx: number) => {
-              // Alternating: idx 0: Image Left, Content Right
-              //              idx 1: Content Left, Image Right (isReversed = true)
-              //              idx 2: Image Left, Content Right
-              //              idx 3: Content Left, Image Right
-              const isReversed = idx % 2 === 1;
-              const percent = project.goalAmount > 0
-                ? Math.min(Math.round((project.raisedAmount / project.goalAmount) * 100), 100)
-                : 0;
-              const coverImg = assetPath(project.coverImage || (project.images && project.images[0]?.url) || "/images/youth-skills-vrindavan.jpg");
-
-              return (
-                <ScrollReveal key={project.id} delay={idx * 80}>
-                  <div
-                    className={`border border-prayas-rule bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-xl transition-all duration-300 flex flex-col ${
-                      isReversed ? "md:flex-row-reverse" : "md:flex-row"
-                    } items-stretch group`}
-                  >
-                    {/* Image Half */}
-                    <div className="w-full md:w-1/2 relative min-h-[260px] sm:min-h-[300px] md:min-h-[360px] lg:min-h-[380px] bg-prayas-stone overflow-hidden">
-                      <Image
-                        src={coverImg}
-                        alt={project.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50" />
-                      <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-emerald-950/80 backdrop-blur-md text-emerald-200 text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm z-10 border border-emerald-500/30">
-                        {project.category ? project.category.replace(/_/g, " ") : "COMMUNITY"} PILLAR
-                      </span>
-                    </div>
-
-                    {/* Content Half ("About it") */}
-                    <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-5">
-                      <div className="space-y-3 sm:space-y-4">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-prayas-neem shrink-0 animate-pulse" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-prayas-neem">
-                            Prayas Grassroots Program
-                          </span>
-                        </div>
-
-                        <h3 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-prayas-ink leading-tight group-hover:text-emerald-900 transition-colors">
-                          {project.title}
-                        </h3>
-
-                        <p className="text-xs sm:text-sm lg:text-base text-prayas-muted leading-relaxed line-clamp-3">
-                          {project.description}
-                        </p>
-
-                        {/* Impact / Funding Metric */}
-                        {project.goalAmount > 0 ? (
-                          <div className="p-3.5 sm:p-4 rounded-2xl bg-prayas-paper border border-prayas-rule space-y-2">
-                            <div className="flex justify-between items-baseline text-xs sm:text-sm font-semibold text-prayas-ink">
-                              <span>Community Seva Fund</span>
-                              <span className="font-bold text-prayas-neem font-mono">
-                                ₹{project.raisedAmount?.toLocaleString("en-IN") || 0} / ₹{project.goalAmount?.toLocaleString("en-IN") || 0} ({percent}%)
-                              </span>
-                            </div>
-                            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-emerald-700 rounded-full transition-all"
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-900 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
-                            ⭐ Active Nishkam Field Service Serving Mathura District
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action Links */}
-                      <div className="pt-4 border-t border-prayas-rule flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <Link
-                            href={`/projects/${project.slug}`}
-                            className="text-xs sm:text-sm font-bold text-prayas-neem hover:text-emerald-900 hover:underline flex items-center gap-1.5 transition-colors"
-                          >
-                            <span>Explore Project →</span>
-                          </Link>
-
-                          {project.album && (
-                            <Link
-                              href={`/gallery?albumId=${project.album.id}`}
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-200 transition-colors"
-                            >
-                              <Camera className="w-3 h-3 text-emerald-700" />
-                              <span>Album: {project.album.title}</span>
-                            </Link>
-                          )}
-                        </div>
-
-                        <Link
-                          href={`/donate?project=${project.slug}`}
-                          className="px-5 py-2.5 rounded-xl bg-[#2E5339] text-white text-xs sm:text-sm font-bold shadow-md hover:bg-[#23432b] transition-all flex items-center gap-2"
-                          style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                        >
-                          <Heart className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>Sponsor / Donate</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-        )}
+        {/* 3D Perspective Layered Coverflow with Dynamic Implying Story Columns */}
+        <ProgramsCarousel projects={activeProjects} />
       </section>
 
       {/* ========================================================================= */}
@@ -629,8 +528,8 @@ export default async function HomePage() {
           )}
         </ScrollReveal>
 
-        {/* Dynamic Photo Gallery Grid (Clean 3-Column Uniform Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {/* Dynamic Photo Gallery Grid (Clean 4-Column Uniform Cards) */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 md:gap-4">
           {displayPhotos.map((photo: any, idx: number) => {
             const targetUrl = photo.albumId ? `/gallery?albumId=${photo.albumId}` : "/gallery";
             const albumName = photo.album?.title;
@@ -638,16 +537,16 @@ export default async function HomePage() {
             const badgeLabel = albumName || categoryName;
 
             return (
-              <ScrollReveal key={photo.id || idx} delay={idx * 60}>
+              <ScrollReveal key={photo.id || idx} delay={idx * 50}>
                 <Link
                   href={targetUrl}
-                  className="group relative overflow-hidden rounded-2xl bg-prayas-stone border border-prayas-rule shadow-card hover:shadow-xl transition-all duration-300 block aspect-[4/3]"
+                  className="group relative overflow-hidden rounded-xl bg-prayas-stone border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
                 >
                   <Image
                     src={assetPath(photo.url || photo.src)}
                     alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
                     fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
@@ -655,40 +554,40 @@ export default async function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
 
                   {/* Top Badge: Single, Dignified Glassmorphic Pill */}
-                  <div className="absolute top-3.5 left-3.5 z-20">
-                    <span className="px-3 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[11px] font-semibold border border-white/25 shadow-sm flex items-center gap-1.5">
-                      <FolderOpen className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="truncate max-w-[200px]">{badgeLabel}</span>
+                  <div className="absolute top-2.5 left-2.5 z-20">
+                    <span className="px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold border border-white/25 shadow-sm flex items-center gap-1">
+                      <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                      <span className="truncate max-w-[140px]">{badgeLabel}</span>
                     </span>
                   </div>
 
                   {/* Bottom Text Details */}
-                  <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 z-20 space-y-1.5">
+                  <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 z-20 space-y-1">
                     <h4
-                      className="font-serif font-bold text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
+                      className="font-serif font-bold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
                       style={{ color: "#ffffff" }}
                     >
                       {photo.title || photo.caption}
                     </h4>
                     {photo.caption && photo.title && photo.caption !== photo.title && (
                       <p
-                        className="text-xs text-slate-200 line-clamp-1 leading-snug font-light drop-shadow"
+                        className="text-[10px] sm:text-[11px] text-slate-200 line-clamp-1 leading-tight font-light drop-shadow"
                         style={{ color: "#e2e8f0" }}
                       >
                         {photo.caption}
                       </p>
                     )}
-                    <div className="flex items-center justify-between pt-1.5 text-[11px] border-t border-white/20">
-                      <span className="flex items-center gap-1.5" style={{ color: "#e2e8f0" }}>
-                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span>{photo.location || "Vrindavan, UP"}</span>
+                    <div className="flex items-center justify-between pt-1 text-[10px] border-t border-white/20">
+                      <span className="flex items-center gap-1" style={{ color: "#e2e8f0" }}>
+                        <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <span className="truncate max-w-[100px]">{photo.location || "Vrindavan, UP"}</span>
                       </span>
                       <span
-                        className="font-semibold group-hover:underline flex items-center gap-1 transition-colors"
+                        className="font-semibold group-hover:underline flex items-center gap-0.5 transition-colors shrink-0"
                         style={{ color: "#6ee7b7" }}
                       >
-                        <span>View in Gallery</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <span>View</span>
+                        <ArrowRight className="w-2.5 h-2.5" />
                       </span>
                     </div>
                   </div>
@@ -868,93 +767,7 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 9. STATUTORY CREDENTIALS & DIRECT BANK / UPI DONATION DESK                */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
-        <ScrollReveal>
-          <div className="border border-prayas-rule bg-white rounded-3xl p-6 sm:p-10 shadow-card space-y-6">
-            <div className="border-b border-prayas-rule pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                  100% Direct Non-Profit Channel • Zero Gateway Deductions
-                </span>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-prayas-ink mt-1">
-                  Direct Society Bank Account & UPI Contribution
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
-                  Income Tax 12A Certified • 80G Receipts
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-              {/* Account Details */}
-              <div className="p-5 rounded-2xl bg-prayas-stone/50 border border-prayas-rule space-y-3">
-                <span className="text-xs font-bold uppercase text-prayas-muted block">Direct NEFT / RTGS / IMPS</span>
-                <div className="space-y-2 text-xs text-prayas-ink font-mono">
-                  <div>
-                    <span className="font-sans text-[11px] text-slate-500 block">Account Holder:</span>
-                    <strong className="text-slate-900 font-sans">PRAYAS SANSTHA</strong>
-                  </div>
-                  <div>
-                    <span className="font-sans text-[11px] text-slate-500 block">Bank & Branch:</span>
-                    <span className="font-sans text-slate-800">Punjab National Bank / SBI, Raman Reti, Vrindavan</span>
-                  </div>
-                  <div>
-                    <span className="font-sans text-[11px] text-slate-500 block">Account Number:</span>
-                    <strong className="text-slate-900 tracking-wider">0863000100123456</strong>
-                  </div>
-                  <div>
-                    <span className="font-sans text-[11px] text-slate-500 block">IFSC Code:</span>
-                    <strong className="text-slate-900 tracking-wider">PUNB0086300</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* UPI QR & Instant Transfer */}
-              <div className="p-5 rounded-2xl bg-emerald-50/40 border border-emerald-200 space-y-3">
-                <span className="text-xs font-bold uppercase text-emerald-900 block">Direct UPI Transfer</span>
-                <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                  Contribute directly via Google Pay, PhonePe, Paytm, or any BHIM UPI app into society account.
-                </p>
-                <div className="p-3 rounded-xl bg-white border border-emerald-200 font-mono text-xs text-emerald-950 font-bold flex items-center justify-between shadow-2xs">
-                  <span>prayas.sanstha@upi</span>
-                  <span className="text-[10px] text-emerald-700 uppercase font-sans font-semibold">Verified A/c</span>
-                </div>
-                <p className="text-[11px] text-slate-500 font-sans">
-                  * 0% intermediary fee deducted — 100% funds direct educational supplies and medical patient relief.
-                </p>
-              </div>
-
-              {/* 80G Receipt & Helpline */}
-              <div className="p-5 rounded-2xl bg-amber-50/40 border border-amber-200 space-y-3 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <span className="text-xs font-bold uppercase text-amber-900 block">Instant WhatsApp 80G Desk</span>
-                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                    After transfer, share your donation screenshot with your PAN number on WhatsApp to receive an official digital 80G receipt within 24 hours.
-                  </p>
-                </div>
-                <a
-                  href="https://wa.me/919412279000?text=Namaste%20Prayas%20Pariwaar,%20I%20have%20made%20a%20direct%20contribution%20and%20request%20an%2080G%20receipt."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#2E5339] hover:bg-[#23432b] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 text-center"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>WhatsApp Receipt Desk: +91 94122 79000</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 10. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)               */}
+      {/* 9. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)                */}
       {/* ========================================================================= */}
       <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <ScrollReveal>

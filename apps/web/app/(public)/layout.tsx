@@ -121,7 +121,7 @@ export default function PublicLayout({
                 </li>
                 <li>
                   <Link href="/blog" className="hover:text-white transition-colors">
-                    Field Dispatches & Events
+                    Scheduled & Upcoming Events
                   </Link>
                 </li>
                 <li>

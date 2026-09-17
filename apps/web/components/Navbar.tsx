@@ -85,8 +85,6 @@ export default function Navbar() {
       const settled = isHeroSettled();
       const heroProgressRaw = document.documentElement.dataset.heroVideoProgress;
       const heroProgress = settled ? 1 : (heroProgressRaw ? parseFloat(heroProgressRaw) : 0);
-      const heroRunwayEnd = 800; // Must match hero runway
-
       // On homepage: in fullscreen intro mode (< 0.18 progress)
       if (!settled && isHome && heroProgress < 0.18 && currentScrollY < 140 && !mobileMenuOpen) {
         setIsVisible(false);
@@ -97,9 +95,8 @@ export default function Navbar() {
 
       document.documentElement.classList.remove("hero-video-fullscreen");
 
-      // While hero is settling or fully settled on homepage (scrollY <= heroRunwayEnd + 80),
-      // ensure the header is VISIBLE. Do not hide on scroll-down!
-      if (isHome && currentScrollY <= heroRunwayEnd + 80) {
+      // While near top on homepage (scrollY <= 160), ensure the header is VISIBLE.
+      if (isHome && currentScrollY <= 160) {
         setIsVisible(true);
         lastScrollY.current = currentScrollY;
         return;
@@ -556,7 +553,7 @@ export default function Navbar() {
                 Media
               </Link>
 
-              {/* Dispatches */}
+              {/* Events */}
               <Link
                 href="/blog"
                 className={`px-2 py-1.5 rounded-lg transition-colors ${
@@ -565,7 +562,7 @@ export default function Navbar() {
                     : "hover:bg-prayas-stone text-slate-700 hover:text-slate-900"
                 }`}
               >
-                Dispatches
+                Events
               </Link>
 
               {/* Contact */}
@@ -854,7 +851,7 @@ export default function Navbar() {
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-slate-500" />
-                    <span>Field Dispatches & Events</span>
+                    <span>Scheduled & Upcoming Events</span>
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>

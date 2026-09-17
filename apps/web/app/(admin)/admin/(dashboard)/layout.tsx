@@ -26,6 +26,7 @@ import {
   PanelLeftOpen,
   Image as ImageIcon,
   HeartHandshake,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -131,6 +132,14 @@ export default function AdminLayout({
     {
       title: "SYSTEM & COMMS",
       links: [
+        {
+          href: "/admin/users",
+          label: "Admin & Staff Users",
+          icon: ShieldCheck,
+          badge: "Security",
+          badgeColor: "bg-purple-50 text-purple-800 border-purple-200",
+          color: "text-purple-700",
+        },
         {
           href: "/admin/notifications",
           label: "Expo Push Broadcaster",

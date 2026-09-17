@@ -30,10 +30,10 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   });
 
   const types = [
-    { label: "All Dispatches", value: "ALL" },
-    { label: "Field Events", value: PostType.EVENT },
-    { label: "News & Bulletins", value: PostType.NEWS },
-    { label: "Milestones & Achievements", value: PostType.ACHIEVEMENT },
+    { label: "All Scheduled Events", value: "ALL" },
+    { label: "Upcoming Seva Drives", value: PostType.EVENT },
+    { label: "Community Bulletins", value: PostType.NEWS },
+    { label: "Seva Milestones", value: PostType.ACHIEVEMENT },
     { label: "Announcements", value: PostType.ANNOUNCEMENT },
   ];
 
@@ -42,13 +42,13 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       {/* Header */}
       <div className="border-b border-prayas-rule pb-6 sm:pb-8 space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-prayas-stone border border-prayas-rule text-xs 2xl:text-sm font-bold text-prayas-neem">
-          <span>Journal & Activity Log</span>
+          <span>Scheduled & Upcoming Events • Seva Calendar</span>
         </div>
         <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-bold text-prayas-ink leading-tight">
-          Field Dispatches & Grassroots Reports
+          Scheduled & Upcoming Events
         </h1>
         <p className="text-sm sm:text-base 2xl:text-lg text-prayas-muted max-w-3xl 2xl:max-w-4xl leading-relaxed">
-          First-hand reporting, event write-ups, and photo documentation from our volunteer activities across Vrindavan, Mathura, and surrounding rural communities.
+          Join our upcoming community seva drives, scheduled medical & eye camps, seasonal plantation drives, and volunteer gatherings across Vrindavan and Mathura district.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         <div className="lg:col-span-8 space-y-8">
           {posts.length === 0 ? (
             <div className="p-12 text-center text-prayas-muted bg-white border border-prayas-rule rounded-2xl">
-              No dispatches found in this category.
+              No scheduled events found in this category.
             </div>
           ) : (
             posts.map((post) => (
@@ -99,7 +99,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                       loading="lazy"
                     />
                     <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-bold uppercase backdrop-blur-sm">
-                      {post.type}
+                      {post.type === "EVENT" ? "SCHEDULED EVENT" : post.type}
                     </span>
                   </div>
                 )}
@@ -150,7 +150,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                       href={`/blog/${post.slug}`}
                       className="inline-flex items-center gap-1 text-xs font-bold text-[#B45309] hover:underline"
                     >
-                      <span>Read Full Report</span>
+                      <span>View Event Details</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>

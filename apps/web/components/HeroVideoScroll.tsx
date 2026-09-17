@@ -7,7 +7,6 @@ import {
   Heart,
   Droplet,
   BookOpen,
-  GraduationCap,
   ShieldCheck,
 } from "lucide-react";
 
@@ -29,19 +28,19 @@ export default function HeroVideoScroll({
 
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isPinned, setIsPinned] = useState(true);
   const [hasCompletedHero, setHasCompletedHero] = useState(false);
   const hasCompletedHeroRef = useRef(false);
+  const progressRef = useRef(0);
+  progressRef.current = progress;
 
   // Initialize flag from sessionStorage or current scroll position on client
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedSettled = sessionStorage.getItem("prayas_hero_settled") === "1";
-      if (storedSettled || window.scrollY >= 800) {
+      if (storedSettled || window.scrollY >= 80) {
         hasCompletedHeroRef.current = true;
         setHasCompletedHero(true);
         setProgress(1);
-        setIsPinned(window.scrollY < 800);
         document.documentElement.dataset.heroVideoSettled = "true";
         document.documentElement.dataset.heroVideoProgress = "1.000";
         document.documentElement.classList.remove("hero-video-fullscreen");
@@ -56,7 +55,48 @@ export default function HeroVideoScroll({
     visible: true,
   });
 
-  // Strictly enforce 0.85x playback speed and permanent silence (zero voice/sound)
+  // Smoothly settles the hero into the main page state
+  const settleHero = useCallback(() => {
+    if (hasCompletedHeroRef.current) return;
+    hasCompletedHeroRef.current = true;
+    setHasCompletedHero(true);
+
+    try {
+      sessionStorage.setItem("prayas_hero_settled", "1");
+    } catch (e) {}
+
+    document.documentElement.dataset.heroVideoSettled = "true";
+    document.documentElement.dataset.heroVideoProgress = "1.000";
+    document.documentElement.classList.remove("hero-video-fullscreen");
+
+    window.dispatchEvent(
+      new CustomEvent("hero-video-scroll", { detail: { progress: 1 } })
+    );
+
+    // Smoothly animate progress from current value to 1.0
+    const startProgress = progressRef.current;
+    const duration = 750; // 750ms silky-smooth cubic ease-out
+    const startTime = performance.now();
+
+    const animateTransition = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const currentVal = startProgress + (1 - startProgress) * ease;
+      setProgress(currentVal);
+
+      if (t < 1) {
+        requestAnimationFrame(animateTransition);
+      } else {
+        setProgress(1);
+      }
+    };
+
+    requestAnimationFrame(animateTransition);
+  }, []);
+
+  // Strictly enforce 0.85x playback speed and permanent silence (zero voice/sound),
+  // and trigger auto-settlement after 3-5 seconds of video playing (not full video)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -72,6 +112,7 @@ export default function HeroVideoScroll({
     enforceSettings();
 
     let fadeTimer: NodeJS.Timeout;
+    let autoSettleTimer: NodeJS.Timeout | null = null;
     let triggered = false;
 
     const triggerSlowFade = () => {
@@ -92,6 +133,26 @@ export default function HeroVideoScroll({
       }
     };
 
+    // Auto-transition to main page after 3-5 seconds of video playback
+    const handlePlaying = () => {
+      enforceSettings();
+      if (hasCompletedHeroRef.current) return;
+      if (!autoSettleTimer) {
+        // ~3.8 seconds from actual playback start ensures visitor enjoys 3-5s of intro video
+        autoSettleTimer = setTimeout(() => {
+          settleHero();
+        }, 3800);
+      }
+    };
+
+    const handleTimeUpdate = () => {
+      if (hasCompletedHeroRef.current) return;
+      // 3.5s video currentTime at 0.85x speed equals ~4.1 real-world seconds
+      if (video.currentTime >= 3.5) {
+        settleHero();
+      }
+    };
+
     if (video.readyState >= 2) {
       triggerSlowFade();
     } else {
@@ -100,6 +161,8 @@ export default function HeroVideoScroll({
       video.addEventListener("playing", triggerSlowFade, { once: true });
     }
 
+    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("play", enforceSettings);
     video.addEventListener("loadedmetadata", enforceSettings);
     video.addEventListener("ratechange", () => {
@@ -117,16 +180,27 @@ export default function HeroVideoScroll({
       enforceSettings();
     }, 1200);
 
+    // Safety fallback: if video stalls or network is slow, reveal main page within 5 seconds
+    const safetyTimer = setTimeout(() => {
+      if (!hasCompletedHeroRef.current) {
+        settleHero();
+      }
+    }, 5000);
+
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(fallbackTimer);
+      clearTimeout(safetyTimer);
+      if (autoSettleTimer) clearTimeout(autoSettleTimer);
       video.removeEventListener("loadeddata", triggerSlowFade);
       video.removeEventListener("canplaythrough", triggerSlowFade);
       video.removeEventListener("playing", triggerSlowFade);
+      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("play", enforceSettings);
       video.removeEventListener("loadedmetadata", enforceSettings);
     };
-  }, []);
+  }, [settleHero]);
 
   // Initial fullscreen check on mount: only add fullscreen if hero has not completed
   useEffect(() => {
@@ -138,76 +212,34 @@ export default function HeroVideoScroll({
     }
   }, []);
 
-  // Crisp, responsive scroll listener (runway: 800px for generous, comfortable settling)
+  // Listen for user scroll or interaction during intro to settle immediately without waiting
   useEffect(() => {
-    let ticking = false;
+    if (hasCompletedHero) return;
 
-    const updateScrollProgress = () => {
-      if (!containerRef.current) return;
-      const scrollY = window.scrollY;
-      const runwayDistance = 800; // Generous distance for video settle, header appearance & reading time
-
-      // Once the user has scrolled through the hero section once, lock the flag
-      if (scrollY >= runwayDistance) {
-        if (!hasCompletedHeroRef.current) {
-          hasCompletedHeroRef.current = true;
-          setHasCompletedHero(true);
-          try {
-            sessionStorage.setItem("prayas_hero_settled", "1");
-          } catch (e) {}
-          document.documentElement.dataset.heroVideoSettled = "true";
-        }
-      }
-
-      let currentProgress: number;
-      if (hasCompletedHeroRef.current) {
-        // Flag active: reverse animation should NOT run upon scrolling to the top.
-        // Lock progress at 1.0 (settled hero state), header remains permanently visible
-        currentProgress = 1;
-        setProgress(1);
-        setIsPinned(scrollY < runwayDistance);
-        document.documentElement.classList.remove("hero-video-fullscreen");
-      } else {
-        currentProgress = Math.min(Math.max(scrollY / runwayDistance, 0), 1);
-        setProgress(currentProgress);
-        setIsPinned(scrollY < runwayDistance);
-
-        // Manage html class for header visibility
-        if (currentProgress < 0.18 && scrollY < 140) {
-          document.documentElement.classList.add("hero-video-fullscreen");
-        } else {
-          document.documentElement.classList.remove("hero-video-fullscreen");
-        }
-      }
-
-      // Broadcast progress to Navbar
-      document.documentElement.dataset.heroVideoProgress = currentProgress.toFixed(3);
-      window.dispatchEvent(
-        new CustomEvent("hero-video-scroll", { detail: { progress: currentProgress } })
-      );
-
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateScrollProgress);
-        ticking = true;
+    const handleEarlyInteraction = () => {
+      if (!hasCompletedHeroRef.current) {
+        settleHero();
       }
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("scroll", handleEarlyInteraction, { passive: true });
+    window.addEventListener("wheel", handleEarlyInteraction, { passive: true });
+    window.addEventListener("touchmove", handleEarlyInteraction, { passive: true });
 
-    updateScrollProgress();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (["ArrowDown", "PageDown", "Space"].includes(e.code)) {
+        handleEarlyInteraction();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scroll", handleEarlyInteraction);
+      window.removeEventListener("wheel", handleEarlyInteraction);
+      window.removeEventListener("touchmove", handleEarlyInteraction);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
-
-  const isFullscreen = progress < 0.18;
+  }, [hasCompletedHero, settleHero]);
 
   // Calculate exact position of the watermark in the video accounting for object-cover
   useEffect(() => {
@@ -275,33 +307,25 @@ export default function HeroVideoScroll({
   }, []);
 
   // =========================================================================
-  // ANIMATION CALCULATIONS (800px runway)
+  // ANIMATION CALCULATIONS
   // =========================================================================
-  // 1. Video Dims as you scroll: from 0.15 to 0.60 (120px to 480px, stays gently dimmed 480px..800px)
-  // Subtle balanced dimming so the video remains alive, colorful, and clearly visible with strong text contrast
-  const rawDimProgress = Math.min(Math.max((progress - 0.15) / 0.45, 0), 1);
-  const dimOpacity = rawDimProgress * 0.85;
-
-  // 3. Content appears on top of the dimmed video: from 0.20 to 0.65 (160px to 520px)
-  // Fully loaded & settled from 0.65 to 1.0 (520px to 800px) before video scrolls up
-  const rawContentProgress = Math.min(Math.max((progress - 0.2) / 0.45, 0), 1);
-  const contentEase = 1 - Math.pow(1 - rawContentProgress, 3);
+  // Smooth cubic ease transition as progress goes from 0 to 1
+  const contentEase = 1 - Math.pow(1 - progress, 3);
+  const dimOpacity = contentEase * 0.6;
   const contentOpacity = contentEase;
-  const contentTranslateY = (1 - contentEase) * 28;
-
-  const isContentInteractive = contentOpacity > 0.8;
+  const contentTranslateY = (1 - contentEase) * 20;
+  const isContentInteractive = contentOpacity > 0.6;
 
   return (
     <div
       ref={containerRef}
       className="relative w-full"
-      style={{ height: "calc(100dvh + 800px)" }}
+      style={{ minHeight: "100dvh" }}
       id="hero-video-track"
     >
-      {/* Pinned Frame: Fixed at top: 0 while scrollY < 800px so video NEVER moves up during animation; then absolute at bottom: 0 so it scrolls away naturally only AFTER all content has appeared on top */}
       <div
         style={
-          isPinned
+          !hasCompletedHero
             ? {
                 position: "fixed",
                 top: 0,
@@ -312,12 +336,9 @@ export default function HeroVideoScroll({
                 zIndex: 10,
               }
             : {
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
+                position: "relative",
                 width: "100%",
-                height: "100dvh",
+                minHeight: "100dvh",
                 zIndex: 10,
               }
         }
@@ -369,101 +390,110 @@ export default function HeroVideoScroll({
         </div>
 
         {/* ===================================================================== */}
-        {/* Dimming Vignette Overlay: Balanced for crystal clarity & vibrancy     */}
-        {/* Subtle cinematic gradient: protects text contrast, leaves video clear */}
+        {/* Gentle Vignette: Leaves video vibrant & clear, protects text contrast */}
         {/* ===================================================================== */}
         <div
-          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-300 bg-gradient-to-t lg:bg-gradient-to-r from-black/80 via-black/50 to-black/20 lg:from-black/78 lg:via-black/45 lg:to-black/10"
+          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-700 ease-out bg-gradient-to-t from-black/85 via-black/35 to-transparent lg:bg-gradient-to-r lg:from-black/80 lg:via-black/25 lg:to-transparent"
           style={{ opacity: dimOpacity }}
         />
 
+        {/* ===================================================================== */}
+        {/* Skip Intro Button: Minimal glassmorphic action during 3-5s intro      */}
+        {/* ===================================================================== */}
+        {!hasCompletedHero && isVideoLoaded && (
+          <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto transition-opacity duration-500">
+            <button
+              onClick={settleHero}
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 hover:bg-black/80 text-white/90 hover:text-white border border-white/25 backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-xl hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer"
+              aria-label="Skip intro to main page"
+              title="Skip intro to main page"
+            >
+              <span>Skip Intro</span>
+              <span className="text-emerald-400 group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
+        )}
 
         {/* ===================================================================== */}
-        {/* Settled Hero Content (Starts appearing on top of the dimmed video)    */}
+        {/* Settled Hero Content: Focused, minimal narrative over video           */}
         {/* ===================================================================== */}
         <div
-          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[120px] xs:pt-[124px] sm:pt-36 lg:pt-24 2xl:pt-28 pb-20 sm:pb-24 lg:pb-12"
+          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[110px] xs:pt-[116px] sm:pt-32 lg:pt-28 2xl:pt-32 pb-16 sm:pb-20 lg:pb-16 flex flex-col justify-end lg:justify-center min-h-[100dvh]"
           style={{
             pointerEvents: isContentInteractive ? "auto" : "none",
           }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 2xl:gap-16 items-center">
-            {/* Left Narrative: The Emotional Calling */}
-            <div
-              className="lg:col-span-7 2xl:col-span-7 space-y-3 sm:space-y-4 2xl:space-y-6 text-left text-white will-change-transform"
-              style={{
-                opacity: contentOpacity,
-                transform: `translateY(${contentTranslateY}px)`,
-              }}
-            >
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-emerald-950/85 border border-emerald-500/40 text-[10px] sm:text-xs 2xl:text-sm font-bold text-emerald-300 backdrop-blur-md shadow-md max-w-full">
-                <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
-                <span className="truncate">Project Aashayein • 18 Years of Nishkam Seva in Vrindavan</span>
-              </div>
-
-              <h1 className="font-serif text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl 2xl:text-6xl font-bold tracking-tight text-white leading-[1.22] drop-shadow-md">
-                In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
-              </h1>
-
-              <p className="text-xs sm:text-sm md:text-base lg:text-lg 2xl:text-xl text-slate-100 leading-relaxed max-w-2xl 2xl:max-w-3xl font-light drop-shadow line-clamp-3 sm:line-clamp-none">
-                For 18 years, <strong>Prayas Pariwaar</strong> has stood beside daily-wage and rural families across Mathura district — ensuring free evening study centers, school supplies, emergency blood coordination, and home oxygen support with <strong>zero administrative deductions</strong>.
-              </p>
-
-              {/* Direct Emotional Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-1 sm:pt-2">
-                <Link
-                  href="/donate?project=aashayein-education"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3.5 2xl:px-8 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 text-center"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white shrink-0" />
-                  <span>Sponsor a Child&apos;s Education — ₹500/mo</span>
-                </Link>
-
-                <Link
-                  href="/projects/aashayein-education"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:px-5 sm:py-3.5 2xl:px-7 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-semibold bg-white/15 text-white border border-white/30 hover:bg-white/25 transition-all backdrop-blur-md text-center"
-                >
-                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 shrink-0" />
-                  <span>Explore Project Aashayein</span>
-                </Link>
-              </div>
-
-              {/* Trust & Emergency Blood Link */}
-              <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-y-1.5 gap-x-4 sm:gap-x-6 text-[11px] sm:text-xs 2xl:text-sm text-slate-200 border-t border-white/20">
-                <span className="flex items-center gap-1 font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Registered Non-Profit
-                </span>
-                <span className="flex items-center gap-1 font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  100% Direct to Beneficiaries
-                </span>
-                <Link
-                  href="/blood-donation"
-                  className="flex items-center gap-1 font-semibold text-rose-300 hover:text-rose-200 underline decoration-rose-400/50"
-                >
-                  <Droplet className="w-3 h-3 fill-current text-rose-400 shrink-0" />
-                  24/7 Emergency Blood Registry →
-                </Link>
-              </div>
+          <div
+            className="max-w-2xl 2xl:max-w-3xl space-y-4 sm:space-y-5 text-left text-white will-change-transform transition-all duration-700 ease-out"
+            style={{
+              opacity: contentOpacity,
+              transform: `translateY(${contentTranslateY}px)`,
+            }}
+          >
+            {/* Minimal Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/75 border border-emerald-500/30 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>18 Years of Nishkam Seva in Vrindavan</span>
             </div>
 
-            {/* Right Column: Live Student Sponsorship Desk (Desktop / Large Viewports) */}
-            <div
-              className="hidden lg:block lg:col-span-5 2xl:col-span-5 w-full will-change-transform"
-              style={{
-                opacity: contentOpacity,
-                transform: `translateY(${contentTranslateY}px)`,
-              }}
-            >
-              <StudentDeskCard
-                aashayeinProject={aashayeinProject}
-                percentAashayein={percentAashayein}
-              />
+            {/* Inspiring Headline */}
+            <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-xl">
+              In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
+            </h1>
+
+            {/* Concise 1-Sentence Tagline */}
+            <p className="text-sm sm:text-base md:text-lg text-slate-100/90 leading-relaxed font-light drop-shadow max-w-xl">
+              Empowering underprivileged rural children through free evening tutoring, school supplies, and direct community seva across Mathura district.
+            </p>
+
+            {/* Direct Primary Actions */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href="/donate?project=aashayein-education"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
+                style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+              >
+                <Heart className="w-4 h-4 fill-white text-white shrink-0" />
+                <span>Sponsor a Child — ₹500/mo</span>
+              </Link>
+
+              <Link
+                href="/projects/aashayein-education"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all backdrop-blur-md"
+              >
+                <BookOpen className="w-4 h-4 text-emerald-300 shrink-0" />
+                <span>Explore Projects</span>
+              </Link>
+            </div>
+
+            {/* Minimal Trust Strip */}
+            <div className="pt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium border-t border-white/15 max-w-xl">
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                100% Direct Allocation
+              </span>
+              <span className="text-white/30">•</span>
+              <span>Registered Non-Profit</span>
+              <span className="text-white/30">•</span>
+              <Link
+                href="/blood-donation"
+                className="text-rose-300 hover:text-rose-200 hover:underline flex items-center gap-1 font-semibold"
+              >
+                <Droplet className="w-3 h-3 fill-rose-400 text-rose-400 shrink-0" />
+                24/7 Blood Registry →
+              </Link>
             </div>
           </div>
         </div>
+
+        {/* Live Seva Video Indicator (Bottom-Right) */}
+        {hasCompletedHero && (
+          <div className="absolute bottom-6 right-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] text-white/80 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>On-Ground Seva Footage • Vrindavan</span>
+          </div>
+        )}
       </div>
     </div>
   );
