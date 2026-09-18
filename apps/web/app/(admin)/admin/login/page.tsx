@@ -13,13 +13,11 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
-  Sparkles,
   KeyRound,
   Droplet,
   Stethoscope,
   Users,
   HeartHandshake,
-  CheckCircle2,
   Activity,
   ArrowRight,
   Shield,
@@ -40,12 +38,11 @@ function LoginForm() {
       ? "Your session is invalid. Please sign in again."
       : null;
 
-  const [email, setEmail] = useState("admin@prayaspariwaar.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"admin" | "editor">("admin");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,18 +72,6 @@ function LoginForm() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillDemoCredentials = (role: "admin" | "editor") => {
-    setSelectedRole(role);
-    if (role === "admin") {
-      setEmail("admin@prayaspariwaar.com");
-      setPassword("admin123");
-    } else {
-      setEmail("editor@prayaspariwaar.com");
-      setPassword("editor123");
-    }
-    setError("");
   };
 
   return (
@@ -304,7 +289,7 @@ function LoginForm() {
                 <input
                   type="email"
                   required
-                  placeholder="admin@prayaspariwaar.com"
+                  placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:border-slate-400 text-slate-900 text-xs sm:text-sm font-medium placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-emerald-700 transition-all shadow-2xs"
@@ -313,12 +298,9 @@ function LoginForm() {
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 block">
-                  Secret Access Password <span className="text-red-500">*</span>
-                </label>
-                <span className="text-[11px] text-slate-400">Default: admin123</span>
-              </div>
+              <label className="text-xs font-bold text-slate-800 block">
+                Secret Access Password <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                 <input
@@ -362,63 +344,6 @@ function LoginForm() {
               </button>
             </div>
           </form>
-
-          {/* Quick Demo Access Presets */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-                <span>1-Click Demo Credentials</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
-                Auto-Fill Ready
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials("admin")}
-                className={`p-3 rounded-xl text-left transition-all border shadow-2xs flex flex-col justify-between ${
-                  selectedRole === "admin"
-                    ? "bg-white border-emerald-600 ring-2 ring-emerald-600/20"
-                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="text-xs font-bold text-slate-900">Admin Coordinator</span>
-                  {selectedRole === "admin" && (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono">admin123</div>
-                <span className="text-[9px] text-emerald-700 font-semibold mt-1">
-                  Full System Control
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials("editor")}
-                className={`p-3 rounded-xl text-left transition-all border shadow-2xs flex flex-col justify-between ${
-                  selectedRole === "editor"
-                    ? "bg-white border-emerald-600 ring-2 ring-emerald-600/20"
-                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="text-xs font-bold text-slate-900">Field Editor</span>
-                  {selectedRole === "editor" && (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono">editor123</div>
-                <span className="text-[9px] text-slate-600 font-semibold mt-1">
-                  Gallery & Content
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* BOTTOM SECURITY BADGE & FOOTER */}
