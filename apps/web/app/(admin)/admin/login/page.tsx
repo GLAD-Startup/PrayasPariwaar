@@ -13,13 +13,11 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
-  Sparkles,
   KeyRound,
   Droplet,
   Stethoscope,
   Users,
   HeartHandshake,
-  CheckCircle2,
   Activity,
   ArrowRight,
   Shield,
@@ -311,11 +309,9 @@ function LoginForm() {
 
             {/* Secret Password */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 block">
-                  Secret Access Password <span className="text-red-500">*</span>
-                </label>
-              </div>
+              <label className="text-xs font-bold text-slate-800 block">
+                Secret Access Password <span className="text-red-500">*</span>
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                 <input
@@ -382,7 +378,6 @@ function LoginForm() {
               </button>
             </div>
           </form>
-
           {/* Production Security Notice */}
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1 shadow-2xs">
             <div className="flex items-center gap-1.5 font-bold text-slate-800">

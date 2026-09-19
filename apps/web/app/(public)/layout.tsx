@@ -158,16 +158,38 @@ export default function PublicLayout({
           </div>
 
           {/* Bottom Copyright & Transparency Notice */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#82908A] gap-4">
-            <p>© {new Date().getFullYear()} Prayas Pariwaar. Registered Grassroots Non-Profit Society.</p>
+          <div className="pt-8 border-t border-[#2C3632] flex flex-col lg:flex-row items-center justify-between text-xs text-[#82908A] gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <p>© {new Date().getFullYear()} Prayas Pariwaar. Registered Grassroots Non-Profit Society.</p>
+              <span className="hidden sm:inline text-[#47554F]">•</span>
+              <div className="inline-flex items-center gap-2 text-xs">
+                <span>Developed by</span>
+                <a
+                  href="https://gladstudio.net"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center transition-all duration-200 hover:scale-105 opacity-90 hover:opacity-100 focus:outline-none"
+                  title="GLAD Studio (gladstudio.net)"
+                >
+                  <Image
+                    src={assetPath("/glad-studio-logo.png")}
+                    alt="GLAD Studio"
+                    width={130}
+                    height={36}
+                    className="h-6 sm:h-[26px] w-auto object-contain"
+                  />
+                </a>
+              </div>
+            </div>
+
             <div className="flex items-center gap-5">
-              <Link href="/about" className="hover:text-white">
+              <Link href="/about" className="hover:text-white transition-colors">
                 Transparency & Governance
               </Link>
-              <Link href="/contact" className="hover:text-white">
+              <Link href="/contact" className="hover:text-white transition-colors">
                 Contact Office
               </Link>
-              <Link href="/admin/login" rel="nofollow" className="hover:text-white">
+              <Link href="/admin/login" rel="nofollow" className="hover:text-white transition-colors">
                 Admin Login
               </Link>
             </div>

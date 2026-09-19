@@ -449,4 +449,80 @@ html.hero-video-fullscreen nav[aria-label="Mobile bottom navigation"] {
   visibility: hidden !important;
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-in-out !important;
 }
+
+/* =============================================
+   Premium Interactive Timeline Explainer Styles
+   ============================================= */
+@keyframes timelineContentEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes timelineImageFade {
+  0% {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes timelineModalPop {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-timeline-content {
+  animation: timelineContentEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-timeline-image {
+  animation: timelineImageFade 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-timeline-modal {
+  animation: timelineModalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tourProgressBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Custom slim, high-end scrollbar for timeline card */
+.timeline-card-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.timeline-card-scroll::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.7);
+  border-radius: 9999px;
+}
+.timeline-card-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.timeline-card-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2E5339;
+}
+
  

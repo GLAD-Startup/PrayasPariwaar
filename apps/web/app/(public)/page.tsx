@@ -6,6 +6,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import JsonLd from "@/components/JsonLd";
 import HeroVideoScroll from "@/components/HeroVideoScroll";
 import ProgramsCarousel from "@/components/ProgramsCarousel";
+import InteractiveTimeline from "@/components/InteractiveTimeline";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
 import { assetPath } from "@/lib/api";
 import {
@@ -439,6 +440,11 @@ export default async function HomePage() {
           </div>
         </ScrollReveal>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 3.5. 15-YEAR HISTORICAL JOURNEY & INTERACTIVE TIMELINE (2011 - 2026)      */}
+      {/* ========================================================================= */}
+      <InteractiveTimeline />
 
       {/* ========================================================================= */}
       {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}
