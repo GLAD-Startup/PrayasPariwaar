@@ -461,8 +461,8 @@ export default async function AdminDashboardPage() {
               Prayas Pariwaar Seva Karyalaya (Near Raman Reti, Parikrama Marg) operates daily from 8:00 AM to 8:00 PM for medical equipment dispatches and blood matching.
             </p>
             <div className="pt-2 border-t border-slate-700/80 text-[11px] text-slate-400 space-y-1 font-mono">
-              <p>Helpline: +91 94122 79000</p>
-              <p>Equipment Desk: +91 98971 23456</p>
+              <p>Helpline: +91 99270 81650</p>
+              <p>Equipment Desk: +91 99270 81650</p>
             </div>
           </div>
         </div>

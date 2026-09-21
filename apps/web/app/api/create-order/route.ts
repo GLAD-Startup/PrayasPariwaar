@@ -78,17 +78,26 @@ export async function POST(req: Request) {
     let isSimulated = false;
     let authWarning: string | null = null;
 
+    // Razorpay notes validation: max 15 key-value pairs, strings only, no undefined/null
+    const sanitizedNotes: Record<string, string> = {
+      donorName: String(isAnonymous ? "Anonymous Donor" : donorName).slice(0, 40),
+      donorEmail: String(donorEmail).slice(0, 40),
+      projectOrCause: String(projectOrCause).slice(0, 40),
+    };
+    if (notes && typeof notes === "object") {
+      for (const [k, v] of Object.entries(notes)) {
+        if (v !== undefined && v !== null && String(v).trim().length > 0) {
+          sanitizedNotes[k.slice(0, 30)] = String(v).slice(0, 100);
+        }
+      }
+    }
+
     try {
       order = await razorpay.orders.create({
         amount: amountInPaise,
         currency: currency.toUpperCase(),
         receipt: receiptNumber.slice(0, 40), // Razorpay receipt max 40 chars
-        notes: {
-          donorName: isAnonymous ? "Anonymous Donor" : donorName,
-          donorEmail,
-          projectOrCause: projectOrCause.slice(0, 30),
-          ...(notes || {}),
-        },
+        notes: sanitizedNotes,
       });
     } catch (razorpayErr: any) {
       console.warn("[Razorpay API Error creating order]:", razorpayErr?.message || razorpayErr);

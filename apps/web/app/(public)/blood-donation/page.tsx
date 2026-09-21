@@ -68,7 +68,7 @@ export default function BloodDonationPage() {
         setDonorError(data.error || "Failed to register donor. Please check phone number or call our helpline.");
       }
     } catch (err) {
-      setDonorError("Network error. Please call our 24/7 helpline at +91 94122 79000.");
+      setDonorError("Network error. Please call our 24/7 helpline at +91 99270 81650.");
     } finally {
       setSubmittingDonor(false);
     }
@@ -107,11 +107,11 @@ export default function BloodDonationPage() {
             </div>
           </div>
           <a
-            href="tel:+919412279000"
+            href="tel:+919927081650"
             className="w-full sm:w-auto px-5 py-2.5 text-center rounded-xl bg-[#B91C1C] text-white text-xs font-bold hover:bg-[#991B1B] transition-all shadow-sm"
             style={{ backgroundColor: "#B91C1C", color: "#ffffff" }}
           >
-            Call 24/7 Desk: +91 94122 79000
+            Call 24/7 Desk: +91 99270 81650
           </a>
         </div>
       </div>
@@ -333,11 +333,11 @@ export default function BloodDonationPage() {
               </div>
 
               <a
-                href="tel:+919412279000"
+                href="tel:+919927081650"
                 className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-white text-red-900 font-bold text-sm text-center hover:bg-red-50 transition-all shadow-lg shrink-0 flex items-center justify-center gap-2"
               >
                 <Phone className="w-4 h-4 fill-current text-red-700" />
-                <span>Call Emergency Desk: +91 94122 79000</span>
+                <span>Call Emergency Desk: +91 99270 81650</span>
               </a>
             </div>
           </div>

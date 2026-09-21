@@ -6,7 +6,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import JsonLd from "@/components/JsonLd";
 import HeroVideoScroll from "@/components/HeroVideoScroll";
 import ProgramsCarousel from "@/components/ProgramsCarousel";
-import InteractiveTimeline from "@/components/InteractiveTimeline";
+import HomeHorizontalTimeline from "@/components/HomeHorizontalTimeline";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
 import { assetPath } from "@/lib/api";
 import {
@@ -216,7 +216,7 @@ export default async function HomePage() {
     {
       question: "Can I visit the study centers or field operations in Vrindavan?",
       answer:
-        "Absolutely. We encourage donors and supporters to visit our evening study centers, plantation sites, and medical equipment bank in Vrindavan. Please contact our office at +91 94122 79000 to schedule a visit, and our field coordinator will personally guide you.",
+        "Absolutely. We encourage donors and supporters to visit our evening study centers, plantation sites, and medical equipment bank in Vrindavan. Please contact our office at +91 99270 81650 to schedule a visit, and our field coordinator will personally guide you.",
     },
     {
       question: "What is your administrative overhead?",
@@ -226,12 +226,12 @@ export default async function HomePage() {
     {
       question: "How can I borrow free medical equipment for a family member?",
       answer:
-        "Visit our Medical Equipment Bank page or call +91 94122 79000. We provide free temporary home loans of 10-litre oxygen concentrators, adjustable hospital beds, wheelchairs, BiPAP machines, and patient monitors. You only need to provide a valid ID and a refundable security deposit that is returned when the equipment is returned.",
+        "Visit our Medical Equipment Bank page or call +91 99270 81650. We provide free temporary home loans of 10-litre oxygen concentrators, adjustable hospital beds, wheelchairs, BiPAP machines, and patient monitors. You only need to provide a valid ID and a refundable security deposit that is returned when the equipment is returned.",
     },
     {
       question: "Can my company partner with Prayas under CSR?",
       answer:
-        "Yes. We welcome corporate CSR partnerships for education sponsorship, medical equipment sponsorship, tree plantation drives, and employee volunteering programs. Please fill out our Corporate Partnership Inquiry form or email us at info@prayaspariwaar.com with your company's CSR objectives.",
+        "Yes. We welcome corporate CSR partnerships for education sponsorship, medical equipment sponsorship, tree plantation drives, and employee volunteering programs. Please fill out our Corporate Partnership Inquiry form or email us at av.prayas@gmail.com with your company's CSR objectives.",
     },
   ];
 
@@ -442,9 +442,9 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 3.5. 15-YEAR HISTORICAL JOURNEY & INTERACTIVE TIMELINE (2011 - 2026)      */}
+      {/* 3.5. 15-YEAR HISTORICAL JOURNEY HORIZONTAL TIMELINE (2011 - 2026)         */}
       {/* ========================================================================= */}
-      <InteractiveTimeline />
+      <HomeHorizontalTimeline />
 
       {/* ========================================================================= */}
       {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}

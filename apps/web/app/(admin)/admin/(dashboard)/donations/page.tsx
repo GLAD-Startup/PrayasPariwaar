@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import {
   Heart,
@@ -206,7 +207,18 @@ export default async function AdminDonationsPage({
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Receipt:</span>
-                      <span className="font-bold text-slate-800">{d.receiptNumber || "N/A"}</span>
+                      {d.receiptNumber ? (
+                        <Link
+                          href={`/receipt/${d.receiptNumber}`}
+                          target="_blank"
+                          className="font-bold text-emerald-800 hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>{d.receiptNumber}</span>
+                          <span className="text-[10px]">↗</span>
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">N/A</span>
+                      )}
                     </div>
                   </div>
 
@@ -303,9 +315,21 @@ export default async function AdminDonationsPage({
                             </span>
                           </div>
                         )}
-                        <div className="text-[10px] font-mono text-slate-500">
-                          <span className="font-sans text-[10px] mr-1">Receipt:</span>
-                          {d.receiptNumber || "N/A"}
+                        <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                          <span className="font-sans text-[10px] text-slate-400">Receipt:</span>
+                          {d.receiptNumber ? (
+                            <Link
+                              href={`/receipt/${d.receiptNumber}`}
+                              target="_blank"
+                              className="font-bold text-emerald-800 hover:underline inline-flex items-center gap-0.5"
+                              title="View & Print Official 80G Receipt"
+                            >
+                              <span>{d.receiptNumber}</span>
+                              <span className="text-[9px]">↗</span>
+                            </Link>
+                          ) : (
+                            <span>N/A</span>
+                          )}
                         </div>
                       </td>
 

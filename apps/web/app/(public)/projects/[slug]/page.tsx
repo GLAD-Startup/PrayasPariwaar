@@ -482,8 +482,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                   Contact our field coordination office directly for any queries about this program or partnership.
                 </p>
                 <div className="text-xs text-slate-700 space-y-1.5 font-mono bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <p>📞 +91 94122 79000</p>
-                  <p>✉️ info@prayaspariwaar.com</p>
+                  <p>📞 +91 99270 81650</p>
+                  <p>✉️ av.prayas@gmail.com</p>
                 </div>
                 <Link
                   href="/contact"

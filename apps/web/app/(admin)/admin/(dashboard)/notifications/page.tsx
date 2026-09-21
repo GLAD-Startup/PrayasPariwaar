@@ -26,7 +26,7 @@ import {
 export default function AdminNotificationsPage() {
   const [form, setForm] = useState({
     title: "🚨 EMERGENCY: O-Positive Blood Needed at Ramakrishna Mission Hospital",
-    body: "2 units needed urgently for emergency patient in Vrindavan. Please contact +91 94122 79000 if you can donate.",
+    body: "2 units needed urgently for emergency patient in Vrindavan. Please contact +91 99270 81650 if you can donate.",
     type: "BLOOD_REQUEST",
     targetBloodGroup: "O_POSITIVE",
     targetCity: "Vrindavan",
@@ -63,7 +63,7 @@ export default function AdminNotificationsPage() {
       accent: "text-rose-700 bg-rose-50 border-rose-200",
       data: {
         title: "🚨 EMERGENCY: O+ Blood Needed at District Hospital Mathura",
-        body: "Urgent 2 units of O-Positive blood needed for emergency trauma case. Please call +91 94122 79000 immediately.",
+        body: "Urgent 2 units of O-Positive blood needed for emergency trauma case. Please call +91 99270 81650 immediately.",
         type: "BLOOD_REQUEST",
         targetBloodGroup: "O_POSITIVE",
         targetCity: "Mathura",
@@ -287,7 +287,7 @@ export default function AdminNotificationsPage() {
                 <textarea
                   rows={3}
                   required
-                  placeholder="e.g. 2 units needed urgently for post-operative patient. Please contact +91 94122 79000 if available."
+                  placeholder="e.g. 2 units needed urgently for post-operative patient. Please contact +91 99270 81650 if available."
                   value={form.body}
                   onChange={(e) => setForm({ ...form, body: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-prayas-rule bg-prayas-stone/40 text-prayas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-prayas-neem text-xs sm:text-sm leading-relaxed"

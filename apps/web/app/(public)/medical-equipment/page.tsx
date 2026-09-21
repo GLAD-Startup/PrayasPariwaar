@@ -105,11 +105,11 @@ export default function MedicalEquipmentPage() {
             </div>
           </div>
           <a
-            href="tel:+919897123456"
+            href="tel:+919927081650"
             className="w-full sm:w-auto px-4 py-2.5 text-center rounded-lg bg-[#2E5339] text-white text-xs font-bold hover:bg-[#23432b] transition-all shadow-sm"
             style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
           >
-            Call Desk: +91 98971 23456
+            Call Desk: +91 99270 81650
           </a>
         </div>
       </div>
@@ -453,10 +453,10 @@ export default function MedicalEquipmentPage() {
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
               <a
-                href="tel:+919897123456"
+                href="tel:+919927081650"
                 className="px-5 py-2.5 rounded-xl bg-amber-800 text-white font-bold text-xs text-center hover:bg-amber-900 transition-colors shadow-sm"
               >
-                Call Coordinator: +91 98971 23456
+                Call Coordinator: +91 99270 81650
               </a>
             </div>
           </div>

@@ -82,7 +82,7 @@ export default function ContactPage() {
                 <Phone className="w-5 h-5 text-prayas-crimson shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold">Emergency Blood Helpline (24/7)</strong>
-                  <p className="text-prayas-crimson font-bold font-mono text-sm">+91 94122 79000</p>
+                  <p className="text-prayas-crimson font-bold font-mono text-sm">+91 99270 81650</p>
                 </div>
               </div>
 
@@ -90,7 +90,7 @@ export default function ContactPage() {
                 <Phone className="w-5 h-5 text-prayas-neem shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold">Medical Equipment Coordinator</strong>
-                  <p className="text-prayas-ink font-bold font-mono text-sm">+91 98971 23456</p>
+                  <p className="text-prayas-ink font-bold font-mono text-sm">+91 99270 81650</p>
                 </div>
               </div>
 
@@ -98,7 +98,7 @@ export default function ContactPage() {
                 <Mail className="w-5 h-5 text-prayas-muted shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold">General Enquiries Email</strong>
-                  <p className="text-prayas-muted">contact@prayaspariwaar.com</p>
+                  <p className="text-prayas-muted">av.prayas@gmail.com</p>
                 </div>
               </div>
 

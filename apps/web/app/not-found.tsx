@@ -78,11 +78,11 @@ export default function NotFound() {
 
           <div className="flex items-center gap-3">
             <a
-              href="tel:+919412279000"
+              href="tel:+919927081650"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-colors"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span>24/7 Helpline: +91 94122 79000</span>
+              <span>24/7 Helpline: +91 99270 81650</span>
             </a>
 
             <Link
@@ -137,11 +137,11 @@ export default function NotFound() {
           </Link>
 
           <a
-            href="tel:+919412279000"
+            href="tel:+919927081650"
             className="px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm bg-white hover:bg-slate-50 text-slate-800 border border-[#E2DDD5] shadow-xs transition-colors flex items-center gap-2"
           >
             <Phone className="w-4 h-4 text-emerald-700" />
-            <span>Emergency Seva Desk (+91 94122 79000)</span>
+            <span>Emergency Seva Desk (+91 99270 81650)</span>
           </a>
         </div>
 

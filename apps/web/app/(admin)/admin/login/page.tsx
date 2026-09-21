@@ -419,8 +419,8 @@ function LoginForm() {
                     Central Karyalaya Help Desk:
                   </div>
                   <div className="space-y-1 font-mono text-[11px]">
-                    <div>Email: <strong className="text-slate-900">info@prayaspariwaar.com</strong></div>
-                    <div>Helpline: <strong className="text-slate-900">+91 94122 79000</strong></div>
+                    <div>Email: <strong className="text-slate-900">av.prayas@gmail.com</strong></div>
+                    <div>Helpline: <strong className="text-slate-900">+91 99270 81650</strong></div>
                     <div>Office: <span className="text-slate-700 font-sans">Prayas Karyalaya, Vrindavan, Mathura District, UP</span></div>
                   </div>
                 </div>

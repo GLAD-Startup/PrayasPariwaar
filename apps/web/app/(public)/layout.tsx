@@ -149,9 +149,9 @@ export default function PublicLayout({
                   Uttar Pradesh — 281121, India
                 </p>
                 <div className="pt-2 space-y-1 text-xs">
-                  <p><strong className="text-white">Blood Coordinator:</strong> +91 94122 79000</p>
-                  <p><strong className="text-white">Equipment Bank:</strong> +91 98971 23456</p>
-                  <p><strong className="text-white">Email:</strong> contact@prayaspariwaar.com</p>
+                  <p><strong className="text-white">Blood Coordinator:</strong> +91 99270 81650</p>
+                  <p><strong className="text-white">Equipment Bank:</strong> +91 99270 81650</p>
+                  <p><strong className="text-white">Email:</strong> av.prayas@gmail.com</p>
                 </div>
               </div>
             </div>

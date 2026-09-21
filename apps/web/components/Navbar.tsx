@@ -211,11 +211,11 @@ export default function Navbar() {
               <span className="text-slate-300 select-none">•</span>
 
               <a
-                href="tel:+919412279000"
+                href="tel:+919927081650"
                 className="inline-flex items-center gap-1 font-semibold text-rose-700 hover:underline"
               >
                 <Droplet className="w-3.5 h-3.5 fill-current shrink-0" />
-                <span>24/7 Emergency Blood Helpline: +91 94122 79000</span>
+                <span>24/7 Emergency Blood Helpline: +91 99270 81650</span>
               </a>
 
               <span className="text-slate-300 select-none">•</span>
@@ -260,11 +260,11 @@ export default function Navbar() {
               <span className="text-slate-300 select-none">•</span>
 
               <a
-                href="tel:+919412279000"
+                href="tel:+919927081650"
                 className="inline-flex items-center gap-1 font-semibold text-rose-700 hover:underline"
               >
                 <Droplet className="w-3.5 h-3.5 fill-current shrink-0" />
-                <span>24/7 Emergency Blood Helpline: +91 94122 79000</span>
+                <span>24/7 Emergency Blood Helpline: +91 99270 81650</span>
               </a>
 
               <span className="text-slate-300 select-none">•</span>
@@ -873,14 +873,14 @@ export default function Navbar() {
             {/* Bottom Sticky Action Bar in Mobile Drawer */}
             <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3 shrink-0">
               <a
-                href="tel:+919412279000"
+                href="tel:+919927081650"
                 className="w-full flex items-center justify-between p-3 rounded-xl bg-white border border-rose-200 text-xs shadow-2xs"
               >
                 <span className="flex items-center gap-2 font-bold text-rose-800">
                   <Droplet className="w-4 h-4 fill-current text-rose-600" />
                   <span>24/7 Emergency Blood Helpline</span>
                 </span>
-                <span className="font-mono font-bold text-rose-700">+91 94122 79000</span>
+                <span className="font-mono font-bold text-rose-700">+91 99270 81650</span>
               </a>
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">

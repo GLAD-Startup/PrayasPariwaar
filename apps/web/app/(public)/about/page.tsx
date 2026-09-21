@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Award, ShieldCheck, Heart, Users, MapPin, CheckCircle2 } from "lucide-react";
+import AboutVerticalTimeline from "@/components/AboutVerticalTimeline";
 
 export const revalidate = 60;
 
@@ -108,6 +109,9 @@ export default async function AboutPage() {
           </div>
         </div>
       </div>
+
+      {/* 3. 15-Year Chronicle & Vertical Left-Right Timeline */}
+      <AboutVerticalTimeline />
     </div>
   );
 }

@@ -34,7 +34,7 @@ export default function IndividualPartnerPage() {
         setError(data.error || "Failed to submit partnership proposal.");
       }
     } catch (err) {
-      setError("Network error. Please call our office directly at +91 94122 79000.");
+      setError("Network error. Please call our office directly at +91 99270 81650.");
     } finally {
       setSubmitting(false);
     }
