@@ -1,43 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
-  Image,
-  TextInput,
   StatusBar,
-  Alert,
-  Modal,
+  TextInput,
   ActivityIndicator,
+  Dimensions,
+  Platform,
+  Image,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
+import RazorpayCheckout from "react-native-razorpay";
 import { Colors, Shadows } from "../../lib/theme";
 import { api } from "../../lib/api";
 import { getAuthUser } from "../../lib/secureStore";
-import SidebarDrawer from "../../components/SidebarDrawer";
 import ActionDialog from "../../components/ActionDialog";
+import SidebarDrawer from "../../components/SidebarDrawer";
+
+// Razorpay live key for native checkout — must match the key used on the server to create orders
+const RAZORPAY_KEY_ID = process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_TeXwRoahNczEgu";
 
 const { width } = Dimensions.get("window");
 
-const CAUSES = [
+interface CauseItem {
+  id: string;
+  title: string;
+  icon: string;
+  iconType: "ionicons" | "material";
+  iconColor: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+const CAUSES: CauseItem[] = [
   {
-    id: "education",
-    title: "Free\nEducation",
-    icon: "book-outline",
+    id: "all",
+    title: "All Causes\n(General Seva)",
+    icon: "grid-outline",
     iconType: "ionicons",
-    iconColor: "#16A34A",
+    iconColor: "#166534",
     bgColor: "#F0FDF4",
     borderColor: "#BBF7D0",
   },
   {
-    id: "blood",
-    title: "Blood\nDonation",
-    icon: "water-outline",
+    id: "education",
+    title: "Free Child\nEducation",
+    icon: "school-outline",
+    iconType: "ionicons",
+    iconColor: "#166534",
+    bgColor: "#F0FDF4",
+    borderColor: "#BBF7D0",
+  },
+  {
+    id: "medical",
+    title: "Medical & 24/7\nBlood Seva",
+    icon: "medical-outline",
     iconType: "ionicons",
     iconColor: "#DC2626",
     bgColor: "#FEF2F2",
@@ -45,7 +69,7 @@ const CAUSES = [
   },
   {
     id: "plantation",
-    title: "Plantation",
+    title: "Tree\nPlantation",
     icon: "leaf-outline",
     iconType: "ionicons",
     iconColor: "#15803D",
@@ -73,18 +97,27 @@ const CAUSES = [
 ];
 
 const PRESET_AMOUNTS = [500, 1000, 2500, 5000];
+const DEFAULT_UPI_VPA = "paytmqrjb4vvmyug2@paytm";
+const MERCHANT_NAME = "Prayas Samiti";
 
 export default function DonateScreen() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"razorpay" | "qr">("razorpay");
   const [selectedCause, setSelectedCause] = useState<string>("all");
   const [frequency, setFrequency] = useState<"one-time" | "monthly" | "yearly">("one-time");
   const [selectedAmount, setSelectedAmount] = useState<number | "other">(1000);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-  const [myDonationsModalVisible, setMyDonationsModalVisible] = useState(false);
+
+  // Donor Contact Info
+  const [donorName, setDonorName] = useState<string>("");
+  const [donorPhone, setDonorPhone] = useState<string>("");
+  const [donorEmail, setDonorEmail] = useState<string>("");
+  const [utrNumber, setUtrNumber] = useState<string>("");
+
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
   const [donateDialogState, setDonateDialogState] = useState<{
     visible: boolean;
     title: string;
@@ -102,6 +135,18 @@ export default function DonateScreen() {
     icon: "information-circle-outline",
   });
 
+  // Pre-fill donor details from auth user
+  useEffect(() => {
+    (async () => {
+      const user = await getAuthUser();
+      if (user) {
+        if (user.name) setDonorName(user.name);
+        if (user.phone) setDonorPhone(String(user.phone).trim());
+        if (user.email) setDonorEmail(user.email);
+      }
+    })();
+  }, []);
+
   const getEffectiveAmount = () => {
     if (isOtherSelected) {
       return parseInt(customAmount, 10) || 0;
@@ -109,7 +154,18 @@ export default function DonateScreen() {
     return typeof selectedAmount === "number" ? selectedAmount : 1000;
   };
 
-  const handleInitiatePayment = (methodName: string) => {
+  const getCauseTitle = () => {
+    return selectedCause === "all"
+      ? "General Fund & Emergency Relief"
+      : CAUSES.find((c) => c.id === selectedCause)?.title.replace("\n", " ") || selectedCause;
+  };
+
+  /**
+   * 1. Official Razorpay Payment Gateway (Native SDK Checkout)
+   * Uses react-native-razorpay to open the official Razorpay Checkout natively inside the app.
+   * Flow: Create Order → Open Native Checkout → Verify Signature Server-Side → Show Receipt
+   */
+  const handleRazorpayPayment = async () => {
     const amount = getEffectiveAmount();
     if (amount <= 0) {
       setDonateDialogState({
@@ -122,69 +178,222 @@ export default function DonateScreen() {
       });
       return;
     }
-    setPaymentModalVisible(true);
-  };
 
-  const handleCompleteDonation = async () => {
-    setPaymentModalVisible(false);
+    if (!donorPhone || donorPhone.trim().length < 10) {
+      setDonateDialogState({
+        visible: true,
+        title: "Mobile Number Required",
+        description: "Please provide a valid 10-digit mobile number so your 80G tax receipt is linked to your account.",
+        type: "warning",
+        icon: "call-outline",
+        badge: "MOBILE SYNC",
+      });
+      return;
+    }
+
     setIsProcessing(true);
-    const amount = getEffectiveAmount();
 
     try {
-      const user = await getAuthUser();
-      const donorName = user?.name || "Mobile Seva Donor";
-      const donorEmail = user?.email || "donor@prayas.org";
-      const donorPhone = user?.phone || "+91 94122 79000";
+      const amountInPaise = Math.round(amount * 100);
+      const causeTitle = getCauseTitle();
 
-      const res = await api.post("/donations", {
-        amount,
+      // Step 1: Create Razorpay order on server
+      const orderRes = await api.post("/create-order", {
+        amount: amountInPaise,
+        currency: "INR",
+        donorName: donorName.trim() || "Mobile Seva Donor",
+        donorEmail: donorEmail.trim() || "donor@prayas.org",
+        donorPhone: donorPhone.trim(),
+        projectOrCause: causeTitle,
         frequency: frequency === "monthly" ? "MONTHLY" : frequency === "yearly" ? "YEARLY" : "ONE_TIME",
-        donorName,
-        donorEmail,
-        donorPhone,
-        projectOrCause: selectedCause === "all" ? "General Fund & Emergency Relief" : selectedCause,
-        paymentMethod: "UPI_MOBILE",
         isAnonymous: false,
       });
 
-      if (res.error) {
-        setDonateDialogState({
-          visible: true,
-          title: "Donation Not Recorded",
-          badge: "SEVA TRANSACTION",
-          description: res.error || "Unable to complete donation record. Please check your network connection and try again.",
-          type: "danger",
-          icon: "alert-circle-outline",
-          confirmText: "Close",
-        });
-        return;
+      if (orderRes.error || !orderRes.data?.order_id) {
+        throw new Error(orderRes.error || "Could not initialize Razorpay payment order.");
       }
 
-      const receiptNum = res.data?.receiptNumber || res.data?.data?.receiptNumber || `SDT-${new Date().getFullYear()}-REC`;
+      const { order_id, amount: orderAmount, currency } = orderRes.data;
+
+      // Step 2: Open native Razorpay Checkout inside the app
+      const checkoutOptions = {
+        key: RAZORPAY_KEY_ID,
+        amount: String(orderAmount),
+        currency: currency || "INR",
+        name: "Prayas Samiti",
+        description: `${causeTitle} • Seva Contribution`,
+        image: "https://gladstudio.net/prayas/images/logo.png",
+        order_id: order_id,
+        prefill: {
+          email: donorEmail.trim() || "donor@prayas.org",
+          contact: donorPhone.trim(),
+          name: donorName.trim() || "Supporter",
+        },
+        theme: { color: "#166534" },
+        retry: { enabled: true, max_count: 4 },
+        send_sms_hash: true,
+      };
+
+      console.log("[Razorpay] Opening native checkout for order:", order_id);
+
+      const paymentData = await RazorpayCheckout.open(checkoutOptions);
+      // paymentData = { razorpay_payment_id, razorpay_order_id, razorpay_signature }
+
+      console.log("[Razorpay] Payment success, verifying signature...", paymentData.razorpay_payment_id);
+
+      // Step 3: Verify payment signature on server
+      const verifyRes = await api.post("/verify-payment", {
+        razorpay_order_id: paymentData.razorpay_order_id,
+        razorpay_payment_id: paymentData.razorpay_payment_id,
+        razorpay_signature: paymentData.razorpay_signature,
+        donorPhone: donorPhone.trim(),
+        donorName: donorName.trim() || "Supporter",
+        donorEmail: donorEmail.trim() || "donor@prayas.org",
+        projectOrCause: causeTitle,
+        amount: orderAmount,
+        currency: currency || "INR",
+      });
+
+      if (verifyRes.error || !verifyRes.data?.success) {
+        throw new Error(verifyRes.error || "Payment verification failed on server.");
+      }
+
+      const receiptNo = verifyRes.data.receipt || verifyRes.data.donation?.receiptNumber || `SDT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
+      // Step 4: Show success with receipt
       setDonateDialogState({
         visible: true,
-        title: "Thank You for Your Seva!",
-        badge: `RECEIPT: ${receiptNum}`,
-        description: `Your generous contribution of ₹${amount.toLocaleString()} has been received with deep gratitude. Official donation receipt #${receiptNum} has been recorded for your records.`,
+        title: "Contribution Successful!",
+        description: `Thank you, ${donorName || "Supporter"}!\n\nYour contribution of ₹${amount.toLocaleString("en-IN")} has been verified via Razorpay.\n\nOfficial 80G tax receipt #${receiptNo} is linked to your mobile (${donorPhone.trim()}).`,
         type: "success",
         icon: "checkmark-circle-outline",
-        confirmText: "View Receipts",
-        onConfirm: () => setMyDonationsModalVisible(true),
+        badge: `RECEIPT: ${receiptNo}`,
+        confirmText: "View My Receipts",
+        onConfirm: () => {
+          setDonateDialogState((prev) => ({ ...prev, visible: false }));
+          router.push("/my-donations");
+        },
       });
-    } catch (e: any) {
-      console.error("[Donation Error]", e);
+    } catch (err: any) {
+      console.error("[Razorpay Error]:", err);
+
+      // Razorpay SDK returns error.code === 2 when user dismisses the checkout
+      if (err?.code === 2) {
+        setDonateDialogState({
+          visible: true,
+          title: "Payment Cancelled",
+          description: "You closed the payment screen. No amount has been charged. You can try again anytime.",
+          type: "warning",
+          icon: "close-circle-outline",
+          badge: "CANCELLED",
+        });
+      } else {
+        setDonateDialogState({
+          visible: true,
+          title: "Payment Error",
+          description: err?.description || err?.message || "Failed to complete Razorpay payment. Please check your internet connection and try again.",
+          type: "danger",
+          icon: "alert-circle-outline",
+          badge: "GATEWAY ERROR",
+        });
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * 2. Direct QR Payment Submission
+   * "for direct payment have one tab via QR where no verifucation needed just the form is enough!"
+   */
+  const handleDirectQrPaymentSubmit = async () => {
+    const amount = getEffectiveAmount();
+    if (amount <= 0) {
       setDonateDialogState({
         visible: true,
-        title: "Connection Error",
-        badge: "SEVA TRANSACTION",
-        description: e?.message || "Failed to reach donation server. Please check your internet connection and try again.",
+        title: "Amount Required",
+        description: "Please enter or select the contribution amount you transferred.",
+        type: "warning",
+        icon: "heart-outline",
+      });
+      return;
+    }
+
+    if (!donorName || donorName.trim().length < 2) {
+      setDonateDialogState({
+        visible: true,
+        title: "Donor Name Required",
+        description: "Please enter the donor full name for the official 80G tax receipt.",
+        type: "warning",
+        icon: "person-outline",
+      });
+      return;
+    }
+
+    if (!donorPhone || donorPhone.trim().length < 10) {
+      setDonateDialogState({
+        visible: true,
+        title: "Mobile Number Required",
+        description: "Please provide a valid 10-digit mobile number so your receipt is linked to your account.",
+        type: "warning",
+        icon: "call-outline",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const causeTitle = getCauseTitle();
+
+      // Directly create & record donation in DB (NO SIGNATURE VERIFICATION NEEDED)
+      const res = await api.post("/donations", {
+        amount,
+        currency: "INR",
+        frequency: frequency === "monthly" ? "MONTHLY" : frequency === "yearly" ? "YEARLY" : "ONE_TIME",
+        paymentMethod: "Paytm Standee QR",
+        donorName: donorName.trim(),
+        donorPhone: donorPhone.trim(),
+        donorEmail: donorEmail.trim() || "donor@prayas.org",
+        projectOrCause: causeTitle,
+        isAnonymous: false,
+      });
+
+      if (res.error || !res.data?.success) {
+        throw new Error(res.error || "Failed to record direct contribution.");
+      }
+
+      const receiptNumber = res.data.receiptNumber || res.data.data?.receiptNumber || `SDT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
+      setDonateDialogState({
+        visible: true,
+        title: "Contribution Recorded!",
+        description: `Thank you, ${donorName.trim()}!\n\nYour direct contribution of ₹${amount.toLocaleString("en-IN")} via Paytm QR has been recorded.\n\nOfficial 80G tax receipt #${receiptNumber} is now linked to your mobile (${donorPhone.trim()}).`,
+        type: "success",
+        icon: "checkmark-circle-outline",
+        badge: `RECEIPT: ${receiptNumber}`,
+        confirmText: "View My Receipts",
+        onConfirm: () => {
+          setDonateDialogState((prev) => ({ ...prev, visible: false }));
+          router.push("/my-donations");
+        },
+      });
+    } catch (err: any) {
+      console.error("[Direct QR Error]:", err);
+      setDonateDialogState({
+        visible: true,
+        title: "Submission Error",
+        description: err?.message || "Failed to record contribution. Please try again.",
         type: "danger",
-        icon: "cloud-offline-outline",
-        confirmText: "Close",
+        icon: "alert-circle-outline",
       });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleCopyUpiId = () => {
+    Alert.alert("Paytm UPI ID", `${DEFAULT_UPI_VPA}\n\nPayee: ${MERCHANT_NAME}`);
   };
 
   return (
@@ -203,12 +412,12 @@ export default function DonateScreen() {
 
         <View style={styles.headerTitleCol}>
           <Text style={styles.headerTitle}>Donate & Seva</Text>
-          <Text style={styles.headerSubtitle}>100% Direct Aid • Transparent Seva</Text>
+          <Text style={styles.headerSubtitle}>100% Direct Aid • 80G Tax Exempt</Text>
         </View>
 
         <TouchableOpacity
           style={styles.myDonationsBtn}
-          onPress={() => setMyDonationsModalVisible(true)}
+          onPress={() => router.push("/my-donations")}
           activeOpacity={0.8}
         >
           <MaterialCommunityIcons name="hand-heart-outline" size={18} color="#166534" />
@@ -221,191 +430,469 @@ export default function DonateScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-        {/* Hero Feature Banner Card */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroLeft}>
-            <Text style={styles.heroHeading}>
-              Small Contribution,{"\n"}
-              <Text style={styles.heroHeadingGreen}>Big Transformation</Text>
-            </Text>
-            <Text style={styles.heroDesc}>
-              Your donation helps us continue our mission in education, health, environment, animal
-              care and skill development.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.heroDonateBtn}
-              onPress={() => handleInitiatePayment("General")}
-              activeOpacity={0.88}
-            >
-              <Text style={styles.heroDonateBtnText}>Donate Now</Text>
-              <Ionicons name="heart" size={14} color="#FFFFFF" style={{ marginLeft: 6 }} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.heroRight}>
-            <Image
-              source={require("../../assets/onboarding/education.jpg")}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-          </View>
-        </View>
-
-        {/* Section: Choose a Cause */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Choose a Cause</Text>
+        {/* Top Payment Mode Segmented Tabs */}
+        <View style={styles.tabToggleRow}>
           <TouchableOpacity
-            onPress={() => {
-              setSelectedCause("all");
-              setDonateDialogState({
-                visible: true,
-                title: "All Causes Selected",
-                badge: "UNRESTRICTED SEVA",
-                description: "Your donation will be allocated across all 5 core seva pillars according to immediate ground need.",
-                type: "success",
-                icon: "sparkles-outline",
-              });
-            }}
+            style={[styles.tabToggleBtn, activeTab === "razorpay" && styles.tabToggleBtnActive]}
+            onPress={() => setActiveTab("razorpay")}
+            activeOpacity={0.85}
           >
-            <Text style={styles.viewAllText}>View All Causes ›</Text>
+            <Ionicons
+              name="shield-checkmark"
+              size={16}
+              color={activeTab === "razorpay" ? "#FFFFFF" : "#475569"}
+            />
+            <Text
+              style={[
+                styles.tabToggleText,
+                activeTab === "razorpay" && styles.tabToggleTextActive,
+              ]}
+            >
+              Razorpay Gateway
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabToggleBtn, activeTab === "qr" && styles.tabToggleBtnActive]}
+            onPress={() => setActiveTab("qr")}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons
+              name="qrcode-scan"
+              size={16}
+              color={activeTab === "qr" ? "#FFFFFF" : "#475569"}
+            />
+            <Text
+              style={[styles.tabToggleText, activeTab === "qr" && styles.tabToggleTextActive]}
+            >
+              Direct Standee QR
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.causesGrid}>
-          {CAUSES.map((cause) => {
-            const isSelected = selectedCause === cause.id;
-            return (
+        {/* ------------------ TAB 1: RAZORPAY GATEWAY ------------------ */}
+        {activeTab === "razorpay" && (
+          <View>
+            {/* Section: Choose a Cause */}
+            <Text style={styles.sectionHeading}>1. Choose Seva Cause</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.causesScroll}
+            >
+              {CAUSES.map((cause) => {
+                const isSelected = selectedCause === cause.id;
+                return (
+                  <TouchableOpacity
+                    key={cause.id}
+                    style={[
+                      styles.causeCard,
+                      isSelected && {
+                        borderColor: cause.iconColor,
+                        backgroundColor: cause.bgColor,
+                        borderWidth: 2,
+                      },
+                    ]}
+                    onPress={() => setSelectedCause(cause.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View
+                      style={[
+                        styles.causeIconCircle,
+                        { backgroundColor: cause.bgColor, borderColor: cause.borderColor },
+                      ]}
+                    >
+                      {cause.iconType === "ionicons" ? (
+                        <Ionicons name={cause.icon as any} size={22} color={cause.iconColor} />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name={cause.icon as any}
+                          size={22}
+                          color={cause.iconColor}
+                        />
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.causeCardTitle,
+                        isSelected && { color: cause.iconColor, fontWeight: "800" },
+                      ]}
+                    >
+                      {cause.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Section: Choose Donation Amount */}
+            <Text style={styles.sectionHeading}>2. Choose Contribution Amount</Text>
+
+            {/* Frequency Segmented Control */}
+            <View style={styles.frequencySegmentWrapper}>
               <TouchableOpacity
-                key={cause.id}
-                style={[
-                  styles.causeItem,
-                  isSelected && styles.causeItemSelected,
-                ]}
-                onPress={() => setSelectedCause(isSelected ? "all" : cause.id)}
-                activeOpacity={0.8}
+                style={[styles.freqSegment, frequency === "one-time" && styles.freqSegmentActive]}
+                onPress={() => setFrequency("one-time")}
               >
-                <View
-                  style={[
-                    styles.causeBox,
-                    { backgroundColor: cause.bgColor, borderColor: cause.borderColor },
-                    isSelected && { borderColor: "#166534", borderWidth: 2 },
-                  ]}
-                >
-                  {cause.iconType === "ionicons" ? (
-                    <Ionicons name={cause.icon as any} size={22} color={cause.iconColor} />
-                  ) : (
-                    <MaterialCommunityIcons name={cause.icon as any} size={22} color={cause.iconColor} />
-                  )}
-                </View>
                 <Text
                   style={[
-                    styles.causeLabel,
-                    isSelected && { color: "#166534", fontWeight: "800" },
+                    styles.freqSegmentText,
+                    frequency === "one-time" && styles.freqSegmentTextActive,
                   ]}
                 >
-                  {cause.title}
+                  One Time
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
 
-        {/* Section: Choose Donation Amount */}
-        <Text style={styles.sectionHeading}>Choose Donation Amount</Text>
-
-        {/* Frequency Segmented Control */}
-        <View style={styles.frequencySegmentWrapper}>
-          <TouchableOpacity
-            style={[styles.freqSegment, frequency === "one-time" && styles.freqSegmentActive]}
-            onPress={() => setFrequency("one-time")}
-          >
-            <Text
-              style={[
-                styles.freqSegmentText,
-                frequency === "one-time" && styles.freqSegmentTextActive,
-              ]}
-            >
-              One Time
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.freqSegment, frequency === "monthly" && styles.freqSegmentActive]}
-            onPress={() => setFrequency("monthly")}
-          >
-            <Text
-              style={[
-                styles.freqSegmentText,
-                frequency === "monthly" && styles.freqSegmentTextActive,
-              ]}
-            >
-              Monthly
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.freqSegment, frequency === "yearly" && styles.freqSegmentActive]}
-            onPress={() => setFrequency("yearly")}
-          >
-            <Text
-              style={[
-                styles.freqSegmentText,
-                frequency === "yearly" && styles.freqSegmentTextActive,
-              ]}
-            >
-              Yearly
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Amount Preset Chips */}
-        <View style={styles.amountChipsRow}>
-          {PRESET_AMOUNTS.map((amt) => {
-            const isSelected = !isOtherSelected && selectedAmount === amt;
-            return (
               <TouchableOpacity
-                key={amt}
-                style={[styles.amountChip, isSelected && styles.amountChipActive]}
-                onPress={() => {
-                  setSelectedAmount(amt);
-                  setIsOtherSelected(false);
-                }}
+                style={[styles.freqSegment, frequency === "monthly" && styles.freqSegmentActive]}
+                onPress={() => setFrequency("monthly")}
+              >
+                <Text
+                  style={[
+                    styles.freqSegmentText,
+                    frequency === "monthly" && styles.freqSegmentTextActive,
+                  ]}
+                >
+                  Monthly
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.freqSegment, frequency === "yearly" && styles.freqSegmentActive]}
+                onPress={() => setFrequency("yearly")}
+              >
+                <Text
+                  style={[
+                    styles.freqSegmentText,
+                    frequency === "yearly" && styles.freqSegmentTextActive,
+                  ]}
+                >
+                  Yearly
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Amount Preset Chips */}
+            <View style={styles.amountChipsRow}>
+              {PRESET_AMOUNTS.map((amt) => {
+                const isSelected = !isOtherSelected && selectedAmount === amt;
+                return (
+                  <TouchableOpacity
+                    key={amt}
+                    style={[styles.amountChip, isSelected && styles.amountChipActive]}
+                    onPress={() => {
+                      setSelectedAmount(amt);
+                      setCustomAmount(amt.toString());
+                      setIsOtherSelected(false);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.amountChipText, isSelected && styles.amountChipTextActive]}>
+                      ₹{amt.toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Custom Chip */}
+              <TouchableOpacity
+                style={[styles.amountChip, isOtherSelected && styles.amountChipActive]}
+                onPress={() => setIsOtherSelected(true)}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.amountChipText, isSelected && styles.amountChipTextActive]}>
-                  ₹{amt.toLocaleString()}
+                <Text style={[styles.amountChipText, isOtherSelected && styles.amountChipTextActive]}>
+                  Custom
                 </Text>
               </TouchableOpacity>
-            );
-          })}
+            </View>
 
-          {/* Other Chip */}
-          <TouchableOpacity
-            style={[styles.amountChip, isOtherSelected && styles.amountChipActive]}
-            onPress={() => setIsOtherSelected(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.amountChipText, isOtherSelected && styles.amountChipTextActive]}>
-              Other
+            {/* Custom Amount Input Field */}
+            <View
+              style={[
+                styles.customAmountInputWrapper,
+                isOtherSelected && { borderColor: "#166534", backgroundColor: "#F0FDF4" },
+              ]}
+            >
+              <Text style={styles.rupeeSymbol}>₹</Text>
+              <TextInput
+                style={styles.customAmountInput}
+                placeholder="Or enter any custom amount (₹)"
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                value={isOtherSelected ? customAmount : ""}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/[^0-9]/g, "");
+                  setCustomAmount(cleaned);
+                  setIsOtherSelected(true);
+                }}
+              />
+              {isOtherSelected && customAmount.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setCustomAmount("");
+                    setSelectedAmount(1000);
+                    setIsOtherSelected(false);
+                  }}
+                  style={{ padding: 4 }}
+                >
+                  <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Section 3: Donor Details for 80G Receipt */}
+            <Text style={styles.sectionHeading}>3. Donor Details (For 80G Tax Receipt)</Text>
+            <View style={styles.formCard}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Mobile Number (Required for Receipt Link)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorPhone}
+                  onChangeText={setDonorPhone}
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Donor Full Name</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorName}
+                  onChangeText={setDonorName}
+                  placeholder="Name to appear on 80G receipt"
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorEmail}
+                  onChangeText={setDonorEmail}
+                  placeholder="donor@prayas.org"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Gateway Supported Methods Banner */}
+            <View style={styles.gatewayFeaturesBanner}>
+              <View style={styles.featurePill}>
+                <Ionicons name="card" size={13} color="#166534" />
+                <Text style={styles.featurePillText}>Debit / Credit Cards</Text>
+              </View>
+              <View style={styles.featurePill}>
+                <MaterialCommunityIcons name="bank" size={13} color="#1E40AF" />
+                <Text style={styles.featurePillText}>50+ NetBanking</Text>
+              </View>
+              <View style={styles.featurePill}>
+                <Ionicons name="flash" size={13} color="#7C3AED" />
+                <Text style={styles.featurePillText}>Razorpay UPI & QR</Text>
+              </View>
+              <View style={styles.featurePill}>
+                <Ionicons name="wallet" size={13} color="#EA580C" />
+                <Text style={styles.featurePillText}>Wallets</Text>
+              </View>
+            </View>
+
+            {/* Primary Razorpay Action Button */}
+            <TouchableOpacity
+              style={styles.mainDonateBtn}
+              onPress={handleRazorpayPayment}
+              disabled={isProcessing}
+              activeOpacity={0.88}
+            >
+              {isProcessing ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.mainDonateBtnText}>Connecting to Razorpay...</Text>
+                </View>
+              ) : (
+                <>
+                  <Ionicons name="lock-closed" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.mainDonateBtnText}>
+                    Pay ₹{getEffectiveAmount() > 0 ? getEffectiveAmount().toLocaleString() : "..."} via Razorpay
+                  </Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ------------------ TAB 2: DIRECT STANDEE QR ------------------ */}
+        {activeTab === "qr" && (
+          <View>
+            {/* Standee QR Card */}
+            <View style={styles.qrHeroCard}>
+              <Text style={styles.qrTitle}>Official Paytm Merchant Standee</Text>
+              <Text style={styles.qrSub}>
+                Scan with any UPI app (Paytm, PhonePe, Google Pay, BHIM or any Banking app)
+              </Text>
+
+              <View style={styles.qrImageWrapper}>
+                <Image
+                  source={require("../../assets/images/paytm-qr.png")}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              <View style={styles.vpaInfoBox}>
+                <View style={styles.vpaRow}>
+                  <Text style={styles.vpaLabel}>Verified Payee:</Text>
+                  <Text style={styles.vpaValue}>{MERCHANT_NAME}</Text>
+                </View>
+                <View style={styles.vpaRow}>
+                  <Text style={styles.vpaLabel}>Merchant UPI ID:</Text>
+                  <TouchableOpacity onPress={handleCopyUpiId} style={styles.copyRow}>
+                    <Text style={styles.vpaIdText} selectable>{DEFAULT_UPI_VPA}</Text>
+                    <Ionicons name="copy-outline" size={14} color="#166534" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Direct Donation Form: No verification needed, just form is enough! */}
+            <Text style={styles.sectionHeading}>Direct Contribution Form</Text>
+            <Text style={styles.formInstruction}>
+              After scanning and paying via your UPI app, submit this simple form to link and generate your official 80G tax receipt:
             </Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Custom Amount Input if Other selected */}
-        {isOtherSelected && (
-          <View style={styles.customAmountInputWrapper}>
-            <Text style={styles.rupeeSymbol}>₹</Text>
-            <TextInput
-              style={styles.customAmountInput}
-              placeholder="Enter custom amount"
-              placeholderTextColor="#94A3B8"
-              keyboardType="numeric"
-              value={customAmount}
-              onChangeText={setCustomAmount}
-              autoFocus
-            />
+            {/* Amount Selection */}
+            <View style={styles.amountChipsRow}>
+              {PRESET_AMOUNTS.map((amt) => {
+                const isSelected = !isOtherSelected && selectedAmount === amt;
+                return (
+                  <TouchableOpacity
+                    key={amt}
+                    style={[styles.amountChip, isSelected && styles.amountChipActive]}
+                    onPress={() => {
+                      setSelectedAmount(amt);
+                      setCustomAmount(amt.toString());
+                      setIsOtherSelected(false);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.amountChipText, isSelected && styles.amountChipTextActive]}>
+                      ₹{amt.toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              <TouchableOpacity
+                style={[styles.amountChip, isOtherSelected && styles.amountChipActive]}
+                onPress={() => setIsOtherSelected(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.amountChipText, isOtherSelected && styles.amountChipTextActive]}>
+                  Custom
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Custom Amount Input Field */}
+            <View
+              style={[
+                styles.customAmountInputWrapper,
+                isOtherSelected && { borderColor: "#166534", backgroundColor: "#F0FDF4" },
+              ]}
+            >
+              <Text style={styles.rupeeSymbol}>₹</Text>
+              <TextInput
+                style={styles.customAmountInput}
+                placeholder="Transferred Amount (₹)"
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                value={isOtherSelected ? customAmount : ""}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/[^0-9]/g, "");
+                  setCustomAmount(cleaned);
+                  setIsOtherSelected(true);
+                }}
+              />
+            </View>
+
+            {/* Form Fields */}
+            <View style={styles.formCard}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Donor Full Name *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorName}
+                  onChangeText={setDonorName}
+                  placeholder="Full name for tax receipt"
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Mobile Number * (Linked to My Receipts)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorPhone}
+                  onChangeText={setDonorPhone}
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email Address (Optional)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={donorEmail}
+                  onChangeText={setDonorEmail}
+                  placeholder="donor@prayas.org"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>UPI Reference / UTR Number (Optional)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={utrNumber}
+                  onChangeText={setUtrNumber}
+                  placeholder="e.g. 4235XXXXXXXX"
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={styles.mainDonateBtn}
+              onPress={handleDirectQrPaymentSubmit}
+              disabled={isProcessing}
+              activeOpacity={0.88}
+            >
+              {isProcessing ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.mainDonateBtnText}>Recording Contribution...</Text>
+                </View>
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.mainDonateBtnText}>
+                    Record Contribution & Get 80G Receipt
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         )}
 
@@ -415,226 +902,39 @@ export default function DonateScreen() {
             <MaterialCommunityIcons name="hand-heart-outline" size={24} color="#166534" />
           </View>
           <View style={styles.transparencyTextCol}>
-            <Text style={styles.transparencyTitle}>100% of your donation goes to our programs.</Text>
+            <Text style={styles.transparencyTitle}>100% of your donation goes directly to seva.</Text>
             <Text style={styles.transparencySubtitle}>
-              We are an 18-year registered society (Reg. 142/2006-07) operating with zero administrative deductions.
+              Prayas Samiti is an 18-year registered society (Reg. 142/2006-07) operating with zero administrative deductions.
             </Text>
           </View>
-          <View style={styles.secureBadge}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#166534" />
-            <Text style={styles.secureText}>Secure{"\n"}Donation</Text>
-          </View>
-        </View>
-
-        {/* Payment Options Section */}
-        <Text style={styles.sectionHeading}>Payment Options</Text>
-        <View style={styles.paymentOptionsList}>
-          {/* UPI */}
-          <TouchableOpacity
-            style={styles.paymentOptionCard}
-            onPress={() => handleInitiatePayment("UPI")}
-            activeOpacity={0.85}
-          >
-            <View style={styles.paymentOptionLeft}>
-              <View style={[styles.payIconBox, { backgroundColor: "#F8FAFC" }]}>
-                <Text style={styles.upiText}>UPI</Text>
-              </View>
-              <View style={styles.payInfo}>
-                <Text style={styles.payTitle}>UPI / QR Code</Text>
-                <Text style={styles.paySubtitle}>Pay using any UPI app (GPay, PhonePe, Paytm)</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-
-          {/* Cards */}
-          <TouchableOpacity
-            style={styles.paymentOptionCard}
-            onPress={() => handleInitiatePayment("Cards")}
-            activeOpacity={0.85}
-          >
-            <View style={styles.paymentOptionLeft}>
-              <View style={[styles.payIconBox, { backgroundColor: "#F0FDF4" }]}>
-                <Ionicons name="card-outline" size={20} color="#166534" />
-              </View>
-              <View style={styles.payInfo}>
-                <Text style={styles.payTitle}>Cards</Text>
-                <Text style={styles.paySubtitle}>Debit / Credit Cards</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-
-          {/* Net Banking */}
-          <TouchableOpacity
-            style={styles.paymentOptionCard}
-            onPress={() => handleInitiatePayment("NetBanking")}
-            activeOpacity={0.85}
-          >
-            <View style={styles.paymentOptionLeft}>
-              <View style={[styles.payIconBox, { backgroundColor: "#EFF6FF" }]}>
-                <Ionicons name="business-outline" size={20} color="#1D4ED8" />
-              </View>
-              <View style={styles.payInfo}>
-                <Text style={styles.payTitle}>Net Banking</Text>
-                <Text style={styles.paySubtitle}>All major banks supported</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-
-          {/* Wallets */}
-          <TouchableOpacity
-            style={styles.paymentOptionCard}
-            onPress={() => handleInitiatePayment("Wallets")}
-            activeOpacity={0.85}
-          >
-            <View style={styles.paymentOptionLeft}>
-              <View style={[styles.payIconBox, { backgroundColor: "#FFFBEB" }]}>
-                <Ionicons name="wallet-outline" size={20} color="#D97706" />
-              </View>
-              <View style={styles.payInfo}>
-                <Text style={styles.payTitle}>Wallets</Text>
-                <Text style={styles.paySubtitle}>PhonePe, Paytm, Amazon Pay & more</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
         </View>
 
         {/* Trust & Benefits 4-Grid */}
         <View style={styles.trustGrid}>
-          {/* 1 */}
           <View style={styles.trustItem}>
             <Ionicons name="shield-checkmark-outline" size={22} color="#166534" />
             <Text style={styles.trustTitle}>Trusted &{"\n"}Transparent</Text>
-            <Text style={styles.trustDesc}>Your trust means everything to us.</Text>
+            <Text style={styles.trustDesc}>Zero commission deductions.</Text>
           </View>
 
-          {/* 2 */}
           <View style={styles.trustItem}>
             <Ionicons name="document-text-outline" size={22} color="#166534" />
             <Text style={styles.trustTitle}>Official{"\n"}Receipts</Text>
-            <Text style={styles.trustDesc}>Instant digital receipt for every donation.</Text>
+            <Text style={styles.trustDesc}>Digital 80G tax exemption receipt.</Text>
           </View>
 
-          {/* 3 */}
           <View style={styles.trustItem}>
             <Ionicons name="lock-closed-outline" size={22} color="#166534" />
             <Text style={styles.trustTitle}>Safe &{"\n"}Secure</Text>
-            <Text style={styles.trustDesc}>Your payment information is 100% secure.</Text>
+            <Text style={styles.trustDesc}>Razorpay certified 256-bit SSL.</Text>
           </View>
 
-          {/* 4 */}
           <View style={styles.trustItem}>
             <MaterialCommunityIcons name="account-group-outline" size={22} color="#166534" />
             <Text style={styles.trustTitle}>Support 5{"\n"}Causes</Text>
-            <Text style={styles.trustDesc}>Education, Health, Environment, Animals & Skills</Text>
+            <Text style={styles.trustDesc}>Education, Health, Trees & Care.</Text>
           </View>
         </View>
-
-        {/* Bottom Floating Action Banner */}
-        <View style={styles.bottomBanner}>
-          <View style={styles.bottomBannerLeft}>
-            <MaterialCommunityIcons name="hand-heart" size={28} color="#EF4444" style={{ marginRight: 8 }} />
-            <View style={styles.bottomBannerTextCol}>
-              <Text style={styles.bottomBannerTitle}>Together, we can create a better world.</Text>
-              <Text style={styles.bottomBannerSubtitle}>Thank you for your generosity!</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.bottomDonateBtn}
-            onPress={() => handleInitiatePayment("Direct")}
-            activeOpacity={0.88}
-          >
-            <Text style={styles.bottomDonateBtnText}>Donate Now</Text>
-            <Ionicons name="arrow-forward" size={14} color="#166534" style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Payment Confirmation Modal */}
-        <Modal visible={paymentModalVisible} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Confirm Donation</Text>
-                <TouchableOpacity onPress={() => setPaymentModalVisible(false)}>
-                  <Ionicons name="close-circle" size={24} color="#64748B" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.modalAmountBox}>
-                <Text style={styles.modalAmountLabel}>Donation Amount</Text>
-                <Text style={styles.modalAmountValue}>₹{getEffectiveAmount().toLocaleString()}</Text>
-                <Text style={styles.modalFreqBadge}>
-                  {frequency === "one-time" ? "One-Time Contribution" : frequency === "monthly" ? "Monthly Subscription" : "Annual Contribution"}
-                </Text>
-              </View>
-
-              <View style={styles.modalRow}>
-                <Text style={styles.modalRowLabel}>Beneficiary</Text>
-                <Text style={styles.modalRowValue}>Prayas Pariwaar (Reg. 142/2006-07)</Text>
-              </View>
-
-              <View style={styles.modalRow}>
-                <Text style={styles.modalRowLabel}>Receipt Type</Text>
-                <Text style={styles.modalRowValue}>Official Society Receipt (12A Reg.)</Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.modalPayBtn}
-                onPress={handleCompleteDonation}
-                activeOpacity={0.88}
-              >
-                <Text style={styles.modalPayBtnText}>Proceed to Pay ₹{getEffectiveAmount().toLocaleString()} →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        {/* My Donations History Modal */}
-        <Modal visible={myDonationsModalVisible} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>My Donation History</Text>
-                <TouchableOpacity onPress={() => setMyDonationsModalVisible(false)}>
-                  <Ionicons name="close-circle" size={24} color="#64748B" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.donationHistoryCard}>
-                <View style={styles.donHistoryHeader}>
-                  <Text style={styles.donHistoryTitle}>Free Education Drive</Text>
-                  <Text style={styles.donHistoryAmount}>₹1,000</Text>
-                </View>
-                <Text style={styles.donHistoryDate}>📅 15 May 2024 • Receipt #PPV-2024-884</Text>
-                <View style={styles.donStatusBadge}>
-                  <Text style={styles.donStatusText}>✓ Official Receipt Issued</Text>
-                </View>
-              </View>
-
-              <View style={[styles.donationHistoryCard, { marginTop: 10 }]}>
-                <View style={styles.donHistoryHeader}>
-                  <Text style={styles.donHistoryTitle}>Summer Jeev Jal Seva</Text>
-                  <Text style={styles.donHistoryAmount}>₹500</Text>
-                </View>
-                <Text style={styles.donHistoryDate}>📅 02 May 2024 • Receipt #PPV-2024-631</Text>
-                <View style={styles.donStatusBadge}>
-                  <Text style={styles.donStatusText}>✓ Official Receipt Issued</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.modalPayBtn, { marginTop: 18 }]}
-                onPress={() => setMyDonationsModalVisible(false)}
-              >
-                <Text style={styles.modalPayBtnText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
 
       {/* Universal ActionDialog */}
@@ -725,130 +1025,86 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 36,
   },
-  subtitle: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 14,
-  },
-  heroCard: {
-    backgroundColor: "#F8FAF9",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 16,
+  tabToggleRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 18,
-    ...Shadows.soft,
-  },
-  heroLeft: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  heroHeading: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#0F172A",
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  heroHeadingGreen: {
-    color: "#16A34A",
-  },
-  heroDesc: {
-    fontSize: 10,
-    color: "#64748B",
-    lineHeight: 14,
-    marginBottom: 10,
-  },
-  heroDonateBtn: {
-    backgroundColor: "#166534",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    ...Shadows.soft,
-  },
-  heroDonateBtnText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  heroRight: {
-    width: 95,
-    height: 105,
-    borderRadius: 12,
-    overflow: "hidden",
     backgroundColor: "#F1F5F9",
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
   },
-  heroImage: {
-    width: "100%",
-    height: "100%",
-  },
-  sectionHeaderRow: {
+  tabToggleBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-    marginTop: 4,
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  tabToggleBtnActive: {
+    backgroundColor: "#166534",
+    ...Shadows.soft,
+  },
+  tabToggleText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  tabToggleTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
   sectionHeading: {
     fontSize: 14,
     fontWeight: "800",
     color: "#0F172A",
+    marginTop: 12,
     marginBottom: 10,
-    marginTop: 6,
+    letterSpacing: -0.2,
   },
-  viewAllText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#166534",
+  causesScroll: {
+    paddingRight: 16,
+    gap: 10,
+    marginBottom: 10,
   },
-  causesGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  causeItem: {
-    alignItems: "center",
-    width: (width - 40) / 5,
-  },
-  causeItemSelected: {
-    transform: [{ scale: 1.02 }],
-  },
-  causeBox: {
-    width: 52,
-    height: 52,
+  causeCard: {
+    width: 105,
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
+    padding: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    ...Shadows.soft,
+  },
+  causeIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     marginBottom: 6,
-    ...Shadows.soft,
   },
-  causeLabel: {
-    fontSize: 9,
+  causeCardTitle: {
+    fontSize: 10,
     fontWeight: "700",
-    color: "#334155",
+    color: "#1E293B",
     textAlign: "center",
-    lineHeight: 12,
+    lineHeight: 13,
   },
   frequencySegmentWrapper: {
     flexDirection: "row",
     backgroundColor: "#F1F5F9",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 3,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   freqSegment: {
     flex: 1,
     paddingVertical: 8,
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: 8,
   },
   freqSegmentActive: {
     backgroundColor: "#166534",
@@ -865,7 +1121,7 @@ const styles = StyleSheet.create({
   amountChipsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   amountChip: {
     width: (width - 40 - 32) / 5,
@@ -896,11 +1152,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1.5,
-    borderColor: "#166534",
+    borderColor: "#E2E8F0",
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 46,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   rupeeSymbol: {
     fontSize: 16,
@@ -913,6 +1169,148 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#0F172A",
     fontWeight: "700",
+  },
+  formCard: {
+    backgroundColor: "#F8FAF9",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 14,
+    gap: 10,
+  },
+  inputGroup: {
+    gap: 4,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  formInput: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 42,
+    fontSize: 13,
+    color: "#0F172A",
+    fontWeight: "600",
+  },
+  gatewayFeaturesBanner: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 16,
+  },
+  featurePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    gap: 4,
+  },
+  featurePillText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  mainDonateBtn: {
+    backgroundColor: "#166534",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 52,
+    borderRadius: 14,
+    marginBottom: 20,
+    ...Shadows.primaryBtn,
+  },
+  mainDonateBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.2,
+  },
+  qrHeroCard: {
+    backgroundColor: "#F8FAF9",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 14,
+  },
+  qrTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  qrSub: {
+    fontSize: 11,
+    color: "#64748B",
+    textAlign: "center",
+    marginTop: 2,
+    marginBottom: 14,
+  },
+  qrImageWrapper: {
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.soft,
+  },
+  qrImage: {
+    width: width - 88,
+    height: Math.min((width - 88) * 1.3, 310),
+    borderRadius: 10,
+  },
+  vpaInfoBox: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginTop: 12,
+    gap: 4,
+  },
+  vpaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  vpaLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  vpaValue: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  vpaIdText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#166534",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  },
+  copyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  formInstruction: {
+    fontSize: 11,
+    color: "#64748B",
+    marginBottom: 10,
+    lineHeight: 16,
   },
   transparencyBanner: {
     backgroundColor: "#F8FAF9",
@@ -937,261 +1335,43 @@ const styles = StyleSheet.create({
   },
   transparencyTextCol: {
     flex: 1,
-    paddingRight: 6,
   },
   transparencyTitle: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#164E2E",
+    color: "#166534",
   },
   transparencySubtitle: {
-    fontSize: 9,
-    color: "#64748B",
-    marginTop: 2,
-    lineHeight: 12,
-  },
-  secureBadge: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingLeft: 6,
-    borderLeftWidth: 1,
-    borderLeftColor: "#E2E8F0",
-  },
-  secureText: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: "#166534",
-    textAlign: "center",
-    marginTop: 2,
-  },
-  paymentOptionsList: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  paymentOptionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 12,
-    ...Shadows.soft,
-  },
-  paymentOptionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  payIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  upiText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#334155",
-  },
-  payInfo: {
-    flex: 1,
-  },
-  payTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  paySubtitle: {
     fontSize: 10,
-    color: "#64748B",
+    color: "#475569",
     marginTop: 1,
+    lineHeight: 14,
   },
   trustGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    gap: 10,
+    marginBottom: 20,
   },
   trustItem: {
-    width: (width - 40 - 24) / 4,
-    alignItems: "flex-start",
-  },
-  trustTitle: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#164E2E",
-    marginTop: 4,
-    marginBottom: 2,
-    lineHeight: 12,
-  },
-  trustDesc: {
-    fontSize: 8,
-    color: "#64748B",
-    lineHeight: 11,
-  },
-  bottomBanner: {
-    backgroundColor: "#164E2E",
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    ...Shadows.soft,
-  },
-  bottomBannerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 10,
-  },
-  bottomBannerTextCol: {
-    flex: 1,
-  },
-  bottomBannerTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#FFFFFF",
-  },
-  bottomBannerSubtitle: {
-    fontSize: 10,
-    color: "#A7F3D0",
-    marginTop: 1,
-  },
-  bottomDonateBtn: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    ...Shadows.soft,
-  },
-  bottomDonateBtnText: {
-    color: "#166534",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#164E2E",
-  },
-  modalAmountBox: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    marginBottom: 16,
-  },
-  modalAmountLabel: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  modalAmountValue: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#166534",
-    marginVertical: 4,
-  },
-  modalFreqBadge: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#16A34A",
-  },
-  modalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  modalRowLabel: {
-    fontSize: 12,
-    color: "#64748B",
-  },
-  modalRowValue: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  modalPayBtn: {
-    height: 48,
-    backgroundColor: "#166534",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 18,
-    ...Shadows.primaryBtn,
-  },
-  modalPayBtnText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  donationHistoryCard: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
+    width: (width - 32 - 10) / 2,
+    backgroundColor: "#F8FAF9",
     padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
-  donHistoryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  donHistoryTitle: {
-    fontSize: 13,
+  trustTitle: {
+    fontSize: 11,
     fontWeight: "800",
     color: "#0F172A",
+    marginTop: 6,
+    marginBottom: 2,
   },
-  donHistoryAmount: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#166534",
-  },
-  donHistoryDate: {
-    fontSize: 10,
-    color: "#64748B",
-    marginBottom: 6,
-  },
-  donStatusBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#F0FDF4",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  donStatusText: {
+  trustDesc: {
     fontSize: 9,
-    fontWeight: "800",
-    color: "#166534",
+    color: "#64748B",
+    lineHeight: 13,
   },
 });

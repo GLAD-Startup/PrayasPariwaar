@@ -166,7 +166,6 @@ export default function MobileHomeScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [eventModalVisible, setEventModalVisible] = useState(false);
   const [helplineModalVisible, setHelplineModalVisible] = useState(false);
   const heroListRef = useRef<FlatList>(null);
 
@@ -582,33 +581,6 @@ export default function MobileHomeScreen() {
           </>
         )}
 
-        {/* Upcoming Event Featured Card */}
-        <View style={styles.eventCard}>
-          <View style={styles.eventLeft}>
-            <View style={styles.eventCalendarCircle}>
-              <Ionicons name="calendar-outline" size={22} color="#D97706" />
-            </View>
-
-            <View style={styles.eventInfo}>
-              <Text style={styles.eventTag}>Upcoming Event</Text>
-              <Text style={styles.eventTitle}>Mega Blood Donation Camp</Text>
-              <Text style={styles.eventTime}>Sunday, 9:00 AM – 4:00 PM</Text>
-              <View style={styles.eventLocRow}>
-                <Ionicons name="location-outline" size={11} color="#64748B" style={{ marginRight: 3 }} />
-                <Text style={styles.eventLocation}>District Hospital, Mathura</Text>
-              </View>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.eventDetailsBtn}
-            onPress={() => setEventModalVisible(true)}
-            activeOpacity={0.88}
-          >
-            <Text style={styles.eventDetailsBtnText}>Details</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Dual Action Cards (Donate & Volunteer) */}
         <View style={styles.dualActionRow}>
           {/* Donate Card */}
@@ -714,42 +686,6 @@ export default function MobileHomeScreen() {
           </View>
         </View>
 
-        {/* Event Details Modal */}
-        <Modal visible={eventModalVisible} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Event Information</Text>
-                <TouchableOpacity onPress={() => setEventModalVisible(false)}>
-                  <Ionicons name="close-circle" size={22} color="#64748B" />
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.modalEventHeading}>🩸 Mega Voluntary Blood Donation Camp</Text>
-              <Text style={styles.modalEventText}>
-                Organized by Seva Dham Trust (Prayas Pariwaar) in collaboration with District Hospital Mathura. All donors will receive healthy refreshments and voluntary donor recognition cards.
-              </Text>
-
-              <View style={styles.modalMetaBox}>
-                <Text style={styles.modalMetaItem}>📅 Date: Sunday, 26 May 2024</Text>
-                <Text style={styles.modalMetaItem}>⏰ Time: 9:00 AM – 4:00 PM</Text>
-                <Text style={styles.modalMetaItem}>📍 Venue: District Hospital, Mathura</Text>
-                <Text style={styles.modalMetaItem}>📞 Helpline: +91 94122 79001</Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.modalRegisterBtn}
-                onPress={() => {
-                  setEventModalVisible(false);
-                  router.push("/blood-donor-registration");
-                }}
-                activeOpacity={0.88}
-              >
-                <Text style={styles.modalRegisterBtnText}>Register as Donor →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
 
       {/* Helpline ActionDialog */}
@@ -1066,80 +1002,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* Event Card */
-  eventCard: {
-    backgroundColor: "#FFFBEB",
-    marginHorizontal: 16,
-    marginTop: 14,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    ...Shadows.soft,
-  },
-  eventLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 8,
-  },
-  eventCalendarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#FEF3C7",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  eventInfo: {
-    flex: 1,
-  },
-  eventTag: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: "#D97706",
-    letterSpacing: 0.4,
-    marginBottom: 1,
-  },
-  eventTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#1E293B",
-  },
-  eventTime: {
-    fontSize: 10,
-    color: "#64748B",
-    marginTop: 1,
-    fontWeight: "600",
-  },
-  eventLocRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 1,
-  },
-  eventLocation: {
-    fontSize: 9,
-    color: "#64748B",
-  },
-  eventDetailsBtn: {
-    backgroundColor: "#166534",
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Shadows.soft,
-  },
-  eventDetailsBtnText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
   /* Dual Action */
   dualActionRow: {
     flexDirection: "row",
@@ -1337,44 +1199,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     color: "#164E2E",
-  },
-  modalEventHeading: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 6,
-  },
-  modalEventText: {
-    fontSize: 12,
-    color: "#475569",
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  modalMetaBox: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    gap: 4,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  modalMetaItem: {
-    fontSize: 11,
-    color: "#334155",
-    fontWeight: "600",
-  },
-  modalRegisterBtn: {
-    backgroundColor: "#166534",
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Shadows.primaryBtn,
-  },
-  modalRegisterBtnText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
   },
 });

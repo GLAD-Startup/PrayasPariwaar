@@ -5,24 +5,24 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView,
   Image,
   StatusBar,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 
-const { width } = Dimensions.get("window");
-const COLLAGE_SIZE = Math.min(width - 48, 300);
-const QUADRANT_SIZE = (COLLAGE_SIZE - 10) / 2;
-const CENTER_CIRCLE_SIZE = 86;
+const { width, height } = Dimensions.get("window");
+
+// Responsive collage dimensions calibrated to stay 100% fixed on all device screen sizes
+const COLLAGE_SIZE = Math.min(width - 56, height > 750 ? 280 : 230);
+const QUADRANT_SIZE = (COLLAGE_SIZE - 8) / 2;
+const CENTER_CIRCLE_SIZE = height > 750 ? 82 : 68;
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -32,15 +32,8 @@ export default function OnboardingScreen() {
         translucent={Platform.OS === "android"}
       />
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: Math.max(insets.top > 0 ? 8 : 16, 12), paddingBottom: Math.max(insets.bottom, 20) + 10 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Top Organization Emblem - Official Prayas Blue Logo */}
+      <View style={styles.fixedContainer}>
+        {/* Top Organization Emblem - Official Prayas Royal Blue Logo */}
         <View style={styles.brandHeader}>
           <Image
             source={require("../../assets/images/prayas-logo-blue.png")}
@@ -49,7 +42,7 @@ export default function OnboardingScreen() {
           />
           <Text style={styles.orgName}>PRAYAS</Text>
 
-          {/* Subtitle with divider lines */}
+          {/* Subtitle with dark royal blue divider lines */}
           <View style={styles.taglineRow}>
             <View style={styles.blueLine} />
             <Text style={styles.taglineText}>A TRIAL TO MOVE AHEAD</Text>
@@ -57,18 +50,7 @@ export default function OnboardingScreen() {
           </View>
         </View>
 
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <View style={styles.welcomeTitleRow}>
-            <Text style={styles.welcomeTitle}>Welcome to Prayas</Text>
-            <Text style={styles.heartEmoji}>💙</Text>
-          </View>
-          <Text style={styles.welcomeDesc}>
-            Serving humanity across education, emergency blood dispatch, green afforestation & medical aid in Vrindavan.
-          </Text>
-        </View>
-
-        {/* 5-Piece Photo Collage */}
+        {/* Center Visual: 5-Piece Humanitarian Work Collage */}
         <View style={styles.collageContainer}>
           <View style={[styles.collageGrid, { width: COLLAGE_SIZE, height: COLLAGE_SIZE }]}>
             {/* Top-Left: Free Education */}
@@ -98,7 +80,7 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            {/* Bottom-Right: Vocational Seva */}
+            {/* Bottom-Right: Youth Skills */}
             <View style={[styles.quadrant, styles.quadrantBR, { width: QUADRANT_SIZE, height: QUADRANT_SIZE }]}>
               <Image
                 source={require("../../assets/images/youth-skills-vrindavan.jpg")}
@@ -134,59 +116,20 @@ export default function OnboardingScreen() {
           </View>
         </View>
 
-        {/* 5 Service Category Icon Circles */}
-        <View style={styles.servicesRow}>
-          {/* Free Education */}
-          <View style={styles.serviceItem}>
-            <View style={[styles.serviceCircle, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-              <Ionicons name="school-outline" size={18} color="#1D4ED8" />
-            </View>
-            <Text style={styles.serviceLabel}>Free{"\n"}Education</Text>
-          </View>
-
-          {/* Blood Donation */}
-          <View style={styles.serviceItem}>
-            <View style={[styles.serviceCircle, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
-              <Ionicons name="water-outline" size={18} color="#DC2626" />
-            </View>
-            <Text style={styles.serviceLabel}>Blood{"\n"}Donation</Text>
-          </View>
-
-          {/* Plantation */}
-          <View style={styles.serviceItem}>
-            <View style={[styles.serviceCircle, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]}>
-              <MaterialCommunityIcons name="sprout-outline" size={18} color="#15803D" />
-            </View>
-            <Text style={styles.serviceLabel}>Tree{"\n"}Plantation</Text>
-          </View>
-
-          {/* Jeev Jal Seva */}
-          <View style={styles.serviceItem}>
-            <View style={[styles.serviceCircle, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-              <MaterialCommunityIcons name="bird" size={18} color="#2563EB" />
-            </View>
-            <Text style={styles.serviceLabel}>Jeev Jal{"\n"}Seva</Text>
-          </View>
-
-          {/* Vocational & Medical */}
-          <View style={styles.serviceItem}>
-            <View style={[styles.serviceCircle, { backgroundColor: "#FAF5FF", borderColor: "#E9D5FF" }]}>
-              <Ionicons name="medkit-outline" size={18} color="#9333EA" />
-            </View>
-            <Text style={styles.serviceLabel}>Medical{"\n"}Aid</Text>
+        {/* Welcome Text Section */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeTitle}>Welcome to Prayas</Text>
+          <Text style={styles.welcomeDesc}>
+            Serving humanity across free education, emergency blood dispatch, green afforestation & medical aid in Vrindavan.
+          </Text>
+          <View style={styles.mottoBadge}>
+            <Text style={styles.mottoText}>18 Years of Dedicated Grassroots Seva</Text>
           </View>
         </View>
 
-        {/* Motto Banner */}
-        <View style={styles.mottoRow}>
-          <Text style={styles.mottoArrows}>❯❯</Text>
-          <Text style={styles.mottoText}>Small Acts, Big Impact</Text>
-          <Text style={styles.mottoArrows}>❮❮</Text>
-        </View>
-
-        {/* Action Buttons */}
+        {/* Bottom Actions Area (Fixed, No Explore App) */}
         <View style={styles.actionsContainer}>
-          {/* Primary Get Started Button */}
+          {/* Primary Get Started Button with Dark Royal Blue */}
           <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => router.push("/(auth)/signup" as any)}
@@ -194,18 +137,8 @@ export default function OnboardingScreen() {
           >
             <Text style={styles.primaryBtnText}>Get Started</Text>
             <View style={styles.arrowCircle}>
-              <Ionicons name="arrow-forward" size={14} color="#1D4ED8" />
+              <Ionicons name="arrow-forward" size={15} color={Colors.bluePrimary} />
             </View>
-          </TouchableOpacity>
-
-          {/* Secondary Explore App Button */}
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={() => router.replace("/(tabs)/home" as any)}
-            activeOpacity={0.85}
-          >
-            <MaterialCommunityIcons name="compass-outline" size={18} color="#1D4ED8" style={{ marginRight: 6 }} />
-            <Text style={styles.secondaryBtnText}>Explore the App</Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
@@ -219,7 +152,7 @@ export default function OnboardingScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -229,119 +162,98 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  container: {
+  fixedContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollContent: {
-    flexGrow: 1,
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: height > 750 ? 16 : 8,
+    paddingBottom: height > 750 ? 24 : 14,
+    backgroundColor: "#FFFFFF",
   },
   brandHeader: {
     alignItems: "center",
-    marginBottom: 8,
   },
   logoImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 14,
+    width: height > 750 ? 66 : 54,
+    height: height > 750 ? 66 : 54,
     marginBottom: 4,
   },
   orgName: {
-    fontSize: 20,
+    fontSize: height > 750 ? 22 : 19,
     fontWeight: "900",
-    color: "#1E3A8A",
-    letterSpacing: 1.5,
-    marginTop: 2,
+    color: "#0F172A",
+    letterSpacing: 2,
   },
   taglineRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     marginTop: 3,
+    gap: 8,
   },
   blueLine: {
-    width: 24,
     height: 1.5,
-    backgroundColor: "#2563EB",
-    opacity: 0.7,
+    width: 24,
+    backgroundColor: Colors.bluePrimary,
+    borderRadius: 2,
   },
   taglineText: {
-    fontSize: 10,
-    color: "#1E40AF",
+    fontSize: 9.5,
     fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  welcomeSection: {
-    alignItems: "center",
-    marginVertical: 8,
-    paddingHorizontal: 16,
-  },
-  welcomeTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  welcomeTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#1D4ED8",
-    letterSpacing: -0.2,
-  },
-  heartEmoji: {
-    fontSize: 15,
-  },
-  welcomeDesc: {
-    fontSize: 11,
-    color: "#64748B",
-    textAlign: "center",
-    marginTop: 3,
-    lineHeight: 16,
-    maxWidth: 300,
+    color: Colors.bluePrimary,
+    letterSpacing: 1.4,
   },
   collageContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 8,
+    marginVertical: 4,
   },
   collageGrid: {
     position: "relative",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignContent: "space-between",
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    padding: 3,
+    shadowColor: Colors.bluePrimary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 6,
   },
   quadrant: {
+    position: "absolute",
     overflow: "hidden",
-    backgroundColor: "#F1F5F9",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-    ...Shadows.soft,
   },
   quadrantTL: {
-    borderTopLeftRadius: 28,
-    borderBottomRightRadius: 8,
+    top: 3,
+    left: 3,
+    borderTopLeftRadius: 26,
     borderTopRightRadius: 8,
     borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
   },
   quadrantTR: {
-    borderTopRightRadius: 28,
-    borderBottomLeftRadius: 8,
+    top: 3,
+    right: 3,
+    borderTopRightRadius: 26,
     borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
   },
   quadrantBL: {
-    borderBottomLeftRadius: 28,
+    bottom: 3,
+    left: 3,
+    borderBottomLeftRadius: 26,
+    borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
-    borderTopLeftRadius: 8,
   },
   quadrantBR: {
-    borderBottomRightRadius: 28,
+    bottom: 3,
+    right: 3,
+    borderBottomRightRadius: 26,
     borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
     borderTopRightRadius: 8,
+    borderBottomLeftRadius: 8,
   },
   quadrantImage: {
     width: "100%",
@@ -351,121 +263,99 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "50%",
     left: "50%",
-    transform: [{ translateX: -43 }, { translateY: -43 }],
+    transform: [{ translateX: -(CENTER_CIRCLE_SIZE / 2) }, { translateY: -(CENTER_CIRCLE_SIZE / 2) }],
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
+    borderWidth: 3.5,
     borderColor: "#FFFFFF",
-    ...Shadows.card,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 8,
     zIndex: 10,
   },
   centerImage: {
     overflow: "hidden",
   },
-  servicesRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 6,
-    marginVertical: 10,
-  },
-  serviceItem: {
+  welcomeSection: {
     alignItems: "center",
-    flex: 1,
+    paddingHorizontal: 12,
   },
-  serviceCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    marginBottom: 4,
-    ...Shadows.soft,
+  welcomeTitle: {
+    fontSize: height > 750 ? 21 : 18,
+    fontWeight: "900",
+    color: "#0F172A",
+    letterSpacing: -0.4,
+    marginBottom: 6,
   },
-  serviceLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#334155",
+  welcomeDesc: {
+    fontSize: height > 750 ? 12.5 : 11.5,
+    color: "#475569",
     textAlign: "center",
-    lineHeight: 12,
+    lineHeight: height > 750 ? 18 : 16,
   },
-  mottoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginVertical: 8,
-  },
-  mottoArrows: {
-    fontSize: 11,
-    color: "#1D4ED8",
-    fontWeight: "800",
+  mottoBadge: {
+    marginTop: 8,
+    backgroundColor: Colors.blueSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.blueBorder,
   },
   mottoText: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: "800",
-    color: "#1E3A8A",
-    letterSpacing: 0.3,
+    color: Colors.bluePrimary,
+    letterSpacing: 0.2,
   },
   actionsContainer: {
     width: "100%",
-    paddingHorizontal: 6,
-    marginTop: 4,
-    gap: 10,
+    alignItems: "center",
+    gap: 12,
   },
   primaryBtn: {
-    backgroundColor: "#1D4ED8",
-    height: 48,
-    borderRadius: 12,
+    width: "100%",
+    height: height > 750 ? 52 : 48,
+    backgroundColor: Colors.bluePrimary,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    ...Shadows.primaryBtn,
+    shadowColor: Colors.bluePrimary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 5,
   },
   primaryBtnText: {
-    color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
-    letterSpacing: -0.2,
-    marginRight: 8,
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
   },
   arrowCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-  },
-  secondaryBtn: {
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: "#1D4ED8",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    ...Shadows.soft,
-  },
-  secondaryBtnText: {
-    color: "#1D4ED8",
-    fontSize: 13,
-    fontWeight: "800",
+    marginLeft: 10,
   },
   signInRow: {
-    alignItems: "center",
     paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   signInText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#64748B",
-    fontWeight: "500",
+    fontWeight: "600",
   },
   signInBold: {
-    color: "#1D4ED8",
+    color: Colors.bluePrimary,
     fontWeight: "800",
   },
 });

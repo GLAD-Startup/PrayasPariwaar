@@ -18,29 +18,34 @@ export const dynamic = "force-dynamic";
 export default async function AdminDonationsPage({
   searchParams,
 }: {
-  searchParams?: { status?: string };
+  searchParams?: { frequency?: string; cause?: string };
 }) {
   let donations: any[] = [];
   try {
     donations = await prisma.donation.findMany({
+      where: {
+        status: "SUCCESS",
+      },
       orderBy: { createdAt: "desc" },
     });
   } catch (e) {
     console.warn("Database connection issue loading donations:", e);
   }
 
-  // Filter based on status query parameter if provided
-  const activeStatus = searchParams?.status?.toUpperCase();
-  const filteredDonations = activeStatus
-    ? donations.filter((d) => d.status === activeStatus)
-    : donations;
+  // Filter based on frequency if provided (All displayed records are strictly finalized SUCCESS)
+  const activeFrequency = searchParams?.frequency?.toUpperCase();
+  const filteredDonations =
+    activeFrequency === "MONTHLY"
+      ? donations.filter((d) => d.frequency === "MONTHLY" || d.frequency === "YEARLY")
+      : activeFrequency === "ONE_TIME"
+      ? donations.filter((d) => d.frequency !== "MONTHLY" && d.frequency !== "YEARLY")
+      : donations;
 
-  const totalRaised = donations
-    .filter((d) => d.status === "SUCCESS")
-    .reduce((sum, d) => sum + (d.amount || 0), 0);
-  const successCount = donations.filter((d) => d.status === "SUCCESS").length;
-  const pendingCount = donations.filter((d) => d.status === "PENDING").length;
-  const failedCount = donations.filter((d) => d.status === "FAILED").length;
+  const totalRaised = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
+  const successCount = donations.length;
+  const oneTimeCount = donations.filter((d) => d.frequency !== "MONTHLY" && d.frequency !== "YEARLY").length;
+  const monthlyCount = donations.filter((d) => d.frequency === "MONTHLY" || d.frequency === "YEARLY").length;
+  const avgDonation = successCount > 0 ? Math.round(totalRaised / successCount) : 0;
 
   return (
     <div className="space-y-6">
@@ -49,13 +54,13 @@ export default async function AdminDonationsPage({
         <div className="space-y-1.5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Institutional Seva Donation Ledger</span>
+            <span>Institutional Seva Donation Ledger (Finalized Receipts Only)</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-prayas-ink">
             Donations & Razorpay Ledger
           </h1>
           <p className="text-xs text-prayas-muted max-w-2xl leading-relaxed">
-            Real-time Razorpay payments, cryptographic signature verification logs, order IDs, and issued 80G seva receipts.
+            Real-time verified Razorpay payments, cryptographic signature verification logs, order IDs, and issued 80G seva receipts. Incomplete or rejected checkouts are filtered out automatically.
           </p>
         </div>
 
@@ -67,12 +72,12 @@ export default async function AdminDonationsPage({
             ₹{totalRaised.toLocaleString("en-IN")}
           </p>
           <span className="text-[10px] text-emerald-700 font-medium">
-            {successCount} verified successful receipts
+            {successCount} verified & finalized receipts
           </span>
         </div>
       </div>
 
-      {/* 2. Key Metrics Row */}
+      {/* 2. Key Metrics Row - All Finalized Data */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-prayas-rule p-4 rounded-xl shadow-subtle flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
@@ -89,28 +94,28 @@ export default async function AdminDonationsPage({
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Verified Success</span>
+            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Finalized Receipts</span>
             <span className="font-serif text-lg font-bold text-prayas-ink">{successCount}</span>
           </div>
         </div>
 
         <div className="bg-white border border-prayas-rule p-4 rounded-xl shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-            <Clock className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+            <Receipt className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Pending Orders</span>
-            <span className="font-serif text-lg font-bold text-prayas-ink">{pendingCount}</span>
+            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Avg Contribution</span>
+            <span className="font-serif text-lg font-bold text-prayas-ink">₹{avgDonation.toLocaleString("en-IN")}</span>
           </div>
         </div>
 
         <div className="bg-white border border-prayas-rule p-4 rounded-xl shadow-subtle flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-red-50 text-red-700 flex items-center justify-center font-bold">
-            <XCircle className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Failed / Dropped</span>
-            <span className="font-serif text-lg font-bold text-prayas-ink">{failedCount}</span>
+            <span className="text-[10px] font-bold text-prayas-muted uppercase tracking-wider block">Gateway Status</span>
+            <span className="font-serif text-sm font-bold text-emerald-700">100% Finalized</span>
           </div>
         </div>
       </div>
@@ -119,43 +124,33 @@ export default async function AdminDonationsPage({
       <div className="flex items-center gap-2 border-b border-prayas-rule pb-2 overflow-x-auto text-xs font-bold">
         <a
           href="/admin/donations"
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            !activeStatus
-              ? "bg-[#2E5339] text-white"
+          className={`px-3.5 py-1.5 rounded-lg transition-colors ${
+            !activeFrequency
+              ? "bg-[#2E5339] text-white shadow-xs"
               : "text-prayas-muted hover:text-prayas-ink hover:bg-prayas-stone"
           }`}
         >
-          All Transactions ({donations.length})
+          All Finalized Receipts ({donations.length})
         </a>
         <a
-          href="/admin/donations?status=SUCCESS"
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            activeStatus === "SUCCESS"
-              ? "bg-[#2E5339] text-white"
+          href="/admin/donations?frequency=ONE_TIME"
+          className={`px-3.5 py-1.5 rounded-lg transition-colors ${
+            activeFrequency === "ONE_TIME"
+              ? "bg-[#2E5339] text-white shadow-xs"
               : "text-prayas-muted hover:text-prayas-ink hover:bg-prayas-stone"
           }`}
         >
-          Verified Success ({successCount})
+          One-Time Seva ({oneTimeCount})
         </a>
         <a
-          href="/admin/donations?status=PENDING"
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            activeStatus === "PENDING"
-              ? "bg-[#2E5339] text-white"
+          href="/admin/donations?frequency=MONTHLY"
+          className={`px-3.5 py-1.5 rounded-lg transition-colors ${
+            activeFrequency === "MONTHLY"
+              ? "bg-[#2E5339] text-white shadow-xs"
               : "text-prayas-muted hover:text-prayas-ink hover:bg-prayas-stone"
           }`}
         >
-          Pending ({pendingCount})
-        </a>
-        <a
-          href="/admin/donations?status=FAILED"
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            activeStatus === "FAILED"
-              ? "bg-[#2E5339] text-white"
-              : "text-prayas-muted hover:text-prayas-ink hover:bg-prayas-stone"
-          }`}
-        >
-          Failed ({failedCount})
+          Monthly Recurring ({monthlyCount})
         </a>
       </div>
 

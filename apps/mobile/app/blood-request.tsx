@@ -142,6 +142,7 @@ export default function BloodRequestScreen() {
   const [units, setUnits] = useState("1 Unit");
   const [urgency, setUrgency] = useState<"CRITICAL" | "HIGH" | "MEDIUM" | "LOW">("CRITICAL");
   const [attendantPhone, setAttendantPhone] = useState("");
+  const [city, setCity] = useState("Mathura");
   const [notes, setNotes] = useState("");
   const [bgModalVisible, setBgModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -220,7 +221,7 @@ export default function BloodRequestScreen() {
         urgency,
         contactPhone: attendantPhone,
         notes: notes || `Emergency request for ${patientName}`,
-        city: "Mathura",
+        city: city.trim() || "Mathura",
       });
 
       if (res.error) {
@@ -464,6 +465,18 @@ export default function BloodRequestScreen() {
                   🗓️ Low
                 </Text>
               </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>City / Location *</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="location-outline" size={18} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                style={styles.inputInner}
+                placeholder="e.g. Mathura, Vrindavan, Agra"
+                placeholderTextColor="#94A3B8"
+                value={city}
+                onChangeText={setCity}
+              />
             </View>
 
             <Text style={styles.label}>Attendant Contact Number *</Text>

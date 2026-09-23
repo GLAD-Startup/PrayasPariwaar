@@ -103,7 +103,7 @@ export default function EntryScreen() {
 
         {/* Loader & Status Indicator */}
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#166534" />
+          <ActivityIndicator size="large" color="#1E3A8A" />
           <View style={styles.statusBox}>
             <Text style={styles.loadingText}>{loadingText}</Text>
             <Text style={styles.subLoadingText}>Please wait a moment...</Text>
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#166534",
+    shadowColor: "#1E3A8A",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.16,
     shadowRadius: 14,
     elevation: 4,
     borderWidth: 1,
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
   },
   appTagline: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#166534",
+    fontWeight: "800",
+    color: "#1E3A8A",
     letterSpacing: 1.2,
     marginTop: 4,
     marginBottom: 28,

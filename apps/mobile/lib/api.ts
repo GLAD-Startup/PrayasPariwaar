@@ -19,20 +19,25 @@ export function getApiBaseUrl(): string {
     if (hostUri) {
       const hostIp = hostUri.split(":")[0];
       if (hostIp && hostIp !== "localhost" && hostIp !== "127.0.0.1") {
-        return `http://${hostIp}:3005/api`;
+        return `http://${hostIp}:3005/prayas/api`;
       }
     }
 
     // 2. Android emulator loopback alias
     if (Platform.OS === "android") {
-      return "http://10.0.2.2:3005/api";
+      return "http://10.0.2.2:3005/prayas/api";
     }
   }
 
-  return envUrl || "http://localhost:3005/api";
+  return envUrl || "http://localhost:3005/prayas/api";
 }
 
 export const API_BASE_URL = getApiBaseUrl();
+
+export function getWebBaseUrl(): string {
+  const apiUrl = getApiBaseUrl();
+  return apiUrl.replace(/\/api\/?$/, "");
+}
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;

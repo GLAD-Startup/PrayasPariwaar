@@ -1,14 +1,21 @@
 import { useEffect, useState, useCallback } from "react";
 import { Linking } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { saveAuthSession, getAuthUser } from "./secureStore";
+import { saveAuthSession, getAuthUser, getItem, setItem, deleteItem } from "./secureStore";
 import { registerForPushNotificationsAsync } from "./notifications";
 import { getApiBaseUrl } from "./api";
 import { generateCodeVerifier, generateCodeChallenge } from "./pkce";
 
-// Complete any pending auth sessions on web/native
-WebBrowser.maybeCompleteAuthSession();
+// Dynamically load expo-web-browser to prevent unhandled module evaluation errors
+let WebBrowser: any = null;
+try {
+  WebBrowser = require("expo-web-browser");
+  if (WebBrowser && typeof WebBrowser.maybeCompleteAuthSession === "function") {
+    WebBrowser.maybeCompleteAuthSession();
+  }
+} catch {
+  // Gracefully ignore in environments where native WebBrowser module is not present
+  WebBrowser = null;
+}
 
 // Track in-flight and redeemed codes to prevent duplicate token exchange requests
 const inFlightClientExchanges = new Map<string, Promise<any>>();
@@ -63,7 +70,7 @@ export async function redeemGoogleAuthCode(code: string, state?: string): Promis
     try {
       redeemedAuthCodes.add(code);
       const redirectUri = getGoogleRedirectUri();
-      const storedVerifier = await AsyncStorage.getItem("oauth_code_verifier");
+      const storedVerifier = await getItem("oauth_code_verifier");
 
       const queryParams = new URLSearchParams({
         code,
@@ -97,7 +104,7 @@ export async function redeemGoogleAuthCode(code: string, state?: string): Promis
         throw new Error(data.error || "Failed to exchange Google authorization code.");
       }
 
-      await AsyncStorage.removeItem("oauth_code_verifier").catch(() => {});
+      await deleteItem("oauth_code_verifier").catch(() => {});
       await saveAuthSession(data.accessToken, data.refreshToken, data.user);
 
       if (data.user?.id) {
@@ -254,7 +261,7 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = generateCodeChallenge(codeVerifier);
       const state = encodeURIComponent(JSON.stringify({ verifier: codeVerifier }));
-      await AsyncStorage.setItem("oauth_code_verifier", codeVerifier).catch(() => {});
+      await setItem("oauth_code_verifier", codeVerifier).catch(() => {});
 
       let authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
         GOOGLE_WEB_CLIENT_ID
@@ -273,11 +280,25 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
         authUrl = `${redirectUri}/start?${startParams.toString()}`;
       }
 
-      // Open seamless in-app authentication session
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, "prayas://");
+      // Open seamless in-app authentication session with defensive fallback
+      let opened = false;
+      try {
+        if (WebBrowser && typeof WebBrowser.openAuthSessionAsync === "function") {
+          const result = await WebBrowser.openAuthSessionAsync(authUrl, "prayas://");
+          opened = true;
+          if (result.type === "success" && result.url) {
+            await parseAuthDeepLink(result.url);
+            return;
+          }
+        }
+      } catch (browserError) {
+        // WebBrowser native module failed or not installed in current client
+        console.warn("[GoogleAuth] WebBrowser unavailable, falling back to system browser:", browserError);
+      }
 
-      if (result.type === "success" && result.url) {
-        await parseAuthDeepLink(result.url);
+      if (!opened) {
+        // Fall back to system default browser
+        await Linking.openURL(authUrl);
       } else {
         setLoading(false);
         const user = await getAuthUser().catch(() => null);

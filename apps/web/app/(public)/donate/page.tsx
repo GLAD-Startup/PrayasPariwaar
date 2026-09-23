@@ -24,9 +24,9 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
-  Clock,
 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import Image from "next/image";
+import { apiFetch, assetPath } from "@/lib/api";
 
 declare global {
   interface Window {
@@ -902,13 +902,13 @@ function DonateForm() {
 
                   <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-prayas-rule/60">
                     <div>
-                      <span className="text-[10px] text-prayas-muted block">Official UPI ID</span>
-                      <strong className="font-mono text-emerald-800">prayas.samiti@unionbank</strong>
+                      <span className="text-[10px] text-prayas-muted block">Official UPI ID (Paytm)</span>
+                      <strong className="font-mono text-emerald-800 text-xs sm:text-sm select-all">paytmqrjb4vvmyug2@paytm</strong>
                     </div>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard("prayas.samiti@unionbank", "upi")}
-                      className="p-1 text-prayas-muted hover:text-emerald-700"
+                      onClick={() => copyToClipboard("paytmqrjb4vvmyug2@paytm", "upi")}
+                      className="p-1.5 text-prayas-muted hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
                       title="Copy UPI ID"
                     >
                       {copiedKey === "upi" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -936,13 +936,23 @@ function DonateForm() {
 
                 {/* Expandable UPI QR box */}
                 {showQrModal && (
-                  <div className="p-4 rounded-xl bg-white border-2 border-emerald-500/40 text-center space-y-2 animate-in fade-in duration-200">
-                    <div className="w-40 h-40 mx-auto bg-stone-100 rounded-xl border border-prayas-rule flex flex-col items-center justify-center p-3">
-                      <QrCode className="w-24 h-24 text-stone-800" />
-                      <span className="text-[9px] font-mono text-prayas-muted mt-1">prayas.samiti@unionbank</span>
+                  <div className="p-4 rounded-xl bg-white border-2 border-emerald-500/40 text-center space-y-3 animate-in fade-in duration-200">
+                    <div className="w-56 mx-auto bg-white rounded-xl border border-prayas-rule/80 overflow-hidden shadow-xs p-2">
+                      <Image
+                        src={assetPath("/images/paytm-qr.png")}
+                        alt="Paytm UPI QR Code - Prayas Samiti"
+                        width={220}
+                        height={320}
+                        className="w-full h-auto object-contain rounded-lg"
+                        priority
+                      />
+                    </div>
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-2 text-center">
+                      <span className="text-[10px] text-emerald-800 uppercase tracking-wider font-bold block">Paytm UPI ID</span>
+                      <strong className="font-mono text-xs sm:text-sm text-emerald-950 block mt-0.5 select-all">paytmqrjb4vvmyug2@paytm</strong>
                     </div>
                     <p className="text-[11px] text-prayas-muted leading-relaxed">
-                      Scan using Google Pay, PhonePe, Paytm, or BHIM. After payment, WhatsApp UTR to <strong>+91 99270 81650</strong>.
+                      Scan using Paytm, Google Pay, PhonePe, or BHIM. After payment, WhatsApp screenshot & UTR to <strong>+91 99270 81650</strong>.
                     </p>
                   </div>
                 )}

@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Two-tier cache system:
-// Tier 1: High-speed RAM Memory Map (0ms synchronous-speed reads)
-// Tier 2: Persistent Async Storage Disk Cache (preserves data across app closes and cold launches)
+// Resilient Two-tier cache system:
+// Tier 1: Instant RAM Memory Map (0ms synchronous-speed reads, 100% resilient across any runtime)
+// Tier 2: Guarded Persistent Disk Storage (survives app reloads if native storage module is present)
 
 interface CacheEnvelope<T> {
   data: T;
@@ -11,7 +9,24 @@ interface CacheEnvelope<T> {
 
 const memoryCache = new Map<string, CacheEnvelope<any>>();
 const CACHE_PREFIX = "prayas_cache_";
-let isAsyncStorageWorking = true;
+
+// Safely obtain native storage without crashing Hermes during module evaluation
+let persistentStorage: {
+  getItem: (k: string) => Promise<string | null>;
+  setItem: (k: string, v: string) => Promise<void>;
+  removeItem: (k: string) => Promise<void>;
+} | null = null;
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require("@react-native-async-storage/async-storage");
+  const storage = mod?.default || mod;
+  if (storage && typeof storage.getItem === "function") {
+    persistentStorage = storage;
+  }
+} catch {
+  persistentStorage = null;
+}
 
 /**
  * Get cached data: Checks RAM memory first (0ms), then falls back to persistent Disk Storage
@@ -31,29 +46,27 @@ export async function getCachedData<T>(
     memoryCache.delete(key);
   }
 
-  if (!isAsyncStorageWorking) {
+  if (!persistentStorage) {
     return null;
   }
 
   // 2. Tier 2: Persistent Disk Storage (survives app restarts)
   try {
-    const stored = await AsyncStorage.getItem(CACHE_PREFIX + key);
+    const stored = await persistentStorage.getItem(CACHE_PREFIX + key);
     if (!stored) return null;
 
     const diskEnvelope: CacheEnvelope<T> = JSON.parse(stored);
     if (!diskEnvelope || !diskEnvelope.timestamp) return null;
 
     if (Date.now() - diskEnvelope.timestamp > maxAgeMs) {
-      await AsyncStorage.removeItem(CACHE_PREFIX + key).catch(() => {});
+      await persistentStorage.removeItem(CACHE_PREFIX + key).catch(() => {});
       return null;
     }
 
     // Populate RAM cache for subsequent instant reads
     memoryCache.set(key, diskEnvelope);
     return diskEnvelope.data;
-  } catch (error) {
-    // If native AsyncStorage module is missing or throws, fallback to RAM cache silently
-    isAsyncStorageWorking = false;
+  } catch {
     return null;
   }
 }
@@ -70,13 +83,13 @@ export async function setCachedData<T>(key: string, data: T): Promise<void> {
   // Always save to RAM
   memoryCache.set(key, envelope);
 
-  if (!isAsyncStorageWorking) return;
+  if (!persistentStorage) return;
 
   // Persist to Disk asynchronously
   try {
-    await AsyncStorage.setItem(CACHE_PREFIX + key, JSON.stringify(envelope));
-  } catch (error) {
-    isAsyncStorageWorking = false;
+    await persistentStorage.setItem(CACHE_PREFIX + key, JSON.stringify(envelope));
+  } catch {
+    // Graceful fallback to in-memory only
   }
 }
 
@@ -86,12 +99,11 @@ export async function setCachedData<T>(key: string, data: T): Promise<void> {
 export async function clearCachedData(key: string): Promise<void> {
   memoryCache.delete(key);
 
-  if (!isAsyncStorageWorking) return;
+  if (!persistentStorage) return;
 
   try {
-    await AsyncStorage.removeItem(CACHE_PREFIX + key);
-  } catch (error) {
-    isAsyncStorageWorking = false;
+    await persistentStorage.removeItem(CACHE_PREFIX + key);
+  } catch {
+    // Ignore
   }
 }
-

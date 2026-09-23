@@ -7,7 +7,12 @@ export const Colors = {
   primaryBorder: "#BBF7D0", // Light green border
   primaryMuted: "#15803D",
 
-  // Secondary & Accents
+  // Darker Royal Blue Palette (Official Emblem & App Accent)
+  bluePrimary: "#1E3A8A", // Deep royal navy
+  blueDark: "#172554", // Midnight royal navy
+  blueMedium: "#1E40AF", // Classic rich royal blue
+  blueSoft: "#EFF6FF", // Soft royal blue tint
+  blueBorder: "#BFDBFE", // Crisp royal border
   secondary: "#1E3A8A", // Royal Navy
   accent: "#D97706", // Warm Amber / Mustard
 
@@ -21,8 +26,8 @@ export const Colors = {
   textPrimary: "#0F172A",
   textSecondary: "#475569",
   textMuted: "#94A3B8",
-  textBlue: "#1D4ED8",
-  textBlueDark: "#1E3A8A",
+  textBlue: "#1E3A8A", // Darker shade of blue
+  textBlueDark: "#172554",
   textGreen: "#166534",
   textGreenDark: "#14532D",
   textWhite: "#FFFFFF",
@@ -30,9 +35,9 @@ export const Colors = {
   // Borders & Dividers
   border: "#E2E8F0",
   borderLight: "#F1F5F9",
-  borderBlue: "#93C5FD",
+  borderBlue: "#BFDBFE",
   borderGreen: "#86EFAC",
-  borderFocus: "#166534",
+  borderFocus: "#1E3A8A",
 
   // Input styling
   inputBg: "#FFFFFF",
@@ -66,7 +71,7 @@ export const Shadows = {
     elevation: 3,
   },
   primaryBtn: {
-    shadowColor: "#166534",
+    shadowColor: "#1E3A8A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,

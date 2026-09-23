@@ -108,12 +108,6 @@ export default function MobileLoginScreen() {
     }
   };
 
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError("");
-  };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" animated={true} />
@@ -301,34 +295,6 @@ export default function MobileLoginScreen() {
                 </View>
                 <Text style={styles.socialLabel}>Apple</Text>
               </TouchableOpacity>
-            </View>
-
-            {/* Quick Demo Credentials for Testing */}
-            <View style={styles.demoBox}>
-              <Text style={styles.demoTitle}>TEST ACCOUNTS</Text>
-              <View style={styles.demoPills}>
-                <TouchableOpacity
-                  style={styles.demoPill}
-                  onPress={() => handleQuickFill("admin@prayaspariwaar.com", "admin123")}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.demoPillText}>Admin</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.demoPill}
-                  onPress={() => handleQuickFill("volunteer@prayaspariwaar.com", "volunteer123")}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.demoPillText}>Volunteer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.demoPill}
-                  onPress={() => handleQuickFill("donor@prayaspariwaar.com", "donor123")}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.demoPillText}>Donor</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
 
@@ -572,40 +538,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#64748B",
     fontWeight: "700",
-  },
-  demoBox: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 14,
-    padding: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    marginBottom: 14,
-  },
-  demoTitle: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#166534",
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  demoPills: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  demoPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    ...Shadows.soft,
-  },
-  demoPillText: {
-    fontSize: 11.5,
-    fontWeight: "800",
-    color: "#166534",
   },
   footer: {
     marginTop: "auto",
