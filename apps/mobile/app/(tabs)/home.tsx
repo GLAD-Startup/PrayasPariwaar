@@ -319,7 +319,7 @@ export default function MobileHomeScreen() {
   };
 
   const handleCallEmergency = () => {
-    Linking.openURL("tel:+919412279001").catch(() => {
+    Linking.openURL("tel:+919927081650").catch(() => {
       setHelplineModalVisible(true);
     });
   };
@@ -697,10 +697,10 @@ export default function MobileHomeScreen() {
         description="Connect with Prayas Seva Coordination Desk for immediate emergency blood, ambulance, or medical oxygen support in Vrindavan & Mathura."
         icon="call-outline"
         type="primary"
-        confirmText="Call +91 94122 79001"
+        confirmText="Call +91 99270 81650"
         onConfirm={() => {
           setHelplineModalVisible(false);
-          Linking.openURL("tel:+919412279001");
+          Linking.openURL("tel:+919927081650");
         }}
         cancelText="Close"
         showCancel={true}

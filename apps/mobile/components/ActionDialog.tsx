@@ -92,13 +92,13 @@ export default function ActionDialog({
       case "primary":
       default:
         return {
-          iconBg: "#EFF6FF",
-          iconBorder: "#BFDBFE",
-          iconColor: "#1D4ED8",
-          confirmBtnBg: "#1D4ED8",
+          iconBg: "#F0FDF4",
+          iconBorder: "#BBF7D0",
+          iconColor: "#166534",
+          confirmBtnBg: "#166534",
           confirmBtnText: "#FFFFFF",
-          badgeBg: "#EFF6FF",
-          badgeColor: "#1D4ED8",
+          badgeBg: "#F0FDF4",
+          badgeColor: "#166534",
         };
     }
   };

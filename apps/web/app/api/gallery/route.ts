@@ -25,38 +25,7 @@ function getStoredGallery(): LocalGalleryData {
     console.warn("Failed to read local gallery storage", e);
   }
   return {
-    albums: [
-      {
-        id: "alb-education",
-        title: "Free Education & Evening Tutoring Centers",
-        slug: "free-education-centers",
-        category: "Free Education",
-        coverImage: "/images/youth-skills-vrindavan.jpg",
-        description: "Evening tutoring classes and free school kit distribution in rural Vrindavan.",
-        photoCount: 6,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "alb-plantation",
-        title: "Vrindavan Harit Kranti - 5,000 Sapling Afforestation",
-        slug: "vrindavan-harit-kranti",
-        category: "Plantation",
-        coverImage: "/images/vrindavan-plantation.jpg",
-        description: "Native Neem, Peepal, and Kadamba tree plantation along Braj Parikrama Marg.",
-        photoCount: 8,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "alb-blood",
-        title: "Emergency Blood Donation Seva",
-        slug: "emergency-blood-seva",
-        category: "Blood Donation",
-        coverImage: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
-        description: "24/7 volunteer donor network dispatch and hospital patient support.",
-        photoCount: 5,
-        createdAt: new Date().toISOString(),
-      },
-    ],
+    albums: [],
     photos: [],
   };
 }
@@ -221,7 +190,7 @@ export async function POST(req: Request) {
       title: body.title || "New Seva Album",
       slug: body.slug || body.title?.toLowerCase().replace(/\s+/g, "-") || `album-${Date.now()}`,
       category: body.category || "Free Education",
-      coverImage: body.coverImage || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
+      coverImage: body.coverImage || "",
       description: body.description || "",
       photoCount: 0,
       published: true,

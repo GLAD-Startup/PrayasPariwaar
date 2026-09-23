@@ -12,6 +12,7 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -147,7 +148,8 @@ export default function BloodRequestScreen() {
   const [bgModalVisible, setBgModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [liveRequests, setLiveRequests] = useState<LiveBloodRequest[]>(INITIAL_LIVE_REQUESTS);
+  const [liveRequests, setLiveRequests] = useState<LiveBloodRequest[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [dialogState, setDialogState] = useState<{
     visible: boolean;
@@ -170,21 +172,31 @@ export default function BloodRequestScreen() {
 
   const loadLiveRequests = async () => {
     try {
-      const res = await api.get<any>("/blood-requests");
+      // Query pending / in-queue blood requests only
+      const res = await api.get<any>("/blood-requests?status=PENDING");
       if (res.data?.success && Array.isArray(res.data.data)) {
-        const mapped: LiveBloodRequest[] = res.data.data.map((r: any) => ({
+        // Strict filter: only show requests that are actively PENDING / waiting in queue
+        const pendingQueue = res.data.data.filter(
+          (r: any) => !r.status || r.status === "PENDING"
+        );
+        const mapped: LiveBloodRequest[] = pendingQueue.map((r: any) => ({
           id: r.id,
           patientName: r.patientName,
           hospital: r.hospitalName || r.hospital || "Hospital",
           bloodGroup: formatBloodGroup(r.bloodGroup),
           units: `${r.units || r.unitsNeeded || 1} Unit`,
           urgency: r.urgency || "CRITICAL",
-          postedTime: "Recently",
+          postedTime: r.createdAt
+            ? new Date(r.createdAt).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "In Queue",
           attendantPhone: r.contactPhone,
           donorsResponding: [
             {
               name: "Volunteer Taskforce",
-              phone: "+91 94122 79000",
+              phone: "+91 99270 81650",
               distance: "Mathura Network",
               status: "Broadcast Dispatched 🚨",
             },
@@ -195,6 +207,12 @@ export default function BloodRequestScreen() {
     } catch (e) {
       console.warn("Failed to load blood requests:", e);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadLiveRequests();
+    setRefreshing(false);
   };
 
   const handleBroadcast = async () => {
@@ -247,7 +265,7 @@ export default function BloodRequestScreen() {
         donorsResponding: [
           {
             name: "Volunteer Taskforce",
-            phone: "+91 94122 79000",
+            phone: "+91 99270 81650",
             distance: "Mathura Central",
             status: "Push Broadcast Dispatched 🚨",
           },
@@ -323,7 +341,7 @@ export default function BloodRequestScreen() {
             style={{ marginRight: 6 }}
           />
           <Text style={[styles.tabBtnText, activeTab === "status" && styles.tabBtnTextActive]}>
-            Live Status ({liveRequests.length})
+            Live Queue ({liveRequests.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -332,6 +350,14 @@ export default function BloodRequestScreen() {
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#166534"]}
+            tintColor="#166534"
+          />
+        }
       >
         {activeTab === "request" ? (
           /* TAB 1: REQUEST BLOOD FORM */
@@ -525,7 +551,26 @@ export default function BloodRequestScreen() {
         ) : (
           /* TAB 2: LIVE STATUS & RESPONSES */
           <View style={styles.statusContainer}>
-            {liveRequests.map((req) => (
+            {liveRequests.length === 0 ? (
+              <View style={styles.emptyQueueCard}>
+                <View style={styles.emptyQueueIconCircle}>
+                  <Ionicons name="shield-checkmark" size={36} color="#166534" />
+                </View>
+                <Text style={styles.emptyQueueTitle}>All Blood Requests Fulfilled</Text>
+                <Text style={styles.emptyQueueSubtext}>
+                  There are currently no patients waiting in the emergency queue. Pull down or tap below to refresh the live queue.
+                </Text>
+                <TouchableOpacity
+                  style={styles.refreshQueueBtn}
+                  onPress={onRefresh}
+                  activeOpacity={0.88}
+                >
+                  <Ionicons name="refresh" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.refreshQueueBtnText}>Refresh Live Queue</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              liveRequests.map((req) => (
               <View key={req.id} style={styles.liveCard}>
                 <View style={styles.liveCardHeader}>
                   <View style={styles.livePulseWrapper}>
@@ -581,7 +626,7 @@ export default function BloodRequestScreen() {
                   <Text style={styles.attendantCallText}>Call Attendant: {req.attendantPhone}</Text>
                 </TouchableOpacity>
               </View>
-            ))}
+            )))}
           </View>
         )}
 
@@ -1122,5 +1167,56 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
     paddingHorizontal: 10,
+  },
+  emptyQueueCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginTop: 8,
+    ...Shadows.card,
+  },
+  emptyQueueIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F0FDF4",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  emptyQueueTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  emptyQueueSubtext: {
+    fontSize: 13,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 19,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  refreshQueueBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#166534",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  refreshQueueBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

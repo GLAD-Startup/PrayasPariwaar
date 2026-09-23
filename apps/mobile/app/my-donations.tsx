@@ -101,41 +101,30 @@ export default function MyDonationsScreen() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<DonationRecord | null>(null);
 
-  // User Mobile Number Tracking
-  const [userPhone, setUserPhone] = useState<string>("");
-  const [activePhone, setActivePhone] = useState<string>("");
-  const [searchPhoneInput, setSearchPhoneInput] = useState<string>("");
-  const [isEditingPhone, setIsEditingPhone] = useState<boolean>(false);
+  // Authenticated User State
+  const [user, setUser] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [activeUserName, setActiveUserName] = useState<string>("");
 
-  const loadDonations = useCallback(async (overridePhone?: string) => {
+  const loadDonations = useCallback(async () => {
     try {
       setLoading(true);
-      const user = await getAuthUser();
-      if (user?.name) setActiveUserName(user.name);
-
-      const profilePhone = user?.phone ? String(user.phone).trim() : "";
-      if (profilePhone && !userPhone) {
-        setUserPhone(profilePhone);
+      const authUser = await getAuthUser();
+      if (!authUser) {
+        setIsLoggedIn(false);
+        setUser(null);
+        setDonations([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
       }
 
-      // Determine phone to query
-      let queryPhone = "";
-      if (overridePhone !== undefined) {
-        queryPhone = overridePhone.trim();
-        setActivePhone(queryPhone);
-        setSearchPhoneInput(queryPhone);
-      } else if (activePhone) {
-        queryPhone = activePhone.trim();
-      } else if (profilePhone) {
-        queryPhone = profilePhone;
-        setActivePhone(profilePhone);
-        setSearchPhoneInput(profilePhone);
-      }
+      setIsLoggedIn(true);
+      setUser(authUser);
+      if (authUser.name) setActiveUserName(authUser.name);
 
-      const phoneParam = queryPhone ? `&phone=${encodeURIComponent(queryPhone)}` : "";
-      // Only fetch SUCCESS status (verified receipts). Abandoned or pending checkout attempts are excluded.
-      const res = await api.get(`/donations?status=SUCCESS${phoneParam}`);
+      // Authenticated query: server enforces that non-admins can only view their own verified receipts
+      const res = await api.get(`/donations?status=SUCCESS`);
 
       if (res.data?.success && Array.isArray(res.data.data)) {
         // Strict client-side filter: only SUCCESS status is treated as a valid receipt
@@ -181,7 +170,7 @@ export default function MyDonationsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activePhone, userPhone]);
+  }, []);
 
   useEffect(() => {
     loadDonations();
@@ -190,18 +179,6 @@ export default function MyDonationsScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadDonations();
-  };
-
-  const handleApplyPhoneSearch = () => {
-    const trimmed = searchPhoneInput.trim();
-    loadDonations(trimmed);
-    setIsEditingPhone(false);
-  };
-
-  const handleResetToUserProfilePhone = () => {
-    setSearchPhoneInput(userPhone);
-    loadDonations(userPhone);
-    setIsEditingPhone(false);
   };
 
   const filteredList = donations.filter(
@@ -269,83 +246,56 @@ export default function MyDonationsScreen() {
           </Text>
         </View>
 
-        {/* Mobile Number Sync & Receipt Check Bar */}
-        <View style={styles.phoneSyncCard}>
-          <View style={styles.phoneSyncTop}>
-            <View style={styles.phoneSyncLeft}>
-              <View style={styles.phoneIconCircle}>
-                <Ionicons name="phone-portrait" size={18} color="#1E3A8A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.phoneSyncTitle}>Linked Mobile Receipts</Text>
-                <Text style={styles.phoneSyncNumber}>
-                  {activePhone ? activePhone : "Matching all registered accounts"}
-                </Text>
-              </View>
+        {!isLoggedIn && (
+          <View style={styles.loginRequiredCard}>
+            <View style={styles.loginRequiredIcon}>
+              <Ionicons name="lock-closed-outline" size={32} color="#166534" />
             </View>
-
+            <Text style={styles.loginRequiredTitle}>Sign In to Access Your Receipts</Text>
+            <Text style={styles.loginRequiredSubtext}>
+              To protect donor confidentiality, donation receipts and 80G tax certificates can only be viewed after signing in to your verified account.
+            </Text>
             <TouchableOpacity
-              style={styles.changePhoneBtn}
-              onPress={() => setIsEditingPhone(!isEditingPhone)}
-              activeOpacity={0.8}
+              style={styles.loginPromptBtn}
+              onPress={() => router.push("/(auth)/login")}
+              activeOpacity={0.88}
             >
-              <Ionicons
-                name={isEditingPhone ? "close-circle-outline" : "search-outline"}
-                size={14}
-                color="#1E3A8A"
-                style={{ marginRight: 3 }}
-              />
-              <Text style={styles.changePhoneBtnText}>
-                {isEditingPhone ? "Cancel" : "Check Mobile"}
-              </Text>
+              <Ionicons name="log-in-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.loginPromptBtnText}>Sign In / Register</Text>
             </TouchableOpacity>
           </View>
+        )}
 
-          {isEditingPhone && (
-            <View style={styles.phoneEditBox}>
-              <Text style={styles.phoneEditInstruction}>
-                Enter mobile number to view all matching donations made via Mobile App, Razorpay, or Website:
-              </Text>
-              <View style={styles.phoneInputRow}>
-                <TextInput
-                  style={styles.phoneSearchInput}
-                  value={searchPhoneInput}
-                  onChangeText={setSearchPhoneInput}
-                  placeholder="Enter 10-digit mobile number"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="phone-pad"
-                  maxLength={15}
-                />
-                <TouchableOpacity
-                  style={styles.phoneSearchBtn}
-                  onPress={handleApplyPhoneSearch}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.phoneSearchBtnText}>Find</Text>
-                </TouchableOpacity>
+        {/* Verified Account Privacy Card */}
+        {isLoggedIn && (
+          <View style={styles.phoneSyncCard}>
+            <View style={styles.phoneSyncTop}>
+              <View style={styles.phoneSyncLeft}>
+                <View style={styles.phoneIconCircle}>
+                  <Ionicons name="shield-checkmark" size={18} color="#166534" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.phoneSyncTitle}>Verified Donor Account</Text>
+                  <Text style={styles.phoneSyncNumber}>
+                    {user?.phone ? user.phone : user?.email ? user.email : "Authenticated Supporter"}
+                  </Text>
+                </View>
               </View>
 
-              {userPhone ? (
-                <TouchableOpacity
-                  style={styles.phoneResetBtn}
-                  onPress={handleResetToUserProfilePhone}
-                >
-                  <Ionicons name="refresh-outline" size={12} color="#1E3A8A" style={{ marginRight: 4 }} />
-                  <Text style={styles.phoneResetBtnText}>
-                    Use profile mobile number ({userPhone})
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
+              <View style={styles.verifiedSecurityBadge}>
+                <Ionicons name="lock-closed" size={11} color="#166534" style={{ marginRight: 4 }} />
+                <Text style={styles.verifiedSecurityText}>Private</Text>
+              </View>
             </View>
-          )}
 
-          <View style={styles.syncNoticeRow}>
-            <Ionicons name="shield-checkmark-outline" size={13} color="#166534" />
-            <Text style={styles.phoneSyncNotice}>
-              Auto-checking all donations with this mobile number in database.
-            </Text>
+            <View style={styles.syncNoticeRow}>
+              <Ionicons name="shield-checkmark-outline" size={13} color="#166534" />
+              <Text style={styles.phoneSyncNotice}>
+                Receipts are protected under donor privacy and tied strictly to your verified account.
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Frequency Filter Tabs */}
         <View style={styles.tabsRow}>
@@ -368,7 +318,7 @@ export default function MyDonationsScreen() {
           <View style={{ paddingVertical: 40, alignItems: "center" }}>
             <ActivityIndicator size="large" color="#166534" />
             <Text style={{ marginTop: 10, fontSize: 13, color: "#64748B", fontWeight: "600" }}>
-              Loading donations for {activePhone || "your account"}...
+              Loading verified donation receipts...
             </Text>
           </View>
         ) : filteredList.length === 0 ? (
@@ -376,9 +326,7 @@ export default function MyDonationsScreen() {
             <Ionicons name="receipt-outline" size={44} color="#94A3B8" />
             <Text style={styles.emptyTitle}>No Verified Receipts Found</Text>
             <Text style={styles.emptySub}>
-              {activePhone
-                ? `No verified donation receipts found for mobile number ${activePhone}. Check for typos or make a new contribution!`
-                : "You haven't made any verified contributions yet. Support a cause today to get your 80G receipt!"}
+              You haven't made any verified contributions yet. Support a cause today to get your official 80G receipt!
             </Text>
             <TouchableOpacity
               style={styles.donateNowBtn}
@@ -844,10 +792,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   phoneIconCircle: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 10,
-    backgroundColor: "#DBEAFE",
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -855,7 +805,7 @@ const styles = StyleSheet.create({
   phoneSyncTitle: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#1E3A8A",
+    color: "#166534",
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -865,70 +815,21 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     marginTop: 1,
   },
-  changePhoneBtn: {
+  verifiedSecurityBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DBEAFE",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  changePhoneBtnText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#1E3A8A",
-  },
-  phoneEditBox: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#BFDBFE",
-  },
-  phoneEditInstruction: {
-    fontSize: 11,
-    color: "#475569",
-    marginBottom: 6,
-    fontWeight: "600",
-  },
-  phoneInputRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  phoneSearchInput: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#93C5FD",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 38,
-    fontSize: 12,
-    color: "#0F172A",
-    fontWeight: "700",
+    borderColor: "#BBF7D0",
   },
-  phoneSearchBtn: {
-    backgroundColor: "#1E3A8A",
-    paddingHorizontal: 14,
-    height: 38,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  phoneSearchBtnText: {
-    color: "#FFFFFF",
-    fontSize: 11,
+  verifiedSecurityText: {
+    fontSize: 10,
     fontWeight: "800",
-  },
-  phoneResetBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-    paddingVertical: 2,
-  },
-  phoneResetBtnText: {
-    fontSize: 11,
-    color: "#1E3A8A",
-    fontWeight: "700",
+    color: "#166534",
+    textTransform: "uppercase",
   },
   syncNoticeRow: {
     flexDirection: "row",
@@ -940,5 +841,56 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#166534",
     fontWeight: "600",
+  },
+  loginRequiredCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 16,
+    ...Shadows.soft,
+  },
+  loginRequiredIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F0FDF4",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  loginRequiredTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  loginRequiredSubtext: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+  },
+  loginPromptBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#166534",
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 10,
+  },
+  loginPromptBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
   },
 });

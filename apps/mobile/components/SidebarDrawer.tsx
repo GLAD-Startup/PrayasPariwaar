@@ -98,8 +98,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
 
   const handleCallDesk = () => {
     onClose();
-    Linking.openURL("tel:+919412279001").catch(() => {
-      Alert.alert("Helpline", "Prayas 24/7 Seva Coordination Desk: +91 94122 79001");
+    Linking.openURL("tel:+919927081650").catch(() => {
+      Alert.alert("Helpline", "Prayas 24/7 Seva Coordination Desk: +91 99270 81650");
     });
   };
 
@@ -261,12 +261,12 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     {
       id: "helpline",
       title: "Emergency Helpline Desk",
-      subtitle: "One-Tap Call (+91 94122 79001)",
+      subtitle: "One-Tap Call (+91 99270 81650)",
       icon: "call-outline",
       iconType: "ionicons",
       badge: "Direct Line",
-      badgeBg: "#EFF6FF",
-      badgeColor: "#1D4ED8",
+      badgeBg: "#F0FDF4",
+      badgeColor: "#166534",
       onPress: handleCallDesk,
     },
   ];

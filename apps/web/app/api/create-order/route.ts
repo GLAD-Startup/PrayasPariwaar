@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     // Optional donor metadata passed in body or notes
     const donorName = body.donorName || notes.donorName || "Supporter";
-    const donorEmail = body.donorEmail || notes.donorEmail || "donor@prayas.org";
+    const donorEmail = body.donorEmail || notes.donorEmail || "av.prayas@gmail.com";
     const donorPhone = body.donorPhone || notes.donorPhone || null;
     const projectOrCause = body.projectOrCause || notes.projectOrCause || "General Seva Fund";
     const projectId = body.projectId || null;

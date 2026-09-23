@@ -12,6 +12,7 @@ import {
   Share,
   Alert,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -43,148 +44,6 @@ interface GalleryPhoto {
   image: any;
 }
 
-const REAL_ALBUMS: Album[] = [
-  {
-    id: "alb-1",
-    title: "Free Education & Tutoring",
-    date: "Vrindavan & Mathura",
-    photoCount: 140,
-    image: require("../assets/images/hero-education-vrindavan.jpg"),
-    category: "Free Education",
-  },
-  {
-    id: "alb-2",
-    title: "Emergency Blood Seva",
-    date: "24/7 Hospital Desk",
-    photoCount: 86,
-    image: require("../assets/images/medical-blood-seva.jpg"),
-    category: "Blood Donation",
-  },
-  {
-    id: "alb-3",
-    title: "Harit Kranti Plantation",
-    date: "Parikrama Marg Drives",
-    photoCount: 112,
-    image: require("../assets/images/vrindavan-plantation.jpg"),
-    category: "Plantation",
-  },
-  {
-    id: "alb-4",
-    title: "Free Healthcare & Eye Camps",
-    date: "Rural Health Camps",
-    photoCount: 95,
-    image: require("../assets/images/health-camp-vrindavan.jpg"),
-    category: "Healthcare",
-  },
-  {
-    id: "alb-5",
-    title: "Jeev Jal Seva & Bird Bowls",
-    date: "Summer Water Mission",
-    photoCount: 64,
-    image: require("../assets/onboarding/jeev_jal.jpg"),
-    category: "Jeev Jal Seva",
-  },
-  {
-    id: "alb-6",
-    title: "Youth Vocational Training",
-    date: "Skill & Computer Center",
-    photoCount: 78,
-    image: require("../assets/images/youth-skills-vrindavan.jpg"),
-    category: "Vocational Training",
-  },
-];
-
-const REAL_PHOTOS: GalleryPhoto[] = [
-  {
-    id: "rp-1",
-    title: "Children studying under ancient banyan tree in Vrindavan",
-    category: "Free Education",
-    location: "Vrindavan, Mathura",
-    date: "Project Aashayein",
-    image: require("../assets/images/banyan-study-vrindavan.jpg"),
-  },
-  {
-    id: "rp-2",
-    title: "Remedial evening tutoring batch at Raman Reti center",
-    category: "Free Education",
-    location: "Raman Reti, Vrindavan",
-    date: "Daily Classes",
-    image: require("../assets/images/hero-education-vrindavan.jpg"),
-  },
-  {
-    id: "rp-3",
-    title: "Inspiring rural student with school textbook",
-    category: "Free Education",
-    location: "Village Chhatikara",
-    date: "Child Education",
-    image: require("../assets/images/child-hero-portrait.jpg"),
-  },
-  {
-    id: "rp-4",
-    title: "Happy young girl with free school learning kit",
-    category: "Free Education",
-    location: "Mathura District",
-    date: "Kit Distribution",
-    image: require("../assets/images/child-hope-vrindavan.jpg"),
-  },
-  {
-    id: "rp-5",
-    title: "Voluntary donor participating at Mathura emergency blood desk",
-    category: "Blood Donation",
-    location: "Mathura City Hospital",
-    date: "Emergency Seva",
-    image: require("../assets/images/medical-blood-seva.jpg"),
-  },
-  {
-    id: "rp-6",
-    title: "Elderly patient diagnostic checkup at Chhatikara health camp",
-    category: "Healthcare",
-    location: "Chhatikara Village",
-    date: "Free Health Camp",
-    image: require("../assets/images/health-camp-vrindavan.jpg"),
-  },
-  {
-    id: "rp-7",
-    title: "Native Neem and Peepal sapling plantation along Parikrama Marg",
-    category: "Plantation",
-    location: "Parikrama Marg, Vrindavan",
-    date: "Harit Kranti",
-    image: require("../assets/images/vrindavan-plantation.jpg"),
-  },
-  {
-    id: "rp-8",
-    title: "Youth digital literacy and career vocational workshop",
-    category: "Vocational Training",
-    location: "Mathura Skill Center",
-    date: "Project Aadhar",
-    image: require("../assets/images/youth-skills-vrindavan.jpg"),
-  },
-  {
-    id: "rp-9",
-    title: "Earthen terracotta water bowl installed for thirsty birds in summer",
-    category: "Jeev Jal Seva",
-    location: "Vrindavan Raman Reti",
-    date: "Jeev Jal Seva",
-    image: require("../assets/onboarding/jeev_jal.jpg"),
-  },
-  {
-    id: "rp-10",
-    title: "Women mastering tailoring and garment manufacturing",
-    category: "Vocational Training",
-    location: "Vrindavan Skill Center",
-    date: "Women Empowerment",
-    image: require("../assets/onboarding/tailoring.jpg"),
-  },
-  {
-    id: "rp-11",
-    title: "Youth volunteers with Harit Kranti plantation banner",
-    category: "Plantation",
-    location: "Govardhan Road",
-    date: "Afforestation Drive",
-    image: require("../assets/onboarding/banner_plantation.jpg"),
-  },
-];
-
 const FILTER_TABS = [
   { id: "all", label: "All Photos", icon: "grid", iconType: "ionicons" },
   { id: "Free Education", label: "Education", icon: "school-outline", iconType: "ionicons" },
@@ -198,8 +57,9 @@ const FILTER_TABS = [
 export default function GalleryScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [albums, setAlbums] = useState<Album[]>(REAL_ALBUMS);
-  const [photos, setPhotos] = useState<GalleryPhoto[]>(REAL_PHOTOS);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState<GalleryPhoto | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -210,88 +70,67 @@ export default function GalleryScreen() {
 
   const loadGalleryData = async () => {
     try {
-      // 1. Instant 0ms read from disk cache
-      const cached = await getCachedData<{ albums: any[]; recentPhotos: any[] }>(`prayas_gallery_${selectedCategory}`);
-      if (cached && (cached.albums?.length > 0 || cached.recentPhotos?.length > 0)) {
-        if (cached.albums && cached.albums.length > 0) {
-          const mappedAlbums = cached.albums.map((a: any) => ({
+      setLoading(true);
+      // Fetch live gallery data directly from database API
+      const url = selectedCategory === "all" ? "/gallery" : `/gallery?category=${encodeURIComponent(selectedCategory)}`;
+      const res = await api.get<any>(url);
+
+      if (res.data?.success && res.data.data) {
+        const dbAlbums = (res.data.data.albums || []).filter(
+          (a: any) => !a.coverImage || !a.coverImage.includes("unsplash.com")
+        );
+        const dbPhotos = (res.data.data.recentPhotos || []).filter(
+          (p: any) => p.url && !p.url.includes("unsplash.com")
+        );
+        const imageUrlsToPrefetch: string[] = [];
+
+        const mappedAlbums: Album[] = dbAlbums.map((a: any) => {
+          const resolvedImg = resolveImageUrl(a.coverImage);
+          if (typeof resolvedImg === "object" && resolvedImg.uri) {
+            imageUrlsToPrefetch.push(resolvedImg.uri);
+          }
+          return {
             id: a.id,
             title: a.title,
             date: a.location || "Vrindavan & Mathura",
-            photoCount: a.photoCount || (a.photos ? a.photos.length : 12),
-            image: resolveImageUrl(a.coverImage, require("../assets/images/hero-education-vrindavan.jpg")),
+            photoCount: a.photoCount || (a.photos ? a.photos.length : 0),
+            image: resolvedImg,
             category: a.category || "Free Education",
-          }));
-          setAlbums(mappedAlbums);
-        }
-        if (cached.recentPhotos && cached.recentPhotos.length > 0) {
-          const mappedPhotos = cached.recentPhotos.map((p: any) => ({
+          };
+        });
+
+        const mappedPhotos: GalleryPhoto[] = dbPhotos.map((p: any) => {
+          const resolvedImg = resolveImageUrl(p.url);
+          if (typeof resolvedImg === "object" && resolvedImg.uri) {
+            imageUrlsToPrefetch.push(resolvedImg.uri);
+          }
+          return {
             id: p.id,
             title: p.title || p.caption || "Seva Photo",
             category: p.category || "Free Education",
             location: p.location || "Vrindavan Seva",
             date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "Recent",
-            image: resolveImageUrl(p.url, require("../assets/images/banyan-study-vrindavan.jpg")),
-          }));
-          setPhotos(mappedPhotos);
-        }
-      }
-
-      // 2. Fetch live updates
-      const url = selectedCategory === "all" ? "/gallery" : `/gallery?category=${encodeURIComponent(selectedCategory)}`;
-      const res = await api.get<any>(url);
-      if (res.data?.success && res.data.data) {
-        const dbAlbums = res.data.data.albums || [];
-        const dbPhotos = res.data.data.recentPhotos || [];
-        const imageUrlsToPrefetch: string[] = [];
-
-        let mappedAlbums: Album[] | null = null;
-        let mappedPhotos: GalleryPhoto[] | null = null;
-
-        if (dbAlbums.length > 0) {
-          mappedAlbums = dbAlbums.map((a: any) => {
-            const resolvedImg = resolveImageUrl(a.coverImage, require("../assets/images/hero-education-vrindavan.jpg"));
-            if (typeof resolvedImg === "object" && resolvedImg.uri) {
-              imageUrlsToPrefetch.push(resolvedImg.uri);
-            }
-            return {
-              id: a.id,
-              title: a.title,
-              date: a.location || "Vrindavan & Mathura",
-              photoCount: a.photoCount || (a.photos ? a.photos.length : 12),
-              image: resolvedImg,
-              category: a.category || "Free Education",
-            };
-          });
-        }
-
-        if (dbPhotos.length > 0) {
-          mappedPhotos = dbPhotos.map((p: any) => {
-            const resolvedImg = resolveImageUrl(p.url, require("../assets/images/banyan-study-vrindavan.jpg"));
-            if (typeof resolvedImg === "object" && resolvedImg.uri) {
-              imageUrlsToPrefetch.push(resolvedImg.uri);
-            }
-            return {
-              id: p.id,
-              title: p.title || p.caption || "Seva Photo",
-              category: p.category || "Free Education",
-              location: p.location || "Vrindavan Seva",
-              date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "Recent",
-              image: resolvedImg,
-            };
-          });
-        }
+            image: resolvedImg,
+          };
+        });
 
         if (imageUrlsToPrefetch.length > 0) {
-          await prefetchRemoteImages(imageUrlsToPrefetch);
+          prefetchRemoteImages(imageUrlsToPrefetch).catch(() => {});
         }
 
-        await setCachedData(`prayas_gallery_${selectedCategory}`, res.data.data);
-        if (mappedAlbums) setAlbums(mappedAlbums);
-        if (mappedPhotos) setPhotos(mappedPhotos);
+        setAlbums(mappedAlbums);
+        setPhotos(mappedPhotos);
+      } else {
+        setAlbums([]);
+        setPhotos([]);
       }
     } catch (e) {
-      console.warn("Gallery API offline, displaying authentic local assets", e);
+      console.warn("Failed to load gallery from database:", e);
+      setAlbums([]);
+      setPhotos([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -464,25 +303,42 @@ export default function GalleryScreen() {
           <Text style={styles.viewAllText}>Tap to enlarge</Text>
         </View>
 
-        <View style={styles.photosGrid}>
-          {filteredPhotos.map((photo) => (
-            <TouchableOpacity
-              key={photo.id}
-              style={[styles.gridPhotoWrapper, { width: GRID_ITEM_SIZE, height: GRID_ITEM_SIZE }]}
-              onPress={() => setActivePhoto(photo)}
-              activeOpacity={0.85}
-            >
-              <Image
-                source={typeof photo.image === "string" ? { uri: photo.image } : photo.image}
-                style={styles.gridPhotoImage}
-                resizeMode="cover"
-              />
-              <View style={styles.gridPhotoOverlay}>
-                <Ionicons name="expand-outline" size={13} color="#FFFFFF" />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#166534" />
+            <Text style={styles.loadingText}>Fetching gallery from database...</Text>
+          </View>
+        ) : filteredPhotos.length === 0 ? (
+          <View style={styles.emptyGalleryBox}>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="images-outline" size={32} color="#166534" />
+            </View>
+            <Text style={styles.emptyGalleryTitle}>No Photos in this Category</Text>
+            <Text style={styles.emptyGallerySubtitle}>
+              All photos are linked directly to database uploads. Verified field captures will appear here once added.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.photosGrid}>
+            {filteredPhotos.map((photo) => (
+              <TouchableOpacity
+                key={photo.id}
+                style={[styles.gridPhotoWrapper, { width: GRID_ITEM_SIZE, height: GRID_ITEM_SIZE }]}
+                onPress={() => setActivePhoto(photo)}
+                activeOpacity={0.85}
+              >
+                <Image
+                  source={typeof photo.image === "string" ? { uri: photo.image } : photo.image}
+                  style={styles.gridPhotoImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.gridPhotoOverlay}>
+                  <Ionicons name="expand-outline" size={13} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Bottom Impact Banner */}
         <View style={styles.bottomBanner}>
@@ -967,5 +823,50 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#86EFAC",
     fontWeight: "700",
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  emptyGalleryBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 12,
+    ...Shadows.card,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  emptyGalleryTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  emptyGallerySubtitle: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 18,
+    maxWidth: 280,
   },
 });

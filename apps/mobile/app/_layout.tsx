@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="blood-request" options={{ headerShown: false }} />
         <Stack.Screen name="medical-request" options={{ headerShown: false }} />
+        <Stack.Screen name="donation-success" options={{ headerShown: false }} />
       </Stack>
     </>
   );

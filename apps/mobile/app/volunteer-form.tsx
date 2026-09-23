@@ -407,14 +407,14 @@ export default function VolunteerFormScreen() {
             <View style={styles.deskActionsRow}>
               <TouchableOpacity
                 style={styles.deskContactBtn}
-                onPress={() => Linking.openURL("tel:+919412279000")}
+                onPress={() => Linking.openURL("tel:+919927081650")}
               >
                 <Ionicons name="call" size={14} color={Colors.primary} style={{ marginRight: 4 }} />
                 <Text style={styles.deskContactBtnText}>Call Coordinator</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deskContactBtn}
-                onPress={() => Linking.openURL("mailto:volunteer@prayas.org")}
+                onPress={() => Linking.openURL("mailto:av.prayas@gmail.com")}
               >
                 <Ionicons name="mail" size={14} color={Colors.primary} style={{ marginRight: 4 }} />
                 <Text style={styles.deskContactBtnText}>Email Desk</Text>

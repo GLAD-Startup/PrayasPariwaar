@@ -307,7 +307,7 @@ export default function MedicalRequestScreen() {
       setDialogState({
         visible: true,
         title: "Offline Notification Logged",
-        description: "Your loan request has been noted. Our Seva coordination helpline (+91 94122 79001) will verify and assist you right away.",
+        description: "Your loan request has been noted. Our Seva coordination helpline (+91 99270 81650) will verify and assist you right away.",
         type: "primary",
         icon: "information-circle-outline",
         badge: "HELPLINE DESK",
@@ -320,11 +320,11 @@ export default function MedicalRequestScreen() {
   };
 
   const handleCallEmergency = () => {
-    Linking.openURL("tel:+919412279001").catch(() => {
+    Linking.openURL("tel:+919927081650").catch(() => {
       setDialogState({
         visible: true,
         title: "24/7 Seva Helpline",
-        description: "Call Prayas Seva Coordination Desk at +91 94122 79001 for urgent medical equipment & ambulance dispatch.",
+        description: "Call Prayas Seva Coordination Desk at +91 99270 81650 for urgent medical equipment & ambulance dispatch.",
         type: "primary",
         icon: "call-outline",
         badge: "EMERGENCY DESK",
@@ -831,7 +831,7 @@ export default function MedicalRequestScreen() {
               <View style={styles.successDetailsBox}>
                 <Text style={styles.successDetailText}>📍 Destination: {address || "Mathura / Vrindavan"}</Text>
                 <Text style={styles.successDetailText}>⏱️ Coordination: Within 2 Hours</Text>
-                <Text style={styles.successDetailText}>📞 Seva Desk: +91 94122 79001</Text>
+                <Text style={styles.successDetailText}>📞 Seva Desk: +91 99270 81650</Text>
               </View>
 
               <TouchableOpacity

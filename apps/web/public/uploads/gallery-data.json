@@ -10,47 +10,6 @@
       "photoCount": 0,
       "published": true,
       "createdAt": "2026-09-07T03:16:22.924Z"
-    },
-    {
-      "id": "album-1788750943075-wno6o",
-      "title": "Education",
-      "slug": "education",
-      "category": "Free Education",
-      "coverImage": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
-      "description": "",
-      "photoCount": 0,
-      "published": true,
-      "createdAt": "2026-09-07T03:15:43.075Z"
-    },
-    {
-      "id": "alb-education",
-      "title": "Free Education & Evening Tutoring Centers",
-      "slug": "free-education-centers",
-      "category": "Free Education",
-      "coverImage": "/images/youth-skills-vrindavan.jpg",
-      "description": "Evening tutoring classes and free school kit distribution in rural Vrindavan.",
-      "photoCount": 6,
-      "createdAt": "2026-09-02T07:23:19.052Z"
-    },
-    {
-      "id": "alb-plantation",
-      "title": "Vrindavan Harit Kranti - 5,000 Sapling Afforestation",
-      "slug": "vrindavan-harit-kranti",
-      "category": "Plantation",
-      "coverImage": "/images/vrindavan-plantation.jpg",
-      "description": "Native Neem, Peepal, and Kadamba tree plantation along Braj Parikrama Marg.",
-      "photoCount": 8,
-      "createdAt": "2026-09-02T07:23:19.052Z"
-    },
-    {
-      "id": "alb-blood",
-      "title": "Emergency Blood Donation Seva",
-      "slug": "emergency-blood-seva",
-      "category": "Blood Donation",
-      "coverImage": "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
-      "description": "24/7 volunteer donor network dispatch and hospital patient support.",
-      "photoCount": 5,
-      "createdAt": "2026-09-02T07:23:19.052Z"
     }
   ],
   "photos": [
@@ -63,26 +22,6 @@
       "category": "Free Education",
       "location": "Mathura / Vrindavan",
       "createdAt": "2026-09-07T04:03:43.296Z"
-    },
-    {
-      "id": "photo-1788753823269-l0oz9",
-      "albumId": "cmtqo5fri0003ag5akayoq1pd",
-      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:03:43.269Z"
-    },
-    {
-      "id": "photo-1788753823208-33ddj",
-      "albumId": "cmtqo5fri0003ag5akayoq1pd",
-      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:03:43.208Z"
     },
     {
       "id": "photo-1788753739283-nx0y8",
@@ -103,16 +42,6 @@
       "category": "Free Education",
       "location": "Mathura / Vrindavan",
       "createdAt": "2026-09-07T04:02:07.756Z"
-    },
-    {
-      "id": "photo-1788753727697-8g9vo",
-      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
-      "title": "Aadhar Career & Digital Vocational Counseling",
-      "caption": "Aadhar Career & Digital Vocational Counseling",
-      "url": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:02:07.697Z"
     },
     {
       "id": "photo-1788750965684-w9yfs",

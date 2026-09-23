@@ -15,12 +15,55 @@ export async function GET(req: Request) {
     const phoneParam = searchParams.get("phone") || searchParams.get("donorPhone");
     const emailParam = searchParams.get("email");
 
+    // Require authentication to access donation history
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in to view donation receipts." },
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = authUser.role === "ADMIN";
+
     let dbUser: any = null;
-    if (authUser?.userId) {
+    if (authUser.userId) {
       dbUser = await prisma.user.findUnique({
         where: { id: authUser.userId },
         select: { id: true, email: true, phone: true },
       });
+    }
+
+    // Helper: extract last 10 digits of phone
+    const clean10Digits = (p?: string | null): string => {
+      if (!p) return "";
+      const digits = p.replace(/\D/g, "");
+      return digits.length >= 10 ? digits.slice(-10) : digits;
+    };
+
+    // Strict ownership verification: Non-admins cannot query arbitrary phone or email
+    if (!isAdmin) {
+      const userPhoneDigits = clean10Digits(dbUser?.phone);
+      const userEmail = (dbUser?.email || authUser.email || "").toLowerCase().trim();
+
+      if (phoneParam) {
+        const queryPhoneDigits = clean10Digits(phoneParam);
+        if (!userPhoneDigits || queryPhoneDigits !== userPhoneDigits) {
+          return NextResponse.json(
+            { error: "Forbidden. You can only view donation receipts linked to your verified account." },
+            { status: 403 }
+          );
+        }
+      }
+
+      if (emailParam) {
+        const queryEmail = emailParam.toLowerCase().trim();
+        if (!userEmail || queryEmail !== userEmail) {
+          return NextResponse.json(
+            { error: "Forbidden. You can only view donation receipts linked to your verified account." },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const whereCondition: any = {};
@@ -48,27 +91,35 @@ export async function GET(req: Request) {
     };
 
     const targetPhones = new Set<string>();
-    if (dbUser?.phone) targetPhones.add(dbUser.phone);
-    if (phoneParam) targetPhones.add(phoneParam);
+
+    if (isAdmin) {
+      if (phoneParam) targetPhones.add(phoneParam);
+      if (emailParam) {
+        orConditions.push({ donorEmail: { equals: emailParam.toLowerCase().trim(), mode: "insensitive" } });
+      }
+    } else {
+      // Non-admin: bind strictly to the authenticated user's own credentials
+      if (authUser.userId) {
+        orConditions.push({ donorId: authUser.userId });
+      }
+      if (dbUser?.email || authUser.email) {
+        orConditions.push({
+          donorEmail: {
+            equals: (dbUser?.email || authUser.email).toLowerCase().trim(),
+            mode: "insensitive",
+          },
+        });
+      }
+      if (dbUser?.phone) {
+        targetPhones.add(dbUser.phone);
+      }
+    }
 
     for (const phone of targetPhones) {
       const variants = getPhoneSearchVariants(phone);
       for (const variant of variants) {
         orConditions.push({ donorPhone: { contains: variant, mode: "insensitive" } });
       }
-    }
-
-    if (authUser && authUser.role !== "ADMIN") {
-      if (authUser.userId) {
-        orConditions.push({ donorId: authUser.userId });
-      }
-      if (authUser.email) {
-        orConditions.push({ donorEmail: { equals: authUser.email.toLowerCase().trim(), mode: "insensitive" } });
-      }
-    }
-
-    if (emailParam) {
-      orConditions.push({ donorEmail: { equals: emailParam.toLowerCase().trim(), mode: "insensitive" } });
     }
 
     if (orConditions.length > 0) {

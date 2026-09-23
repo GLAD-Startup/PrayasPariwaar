@@ -75,6 +75,10 @@ export default function AdminGalleryPage() {
 
   const handleCreateAlbum = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!albumCoverImage) {
+      alert("Please upload or provide an album cover photo");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await apiFetch("/api/gallery", {
@@ -84,7 +88,7 @@ export default function AdminGalleryPage() {
           title: albumTitle,
           slug: albumSlug || albumTitle.toLowerCase().replace(/\s+/g, "-"),
           category: albumCategory,
-          coverImage: albumCoverImage || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
+          coverImage: albumCoverImage,
           description: albumDesc,
         }),
       });

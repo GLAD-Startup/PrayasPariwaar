@@ -26,87 +26,6 @@ const CATEGORIES = [
   "Vocational Training",
 ];
 
-const INITIAL_FALLBACK_ALBUMS = [
-  {
-    id: "alb-1",
-    title: "Free Education & Evening Learning Center",
-    category: "Free Education",
-    coverImage: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800",
-    photoCount: 8,
-    date: "12 May 2024",
-    description: "Evening tutoring classes for underprivileged children in Vrindavan.",
-  },
-  {
-    id: "alb-2",
-    title: "Vrindavan Harit Kranti - 5,000 Saplings Drive",
-    category: "Plantation",
-    coverImage: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800",
-    photoCount: 12,
-    date: "24 Apr 2024",
-    description: "Native Neem, Peepal, and Kadamba tree plantation along Braj Parikrama Marg.",
-  },
-  {
-    id: "alb-3",
-    title: "Mega Blood Donation Camp",
-    category: "Blood Donation",
-    coverImage: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
-    photoCount: 6,
-    date: "02 May 2024",
-    description: "Voluntary blood donation camp with over 150 donor registrations.",
-  },
-];
-
-const INITIAL_FALLBACK_PHOTOS = [
-  {
-    id: "p1",
-    url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800",
-    title: "Children in evening classroom",
-    category: "Free Education",
-    location: "Vrindavan, UP",
-    date: "12 May 2024",
-  },
-  {
-    id: "p2",
-    url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800",
-    title: "Volunteers planting Peepal sapling",
-    category: "Plantation",
-    location: "Govardhan Parikrama",
-    date: "24 Apr 2024",
-  },
-  {
-    id: "p3",
-    url: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800",
-    title: "Voluntary donor registration camp",
-    category: "Blood Donation",
-    location: "Mathura City Hospital",
-    date: "02 May 2024",
-  },
-  {
-    id: "p4",
-    url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=800",
-    title: "Fresh water trough for street animals & birds",
-    category: "Jeev Jal Seva",
-    location: "Vrindavan Raman Reti",
-    date: "18 Apr 2024",
-  },
-  {
-    id: "p5",
-    url: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800",
-    title: "Women vocational tailoring workshop",
-    category: "Vocational Training",
-    location: "Mathura Center",
-    date: "10 Apr 2024",
-  },
-  {
-    id: "p6",
-    url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800",
-    title: "Free school kit distribution",
-    category: "Free Education",
-    location: "Mathura Rural",
-    date: "05 Apr 2024",
-  },
-];
-
 function GalleryContent() {
   const searchParams = useSearchParams();
   const urlAlbumId = searchParams?.get("albumId");
@@ -138,31 +57,27 @@ function GalleryContent() {
     apiFetch("/api/gallery")
       .then((res) => res.json())
       .then((json) => {
-        let loadedAlbums = INITIAL_FALLBACK_ALBUMS;
-        let loadedPhotos = INITIAL_FALLBACK_PHOTOS;
-
         if (json.success && json.data) {
           const dbAlbums = json.data.albums || [];
           const dbPhotos = json.data.recentPhotos || [];
-          if (dbAlbums.length > 0 || dbPhotos.length > 0) {
-            loadedAlbums = dbAlbums;
-            loadedPhotos = dbPhotos;
+          setAlbums(dbAlbums);
+          setPhotos(dbPhotos);
+
+          if (urlAlbumId) {
+            const found = dbAlbums.find((a: any) => a.id === urlAlbumId || a.slug === urlAlbumId);
+            if (found) setActiveAlbum(found);
+          } else if (urlCategory && CATEGORIES.includes(urlCategory)) {
+            setSelectedCategory(urlCategory);
           }
-        }
-
-        setAlbums(loadedAlbums);
-        setPhotos(loadedPhotos);
-
-        if (urlAlbumId) {
-          const found = loadedAlbums.find((a: any) => a.id === urlAlbumId || a.slug === urlAlbumId);
-          if (found) setActiveAlbum(found);
-        } else if (urlCategory && CATEGORIES.includes(urlCategory)) {
-          setSelectedCategory(urlCategory);
+        } else {
+          setAlbums([]);
+          setPhotos([]);
         }
       })
-      .catch(() => {
-        setAlbums(INITIAL_FALLBACK_ALBUMS);
-        setPhotos(INITIAL_FALLBACK_PHOTOS);
+      .catch((err) => {
+        console.warn("Failed to load gallery from database:", err);
+        setAlbums([]);
+        setPhotos([]);
       })
       .finally(() => {
         setLoading(false);
@@ -287,90 +202,110 @@ function GalleryContent() {
             </div>
           )}
         </div>
+      ) : loading ? (
+        <div className="py-24 text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-medium text-prayas-ink">Fetching field captures from database...</p>
+        </div>
+      ) : filteredAlbums.length === 0 && filteredPhotos.length === 0 ? (
+        <div className="p-16 text-center rounded-2xl bg-white border border-prayas-rule shadow-sm space-y-3">
+          <ImageIcon className="w-12 h-12 text-emerald-700/40 mx-auto" />
+          <h3 className="font-serif text-lg font-bold text-prayas-ink">
+            No photos in {selectedCategory === "All" ? "gallery" : selectedCategory}
+          </h3>
+          <p className="text-xs text-prayas-muted max-w-md mx-auto">
+            All photos and albums in the gallery are linked directly to verified database records.
+            New ground captures will appear here once published via the Admin Panel.
+          </p>
+        </div>
       ) : (
         <>
           {/* Featured Albums Section */}
-          <div className="space-y-4">
-            <h2 className="font-serif text-xl font-bold text-prayas-ink flex items-center gap-2">
-              <Layers className="w-5 h-5 text-emerald-700" />
-              <span>Featured Seva Albums</span>
-            </h2>
+          {filteredAlbums.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="font-serif text-xl font-bold text-prayas-ink flex items-center gap-2">
+                <Layers className="w-5 h-5 text-emerald-700" />
+                <span>Featured Seva Albums</span>
+              </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAlbums.map((album) => (
-                <div
-                  key={album.id}
-                  onClick={() => setActiveAlbum(album)}
-                  className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card group hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="h-48 bg-slate-100 relative overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={album.coverImage}
-                        alt={album.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                        {album.category}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAlbums.map((album) => (
+                  <div
+                    key={album.id}
+                    onClick={() => setActiveAlbum(album)}
+                    className="bg-white border border-prayas-rule rounded-2xl overflow-hidden shadow-card group hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="h-48 bg-slate-100 relative overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={album.coverImage}
+                          alt={album.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                          {album.category}
+                        </div>
+                        <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-prayas-ink text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                          📷 {album.photoCount || album.photos?.length || 0} Photos
+                        </div>
                       </div>
-                      <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-prayas-ink text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
-                        📷 {album.photoCount || album.photos?.length || 0} Photos
+
+                      <div className="p-5 space-y-2">
+                        <h3 className="font-serif text-base font-bold text-prayas-ink line-clamp-1 group-hover:text-emerald-800 transition-colors">
+                          {album.title}
+                        </h3>
+                        <p className="text-xs text-prayas-muted line-clamp-2 leading-relaxed">
+                          {album.description || `Field photography collection for ${album.title}.`}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-5 space-y-2">
-                      <h3 className="font-serif text-base font-bold text-prayas-ink line-clamp-1 group-hover:text-emerald-800 transition-colors">
-                        {album.title}
-                      </h3>
-                      <p className="text-xs text-prayas-muted line-clamp-2 leading-relaxed">
-                        {album.description || `Field photography collection for ${album.title}.`}
-                      </p>
+                    <div className="p-5 pt-0">
+                      <div className="pt-3 flex items-center justify-between text-[11px] text-prayas-muted border-t border-prayas-rule">
+                        <span>{album.date || "Ongoing"}</span>
+                        <span className="text-emerald-700 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                          <span>View Album</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="p-5 pt-0">
-                    <div className="pt-3 flex items-center justify-between text-[11px] text-prayas-muted border-t border-prayas-rule">
-                      <span>{album.date || "Ongoing"}</span>
-                      <span className="text-emerald-700 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        <span>View Album</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Recent Photos Grid */}
-          <div className="space-y-4 pt-4">
-            <h2 className="font-serif text-xl font-bold text-prayas-ink flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-emerald-700" />
-              <span>Recent Photos Grid</span>
-            </h2>
+          {filteredPhotos.length > 0 && (
+            <div className="space-y-4 pt-4">
+              <h2 className="font-serif text-xl font-bold text-prayas-ink flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-emerald-700" />
+                <span>Recent Photos Grid</span>
+              </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {filteredPhotos.map((photo) => (
-                <div
-                  key={photo.id}
-                  onClick={() => setActivePhoto(photo)}
-                  className="bg-white border border-prayas-rule rounded-xl overflow-hidden shadow-sm group aspect-square relative cursor-pointer hover:shadow-md transition-all"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photo.url}
-                    alt={photo.title || "Seva Photo"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 flex flex-col justify-end text-white">
-                    <span className="text-[11px] font-bold line-clamp-1">{photo.title}</span>
-                    <span className="text-[9px] text-slate-300">{photo.category}</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                {filteredPhotos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    onClick={() => setActivePhoto(photo)}
+                    className="bg-white border border-prayas-rule rounded-xl overflow-hidden shadow-sm group aspect-square relative cursor-pointer hover:shadow-md transition-all"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.url}
+                      alt={photo.title || "Seva Photo"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2.5 flex flex-col justify-end text-white">
+                      <span className="text-[11px] font-bold line-clamp-1">{photo.title}</span>
+                      <span className="text-[9px] text-slate-300">{photo.category}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
