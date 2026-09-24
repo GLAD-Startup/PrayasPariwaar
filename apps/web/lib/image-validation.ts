@@ -1,8 +1,8 @@
 import sharp from "sharp";
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB per file
-export const MAX_REQUEST_SIZE = 20 * 1024 * 1024; // 20 MB aggregate per request
-export const MAX_FILES_PER_REQUEST = 10;
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
+export const MAX_REQUEST_SIZE = 60 * 1024 * 1024; // 60 MB aggregate per request
+export const MAX_FILES_PER_REQUEST = 35; // Allow up to 35 files per bulk request
 
 export const ALLOWED_FORMATS = ["jpeg", "png", "webp", "gif"] as const;
 export type AllowedFormat = (typeof ALLOWED_FORMATS)[number];

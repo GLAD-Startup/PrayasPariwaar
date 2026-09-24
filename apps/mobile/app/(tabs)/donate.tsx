@@ -19,7 +19,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import RazorpayCheckout from "react-native-razorpay";
 import { Shadows } from "../../lib/theme";
 import { api } from "../../lib/api";
-import { getAuthUser } from "../../lib/secureStore";
+import { getAuthUser, getItem } from "../../lib/secureStore";
+import { sendLocalNotification } from "../../lib/notifications";
 import ActionDialog from "../../components/ActionDialog";
 import SidebarDrawer from "../../components/SidebarDrawer";
 
@@ -228,6 +229,11 @@ export default function DonateScreen() {
 
       const paymentData = await RazorpayCheckout.open(checkoutOptions);
 
+      const [storedPushToken, authUser] = await Promise.all([
+        getItem("prayas_expo_push_token"),
+        getAuthUser(),
+      ]);
+
       const verifyRes = await api.post("/verify-payment", {
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
@@ -238,6 +244,8 @@ export default function DonateScreen() {
         projectOrCause: causeTitle,
         amount: orderAmount,
         currency: currency || "INR",
+        expoPushToken: storedPushToken || undefined,
+        clientUserId: authUser?.id || undefined,
       });
 
       if (verifyRes.error || !verifyRes.data?.success) {
@@ -248,6 +256,19 @@ export default function DonateScreen() {
         verifyRes.data.receipt ||
         verifyRes.data.donation?.receiptNumber ||
         `SDT-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
+      // Trigger immediate confirmation notification locally
+      sendLocalNotification(
+        "🙏 Seva Contribution Confirmed",
+        `Thank you, ${donorName.trim() || "Kind Donor"}! Your ₹${amount.toLocaleString("en-IN")} contribution has been received. 80G tax-exempt receipt #${receiptNo} generated.`,
+        {
+          type: "donation",
+          receiptNumber: receiptNo,
+          amount: String(amount),
+          url: "/my-donations",
+        },
+        "donation_receipts"
+      );
 
       router.push({
         pathname: "/donation-success",

@@ -16,6 +16,10 @@ out/
 android/
 ios/
 
+# User Uploads & Media
+apps/web/public/uploads/
+public/uploads/
+
 # Logs
 *.log
 npm-debug.log*

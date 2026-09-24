@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { getStoredUser, saveAuthSession, clearAuthSession, getAccessToken, getRefreshToken } from "../../lib/secureStore";
-import { api, uploadFile, getApiBaseUrl } from "../../lib/api";
+import { api, uploadFile, getApiBaseUrl, resolveImageUrl } from "../../lib/api";
 import { pickImageFromGallery, captureImageWithCamera } from "../../lib/imagePickerHelper";
 import {
   sendLocalNotification,
@@ -190,11 +190,12 @@ export default function ProfileScreen() {
     setUploadingPhoto(true);
     try {
       let finalAvatarUrl = localUri;
-      if (!localUri.startsWith("http")) {
+      if (!localUri.startsWith("http") && !localUri.startsWith("data:")) {
         const uploadRes = await uploadFile(localUri, `avatar-${Date.now()}.jpg`, "image/jpeg");
         if (uploadRes.url) {
-          const baseUrl = getApiBaseUrl().replace(/\/api$/, "");
-          finalAvatarUrl = uploadRes.url.startsWith("http") ? uploadRes.url : `${baseUrl}${uploadRes.url}`;
+          finalAvatarUrl = uploadRes.url;
+        } else if (uploadRes.error) {
+          throw new Error(uploadRes.error);
         }
       }
 
@@ -476,7 +477,7 @@ export default function ProfileScreen() {
             <View style={styles.profileBadge}>
               <View style={styles.avatarWrapper}>
                 {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={styles.avatarImg} resizeMode="cover" />
+                  <Image source={resolveImageUrl(avatarUri)} style={styles.avatarImg} resizeMode="cover" />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Text style={styles.avatarInitialsText}>

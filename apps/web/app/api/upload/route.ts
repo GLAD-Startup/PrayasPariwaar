@@ -27,9 +27,9 @@ export async function POST(req: Request) {
 
     // 2. Early Content-Length check to reject blatantly oversized requests before buffering
     const contentLength = req.headers.get("content-length");
-    if (contentLength && parseInt(contentLength, 10) > 28 * 1024 * 1024) {
+    if (contentLength && parseInt(contentLength, 10) > 70 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "Payload too large. Maximum aggregate request size is 20MB." },
+        { error: "Payload too large. Maximum aggregate request size is 60MB." },
         { status: 413 }
       );
     }

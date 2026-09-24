@@ -74,7 +74,16 @@ export async function POST(req: Request) {
 
     // 2. Select appropriate Android channel & priority
     const isEmergency = type === "BLOOD_REQUEST" || title.includes("EMERGENCY") || title.includes("🚨");
-    const channelId = isEmergency ? "emergency_alerts" : "general_announcements";
+    let channelId = "general_announcements";
+    if (isEmergency) {
+      channelId = "emergency_alerts";
+    } else if (type === "EQUIPMENT_UPDATE") {
+      channelId = "medical_requests";
+    } else if (type === "VOLUNTEER_UPDATE") {
+      channelId = "volunteer_updates";
+    } else if (type === "DONATION_RECEIPT") {
+      channelId = "donation_receipts";
+    }
 
     // 3. Dispatch real Push Notification to Expo Push API
     let pushResult = { success: false, count: 0 };
@@ -91,6 +100,7 @@ export async function POST(req: Request) {
           targetBloodGroup,
           targetCity,
           relatedPostId,
+          url: relatedPostId ? `/blog/${relatedPostId}` : undefined,
           timestamp: new Date().toISOString(),
         },
       });

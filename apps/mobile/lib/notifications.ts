@@ -9,6 +9,8 @@ import { getItem, setItem } from "./secureStore";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -101,21 +103,48 @@ export async function registerForPushNotificationsAsync(userId?: string): Promis
       return null;
     }
 
-    // Configure Android notification channels (Android 8.0+)
+    // Configure all 5 Android notification channels (Android 8.0+)
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("emergency_alerts", {
         name: "🚨 Emergency Seva & Blood Alerts",
+        description: "Urgent emergency blood donation and disaster relief requests",
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#1D4ED8",
+        lightColor: "#DC2626",
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         sound: "default",
       });
 
       await Notifications.setNotificationChannelAsync("general_announcements", {
-        name: "📢 Prayas Seva Updates",
+        name: "📢 Prayas Seva Updates & Dispatches",
+        description: "New field dispatches, community stories, and project announcements",
         importance: Notifications.AndroidImportance.HIGH,
-        lightColor: "#1D4ED8",
+        lightColor: "#166534",
+        sound: "default",
+      });
+
+      await Notifications.setNotificationChannelAsync("medical_requests", {
+        name: "🏥 Medical Equipment & Relief Updates",
+        description: "Status updates regarding medical equipment and aid applications",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#0284C7",
+        sound: "default",
+      });
+
+      await Notifications.setNotificationChannelAsync("volunteer_updates", {
+        name: "🤝 Volunteer Status & Seva Drives",
+        description: "Volunteer application status updates, drive approvals, and certificates",
+        importance: Notifications.AndroidImportance.HIGH,
+        lightColor: "#9333EA",
+        sound: "default",
+      });
+
+      await Notifications.setNotificationChannelAsync("donation_receipts", {
+        name: "🙏 Donation Confirmations & 80G Receipts",
+        description: "Official donation receipts, tax deduction certificates, and contribution acknowledgments",
+        importance: Notifications.AndroidImportance.HIGH,
+        lightColor: "#166534",
         sound: "default",
       });
     }
@@ -125,7 +154,7 @@ export async function registerForPushNotificationsAsync(userId?: string): Promis
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ||
         (Constants as any)?.easConfig?.projectId ||
-        "1a8fd611-0fb6-4041-a714-9f6784dca6dc";
+        "d70fa887-d99f-4217-9dbd-dc089248db05";
 
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId,
@@ -159,7 +188,8 @@ export async function registerForPushNotificationsAsync(userId?: string): Promis
 export async function sendLocalNotification(
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, any>,
+  channelId: string = "general_announcements"
 ): Promise<void> {
   if (Platform.OS === "web") return;
   try {
@@ -178,6 +208,7 @@ export async function sendLocalNotification(
         body,
         data: data || {},
         sound: prefs.soundEnabled ? "default" : undefined,
+        ...(Platform.OS === "android" && channelId ? { channelId } : {}),
       },
       trigger: null,
     });

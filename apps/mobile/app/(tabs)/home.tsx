@@ -19,7 +19,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
-import { api, resolveImageUrl } from "../../lib/api";
+import { api, resolveImageUrl, getImageUri } from "../../lib/api";
 import { getCachedData, setCachedData } from "../../lib/cache";
 import { prefetchRemoteImages } from "../../lib/assetPreloader";
 import SidebarDrawer from "../../components/SidebarDrawer";
@@ -289,8 +289,9 @@ export default function MobileHomeScreen() {
           await setCachedData("prayas_gallery", photos);
           nextGallery = photos;
           photos.forEach((p: any) => {
-            if (p.url && p.url.startsWith("http")) {
-              remoteImageUrlsToPrefetch.push(p.url);
+            const uri = getImageUri(p.url);
+            if (uri) {
+              remoteImageUrlsToPrefetch.push(uri);
             }
           });
         }
@@ -393,7 +394,7 @@ export default function MobileHomeScreen() {
             renderItem={({ item }) => (
               <View style={[styles.heroCard, { width: HERO_CARD_WIDTH }]}>
                 <Image
-                  source={typeof item.image === "string" ? { uri: item.image } : item.image}
+                  source={resolveImageUrl(item.image, require("../../assets/images/hero-education-vrindavan.jpg"))}
                   style={styles.heroImage}
                   resizeMode="cover"
                 />
@@ -511,7 +512,7 @@ export default function MobileHomeScreen() {
             >
               <View style={styles.updateImageWrapper}>
                 <Image
-                  source={typeof card.image === "string" ? { uri: card.image } : card.image}
+                  source={resolveImageUrl(card.image, require("../../assets/images/banyan-study-vrindavan.jpg"))}
                   style={styles.updateImage}
                   resizeMode="cover"
                 />
@@ -952,16 +953,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   updateCard: {
-    width: 170,
+    width: 200,
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     overflow: "hidden",
     ...Shadows.soft,
   },
   updateImageWrapper: {
-    height: 100,
+    height: 115,
     position: "relative",
   },
   updateImage: {
@@ -970,34 +971,34 @@ const styles = StyleSheet.create({
   },
   updatePill: {
     position: "absolute",
-    bottom: 6,
-    left: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
+    bottom: 8,
+    left: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   updatePillText: {
     color: "#FFFFFF",
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: "800",
   },
   updateContent: {
-    padding: 10,
+    padding: 12,
   },
   updateTitle: {
-    fontSize: 11,
+    fontSize: 13.5,
     fontWeight: "700",
     color: "#0F172A",
-    lineHeight: 15,
-    height: 30,
+    lineHeight: 19,
+    minHeight: 38,
+    marginBottom: 6,
   },
   updateDateRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
   },
   updateDateText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#94A3B8",
     fontWeight: "600",
   },

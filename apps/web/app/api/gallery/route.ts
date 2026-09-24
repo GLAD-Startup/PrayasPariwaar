@@ -142,7 +142,94 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // Check if adding a photo
+    // Check if bulk adding photos to an album or general gallery
+    if (
+      body.action === "BULK_ADD_PHOTOS" ||
+      (Array.isArray(body.photos) && body.photos.length > 0) ||
+      (Array.isArray(body.urls) && body.urls.length > 0)
+    ) {
+      const rawUrls: string[] = Array.isArray(body.urls)
+        ? body.urls
+        : Array.isArray(body.photos)
+        ? body.photos.map((p: any) => (typeof p === "string" ? p : p?.url)).filter(Boolean)
+        : [];
+
+      if (rawUrls.length === 0) {
+        return NextResponse.json({ error: "No photo URLs provided for bulk upload." }, { status: 400 });
+      }
+
+      const store = getStoredGallery();
+      const targetAlbum = body.albumId ? store.albums.find((a) => a.id === body.albumId) : null;
+      const targetCategory = body.category || targetAlbum?.category || "Free Education";
+      const targetLocation = body.location || "Mathura / Vrindavan";
+
+      const createdPhotos: any[] = [];
+      const now = new Date().toISOString();
+
+      for (let i = 0; i < rawUrls.length; i++) {
+        const url = rawUrls[i];
+        if (!url) continue;
+
+        const defaultTitle = body.sharedTitle
+          ? rawUrls.length > 1
+            ? `${body.sharedTitle} (${i + 1})`
+            : body.sharedTitle
+          : targetAlbum
+          ? `${targetAlbum.title} • Image ${i + 1}`
+          : `Field Seva Photo ${i + 1}`;
+
+        const photoRecord = {
+          id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          albumId: body.albumId || null,
+          title: defaultTitle,
+          caption: body.caption || "",
+          url,
+          category: targetCategory,
+          location: targetLocation,
+          createdAt: now,
+        };
+
+        if ((prisma as any).galleryPhoto) {
+          try {
+            await (prisma as any).galleryPhoto.create({
+              data: {
+                albumId: photoRecord.albumId,
+                title: photoRecord.title,
+                caption: photoRecord.caption,
+                url: photoRecord.url,
+                category: photoRecord.category,
+                location: photoRecord.location,
+              },
+            });
+          } catch (e) {
+            console.warn("Prisma bulk photo save fallback", e);
+          }
+        }
+
+        createdPhotos.push(photoRecord);
+      }
+
+      // Persist to local JSON store
+      store.photos.unshift(...createdPhotos);
+      if (body.albumId && targetAlbum) {
+        targetAlbum.photoCount = (targetAlbum.photoCount || 0) + createdPhotos.length;
+      }
+      saveStoredGallery(store);
+
+      return NextResponse.json(
+        {
+          success: true,
+          count: createdPhotos.length,
+          data: createdPhotos,
+          message: `Successfully uploaded and added ${createdPhotos.length} photos to ${
+            targetAlbum ? `album "${targetAlbum.title}"` : "the gallery"
+          }!`,
+        },
+        { status: 201 }
+      );
+    }
+
+    // Check if adding a single photo
     if (body.action === "ADD_PHOTO" || body.type === "photo" || (body.url && !body.coverImage && !body.slug)) {
       const photoRecord = {
         id: `photo-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -216,6 +303,52 @@ export async function POST(req: Request) {
 
     // Persist to local JSON store
     const store = getStoredGallery();
+
+    // Check if initial bulk photos were also uploaded during album creation
+    const initialPhotos: string[] = Array.isArray(body.initialPhotos)
+      ? body.initialPhotos
+      : Array.isArray(body.photos)
+      ? body.photos
+      : [];
+
+    if (initialPhotos.length > 0) {
+      const now = new Date().toISOString();
+      const createdBulk: any[] = [];
+      for (let i = 0; i < initialPhotos.length; i++) {
+        const pUrl = initialPhotos[i];
+        if (!pUrl) continue;
+        const pRec = {
+          id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          albumId: albumRecord.id,
+          title: `${albumRecord.title} • Image ${i + 1}`,
+          caption: "",
+          url: pUrl,
+          category: albumRecord.category,
+          location: body.location || "Mathura / Vrindavan",
+          createdAt: now,
+        };
+
+        if ((prisma as any).galleryPhoto) {
+          try {
+            await (prisma as any).galleryPhoto.create({
+              data: {
+                albumId: pRec.albumId,
+                title: pRec.title,
+                caption: pRec.caption,
+                url: pRec.url,
+                category: pRec.category,
+                location: pRec.location,
+              },
+            });
+          } catch (e) {}
+        }
+        createdBulk.push(pRec);
+      }
+
+      store.photos.unshift(...createdBulk);
+      albumRecord.photoCount = createdBulk.length;
+    }
+
     store.albums.unshift(albumRecord);
     saveStoredGallery(store);
 

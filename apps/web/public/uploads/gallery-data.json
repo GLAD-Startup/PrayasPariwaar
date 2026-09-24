@@ -1,77 +1,107 @@
 {
   "albums": [
     {
-      "id": "album-1788750982924-bgxo9",
-      "title": "FREE HOME",
-      "slug": "free-home",
-      "category": "Free Education",
-      "coverImage": "/prayas/uploads/1788750943226-images.jpeg",
+      "id": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training",
+      "slug": "aadhaar-and-vocational-training",
+      "category": "Vocational Training",
+      "coverImage": "/prayas/uploads/1790172064202-ebbd1b27d89701800dd26bf320949a33.jpg",
       "description": "",
-      "photoCount": 0,
+      "photoCount": 9,
       "published": true,
-      "createdAt": "2026-09-07T03:16:22.924Z"
+      "createdAt": "2026-09-23T14:01:06.973Z"
     }
   ],
   "photos": [
     {
-      "id": "photo-1788753823295-oxd9y",
-      "albumId": "cmtqo5fri0003ag5akayoq1pd",
-      "title": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "caption": "Jan Swasthya Raksha: Free Health & Eye Care Camps",
-      "url": "/prayas/uploads/1788753816527-screenshot-2026-08-31-141506-removebg-pr.png",
-      "category": "Free Education",
+      "id": "photo-1790253448457-0-tkurl",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (1)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253435276-f29f4e270f0b49ca2bc5d04f2ac3098f.jpg",
+      "category": "Vocational Training",
       "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:03:43.296Z"
+      "createdAt": "2026-09-24T12:37:28.457Z"
     },
     {
-      "id": "photo-1788753739283-nx0y8",
-      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
+      "id": "photo-1790253448802-1-949nv",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (2)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253435277-8ef5ab8e938b0683cdb4016657260b69.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448809-2-5x1rk",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (3)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253436274-ed742b499d6111f202d62700f1d676f0.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448823-3-e2uo3",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (4)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253436489-d57d53e85dbb7839ec6c3b6a5d80f93d.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448831-4-8dc6r",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (5)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253438103-3f9a96b18e00a71b56741a1a273486b4.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448841-5-sbu6u",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (6)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253438530-8e0cd7d2ad6eb2c0250699ed8028440f.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448856-6-muq5n",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (7)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253439933-21b120bd1a1d1ddfe0c80788a3ab9a12.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "photo-1790253448865-7-1ymwj",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Aadhaar And Vocational training (8)",
+      "caption": "",
+      "url": "/prayas/uploads/1790253440085-7a7c834d0d8edfd4c952c5b655a28cdd.jpg",
+      "category": "Vocational Training",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-09-24T12:37:28.457Z"
+    },
+    {
+      "id": "cmue68m4900024le07b9ifzv3",
+      "albumId": "cmue6878v00004le0dym93qfg",
       "title": "Aadhar Career & Digital Vocational Counseling",
       "caption": "Aadhar Career & Digital Vocational Counseling",
-      "url": "/prayas/uploads/1788753738379-bhagwat-logo.jpeg",
-      "category": "Free Education",
+      "url": "/prayas/uploads/1790171333850-3ab3e3c4c6b7e37bf5f8b84ecf1834da.jpg",
+      "category": "Vocational Training",
       "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:02:19.283Z"
-    },
-    {
-      "id": "photo-1788753727756-t0ooq",
-      "albumId": "cmtqo4l0t0000ag5a8iqmpc8a",
-      "title": "Aadhar Career & Digital Vocational Counseling",
-      "caption": "Aadhar Career & Digital Vocational Counseling",
-      "url": "/uploads/1788333527612-screenshot-2024-04-29-221513.png",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T04:02:07.756Z"
-    },
-    {
-      "id": "photo-1788750965684-w9yfs",
-      "albumId": null,
-      "title": "ABCD",
-      "caption": "",
-      "url": "/prayas/uploads/1788750958006-bhagwat-logo.jpeg",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-07T03:16:05.684Z"
-    },
-    {
-      "id": "photo-1788338422213-x60iw",
-      "albumId": null,
-      "title": "Field Seva Photo",
-      "caption": "",
-      "url": "/uploads/1788338419893-chatgpt-image-aug-10-2026-05-05-56-pm.png",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-02T08:40:22.213Z"
-    },
-    {
-      "id": "photo-1788333799035-31t5e",
-      "albumId": null,
-      "title": "Field Seva Photo",
-      "caption": "",
-      "url": "/uploads/1788333795588-whatsapp-image-2026-08-25-at-16-30-57.jpeg",
-      "category": "Free Education",
-      "location": "Mathura / Vrindavan",
-      "createdAt": "2026-09-02T07:23:19.035Z"
+      "createdAt": "2026-09-23T14:01:26.321Z"
     }
   ]
 }

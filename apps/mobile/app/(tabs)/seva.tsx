@@ -221,7 +221,6 @@ const CATEGORY_TABS = [
 export default function SevaScreen() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"projects" | "streams">("projects");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [projects, setProjects] = useState<SevaProject[]>(INITIAL_PROJECTS);
   const [refreshing, setRefreshing] = useState(false);
@@ -353,42 +352,7 @@ export default function SevaScreen() {
         </View>
       </View>
 
-      {/* Segmented Mode Switcher */}
-      <View style={styles.modeSwitcherContainer}>
-        <View style={styles.modeSwitcher}>
-          <TouchableOpacity
-            style={[styles.modeTab, viewMode === "projects" && styles.modeTabActive]}
-            onPress={() => setViewMode("projects")}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name={viewMode === "projects" ? "layers" : "layers-outline"}
-              size={15}
-              color={viewMode === "projects" ? "#FFFFFF" : "#475569"}
-              style={{ marginRight: 6 }}
-            />
-            <Text style={[styles.modeTabText, viewMode === "projects" && styles.modeTabTextActive]}>
-              All Projects ({projects.length})
-            </Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.modeTab, viewMode === "streams" && styles.modeTabActive]}
-            onPress={() => setViewMode("streams")}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name={viewMode === "streams" ? "ribbon" : "ribbon-outline"}
-              size={15}
-              color={viewMode === "streams" ? "#FFFFFF" : "#475569"}
-              style={{ marginRight: 6 }}
-            />
-            <Text style={[styles.modeTabText, viewMode === "streams" && styles.modeTabTextActive]}>
-              5 Pillars of Seva
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       <ScrollView
         style={styles.container}
@@ -403,179 +367,206 @@ export default function SevaScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* ===================== VIEW MODE: ALL PROJECTS ===================== */}
-        {viewMode === "projects" && (
-          <>
-            {/* Category Filter Chips */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryChipsScroll}
+        {/* ===================== SECTION 1: 5 PILLARS OF PRAYAS ===================== */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <View style={styles.pillarSectionIconBadge}>
+              <Ionicons name="sparkles" size={14} color="#166534" />
+            </View>
+            <View>
+              <Text style={styles.sectionTitle}>5 Pillars of Prayas</Text>
+              <Text style={styles.sectionSubtitle}>Core streams of dedicated service • Tap to explore</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Pillars Horizontal Showcase */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pillarsScrollContent}
+        >
+          {SEVA_STREAMS_DATA.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.pillarCard}
+              onPress={() => router.push(`/seva/${item.id}` as any)}
+              activeOpacity={0.9}
             >
-              {CATEGORY_TABS.map((tab) => {
-                const isActive = selectedCategory === tab.id;
-                return (
-                  <TouchableOpacity
-                    key={tab.id}
-                    style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                    onPress={() => setSelectedCategory(tab.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name={tab.icon as any}
-                      size={14}
-                      color={isActive ? "#FFFFFF" : "#166534"}
-                      style={{ marginRight: 5 }}
-                    />
-                    <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
-                      {tab.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* Projects List */}
-            <View style={styles.projectsList}>
-              {filteredProjects.map((project) => {
-                const percent = Math.min(
-                  Math.round(((project.raisedAmount || 0) / (project.goalAmount || 1)) * 100),
-                  100
-                );
-                return (
-                  <View key={project.id} style={styles.projectCard}>
-                    {/* Cover Photo */}
-                    <View style={styles.projectImageWrapper}>
-                      <Image
-                        source={typeof project.coverImage === "string" ? { uri: project.coverImage } : project.coverImage}
-                        style={styles.projectImage}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.projectCategoryBadge}>
-                        <Text style={styles.projectCategoryText}>{project.category}</Text>
-                      </View>
-                      <View style={styles.projectStatusBadge}>
-                        <View style={styles.activeDot} />
-                        <Text style={styles.projectStatusText}>Active Seva</Text>
-                      </View>
-                    </View>
-
-                    {/* Content Section */}
-                    <View style={styles.projectContent}>
-                      <Text style={styles.projectTitle} numberOfLines={2}>
-                        {project.title}
-                      </Text>
-
-                      <Text style={styles.projectDesc} numberOfLines={3}>
-                        {project.description}
-                      </Text>
-
-                      {/* Progress Metrics */}
-                      <View style={styles.progressContainer}>
-                        <View style={styles.progressHeaderRow}>
-                          <Text style={styles.progressRaised}>
-                            {formatCurrency(project.raisedAmount)}
-                            <Text style={styles.progressGoal}> of {formatCurrency(project.goalAmount)}</Text>
-                          </Text>
-                          <Text style={styles.progressPercent}>{percent}%</Text>
-                        </View>
-
-                        <View style={styles.progressBarTrack}>
-                          <View style={[styles.progressBarFill, { width: `${Math.max(percent, 8)}%` }]} />
-                        </View>
-                      </View>
-
-                      {/* Action Buttons */}
-                      <View style={styles.cardActionsRow}>
-                        <TouchableOpacity
-                          style={styles.detailsBtn}
-                          onPress={() => setSelectedProject(project)}
-                          activeOpacity={0.8}
-                        >
-                          <Text style={styles.detailsBtnText}>View Details</Text>
-                          <Ionicons name="arrow-forward" size={14} color="#166534" style={{ marginLeft: 4 }} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.donateBtn}
-                          onPress={() => handleDonateProject(project)}
-                          activeOpacity={0.88}
-                        >
-                          <MaterialCommunityIcons name="hand-heart" size={15} color="#FFFFFF" style={{ marginRight: 5 }} />
-                          <Text style={styles.donateBtnText}>Donate</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </>
-        )}
-
-        {/* ===================== VIEW MODE: 5 PILLARS OF SEVA ===================== */}
-        {viewMode === "streams" && (
-          <>
-            <View style={styles.subHeaderSection}>
-              <Text style={styles.subTitle}>Five pillars of service. One sacred mission.</Text>
-              <View style={styles.leafDividerRow}>
-                <View style={styles.leafLine} />
-                <Text style={styles.leafIcon}>🌿</Text>
-                <View style={styles.leafLine} />
-              </View>
-            </View>
-
-            <View style={styles.cardsList}>
-              {SEVA_STREAMS_DATA.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.streamCard}
-                  onPress={() => router.push(`/seva/${item.id}` as any)}
-                  activeOpacity={0.88}
+              <View style={styles.pillarImageContainer}>
+                <Image source={item.image} style={styles.pillarImage} resizeMode="cover" />
+                <View style={styles.pillarBadge}>
+                  <Text style={styles.pillarBadgeText}>Pillar #{item.number}</Text>
+                </View>
+                <View
+                  style={[
+                    styles.pillarFloatingIcon,
+                    { backgroundColor: item.iconBg, borderColor: item.iconBorder },
+                  ]}
                 >
-                  <View style={styles.streamLeftCol}>
-                    <View style={styles.streamIconAndTitleRow}>
-                      <View
-                        style={[
-                          styles.iconCircle,
-                          { backgroundColor: item.iconBg, borderColor: item.iconBorder },
-                        ]}
-                      >
-                        {item.iconType === "ionicons" ? (
-                          <Ionicons name={item.iconName as any} size={22} color={item.iconColor} />
-                        ) : (
-                          <MaterialCommunityIcons name={item.iconName as any} size={22} color={item.iconColor} />
-                        )}
-                      </View>
+                  {item.iconType === "ionicons" ? (
+                    <Ionicons name={item.iconName as any} size={16} color={item.iconColor} />
+                  ) : (
+                    <MaterialCommunityIcons name={item.iconName as any} size={16} color={item.iconColor} />
+                  )}
+                </View>
+              </View>
 
-                      <View style={styles.titleWrapper}>
-                        <Text style={[styles.streamTitle, { color: item.color }]}>
-                          {item.number}. {item.title}
-                        </Text>
-                      </View>
+              <View style={styles.pillarCardBody}>
+                <Text style={styles.pillarCardTitle} numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <Text style={styles.pillarCardDesc} numberOfLines={2}>
+                  {item.description}
+                </Text>
+                <View style={styles.pillarCardFooter}>
+                  <View style={styles.pillarCardTag}>
+                    <Text style={[styles.pillarCardTagText, { color: item.color }]} numberOfLines={1}>
+                      {item.tag}
+                    </Text>
+                  </View>
+                  <Ionicons name="arrow-forward-circle" size={20} color={item.color} />
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* ===================== SECTION 2: ACTIVE PROJECTS & CAMPAIGNS ===================== */}
+        <View style={[styles.sectionHeaderRow, { marginTop: 26 }]}>
+          <View style={styles.sectionHeaderLeft}>
+            <View style={[styles.pillarSectionIconBadge, { backgroundColor: "#FEF3C7" }]}>
+              <MaterialCommunityIcons name="hand-heart" size={15} color="#D97706" />
+            </View>
+            <View>
+              <Text style={styles.sectionTitle}>Active Projects & Drives</Text>
+              <Text style={styles.sectionSubtitle}>Funded initiatives & ongoing campaigns in Braj</Text>
+            </View>
+          </View>
+          <View style={styles.projectCountBadge}>
+            <Text style={styles.projectCountText}>{filteredProjects.length} Active</Text>
+          </View>
+        </View>
+
+        {/* Category Filter Chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryChipsScroll}
+        >
+          {CATEGORY_TABS.map((tab) => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(tab.id)}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={tab.icon as any}
+                  size={14}
+                  color={isActive ? "#FFFFFF" : "#166534"}
+                  style={{ marginRight: 5 }}
+                />
+                <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Projects List */}
+        <View style={styles.projectsList}>
+          {filteredProjects.length > 0 ? (
+            filteredProjects.map((project) => {
+              const percent = Math.min(
+                Math.round(((project.raisedAmount || 0) / (project.goalAmount || 1)) * 100),
+                100
+              );
+              return (
+                <View key={project.id} style={styles.projectCard}>
+                  {/* Cover Photo */}
+                  <View style={styles.projectImageWrapper}>
+                    <Image
+                      source={resolveImageUrl(project.coverImage, require("../../assets/images/hero-education-vrindavan.jpg"))}
+                      style={styles.projectImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.projectCategoryBadge}>
+                      <Text style={styles.projectCategoryText}>{project.category}</Text>
                     </View>
+                    <View style={styles.projectStatusBadge}>
+                      <View style={styles.activeDot} />
+                      <Text style={styles.projectStatusText}>Active Seva</Text>
+                    </View>
+                  </View>
 
-                    <Text style={styles.streamDesc} numberOfLines={3}>
-                      {item.description}
+                  {/* Content Section */}
+                  <View style={styles.projectContent}>
+                    <Text style={styles.projectTitle} numberOfLines={2}>
+                      {project.title}
                     </Text>
 
-                    <View style={styles.tagRow}>
-                      <Ionicons name={item.tagIcon as any} size={12} color={item.color} style={{ marginRight: 4 }} />
-                      <Text style={[styles.tagText, { color: item.color }]}>{item.tag}</Text>
-                    </View>
-                  </View>
+                    <Text style={styles.projectDesc} numberOfLines={3}>
+                      {project.description}
+                    </Text>
 
-                  <View style={styles.streamRightCol}>
-                    <Image source={item.image} style={styles.streamImage} resizeMode="cover" />
-                    <View style={styles.arrowCircle}>
-                      <Ionicons name="chevron-forward" size={15} color="#164E2E" />
+                    {/* Progress Metrics */}
+                    <View style={styles.progressContainer}>
+                      <View style={styles.progressHeaderRow}>
+                        <Text style={styles.progressRaised}>
+                          {formatCurrency(project.raisedAmount)}
+                          <Text style={styles.progressGoal}> of {formatCurrency(project.goalAmount)}</Text>
+                        </Text>
+                        <Text style={styles.progressPercent}>{percent}%</Text>
+                      </View>
+
+                      <View style={styles.progressBarTrack}>
+                        <View style={[styles.progressBarFill, { width: `${Math.max(percent, 8)}%` }]} />
+                      </View>
+                    </View>
+
+                    {/* Action Buttons */}
+                    <View style={styles.cardActionsRow}>
+                      <TouchableOpacity
+                        style={styles.detailsBtn}
+                        onPress={() => setSelectedProject(project)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.detailsBtnText}>View Details</Text>
+                        <Ionicons name="arrow-forward" size={14} color="#166534" style={{ marginLeft: 4 }} />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.donateBtn}
+                        onPress={() => handleDonateProject(project)}
+                        activeOpacity={0.88}
+                      >
+                        <MaterialCommunityIcons name="hand-heart" size={15} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.donateBtnText}>Donate</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                </TouchableOpacity>
-              ))}
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyProjectsCard}>
+              <Ionicons name="cube-outline" size={38} color="#94A3B8" />
+              <Text style={styles.emptyProjectsTitle}>No Projects in this Category</Text>
+              <Text style={styles.emptyProjectsSub}>Check back soon or view all active campaigns across Braj.</Text>
+              <TouchableOpacity
+                style={styles.emptyProjectsBtn}
+                onPress={() => setSelectedCategory("ALL")}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.emptyProjectsBtnText}>View All Projects</Text>
+              </TouchableOpacity>
             </View>
-          </>
-        )}
+          )}
+        </View>
 
         {/* Bottom Impact Banner */}
         <View style={styles.bottomBanner}>
@@ -623,7 +614,7 @@ export default function SevaScreen() {
                 <ScrollView showsVerticalScrollIndicator={false} style={styles.modalBody}>
                   {/* Modal Cover Image */}
                   <Image
-                    source={typeof selectedProject.coverImage === "string" ? { uri: selectedProject.coverImage } : selectedProject.coverImage}
+                    source={resolveImageUrl(selectedProject.coverImage, require("../../assets/images/hero-education-vrindavan.jpg"))}
                     style={styles.modalImage}
                     resizeMode="cover"
                   />
@@ -777,39 +768,163 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
   },
-  modeSwitcherContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  modeSwitcher: {
-    flexDirection: "row",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 14,
-    padding: 4,
-  },
-  modeTab: {
-    flex: 1,
+  sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 9,
-    borderRadius: 10,
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  modeTabActive: {
-    backgroundColor: "#166534",
+  sectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  pillarSectionIconBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F172A",
+    letterSpacing: -0.2,
+  },
+  sectionSubtitle: {
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 1,
+  },
+  projectCountBadge: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#BBF7D0",
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  projectCountText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#166534",
+  },
+  pillarsScrollContent: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  pillarCard: {
+    width: 220,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    overflow: "hidden",
+    ...Shadows.card,
+  },
+  pillarImageContainer: {
+    width: "100%",
+    height: 115,
+    backgroundColor: "#E2E8F0",
+    position: "relative",
+  },
+  pillarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  pillarBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  pillarBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  pillarFloatingIcon: {
+    position: "absolute",
+    bottom: -14,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
     ...Shadows.soft,
   },
-  modeTabText: {
+  pillarCardBody: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  pillarCardTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 4,
+  },
+  pillarCardDesc: {
+    fontSize: 11,
+    color: "#64748B",
+    lineHeight: 15,
+    marginBottom: 8,
+  },
+  pillarCardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pillarCardTag: {
+    flex: 1,
+    marginRight: 6,
+  },
+  pillarCardTagText: {
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  emptyProjectsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  emptyProjectsTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#334155",
+    marginTop: 10,
+  },
+  emptyProjectsSub: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  emptyProjectsBtn: {
+    backgroundColor: "#166534",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  emptyProjectsBtnText: {
+    color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700",
-    color: "#64748B",
-  },
-  modeTabTextActive: {
-    color: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -995,108 +1110,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#FFFFFF",
   },
-  subHeaderSection: {
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  subTitle: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  leafDividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
-  },
-  leafLine: {
-    width: 25,
-    height: 1,
-    backgroundColor: "#CBD5E1",
-  },
-  leafIcon: {
-    fontSize: 11,
-  },
-  cardsList: {
-    gap: 12,
-  },
-  streamCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    ...Shadows.card,
-  },
-  streamLeftCol: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  streamIconAndTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  titleWrapper: {
-    flex: 1,
-  },
-  streamTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: -0.2,
-  },
-  streamDesc: {
-    fontSize: 11,
-    color: "#64748B",
-    lineHeight: 15,
-    marginBottom: 6,
-  },
-  tagRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  tagText: {
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  streamRightCol: {
-    width: 95,
-    height: 95,
-    borderRadius: 14,
-    overflow: "hidden",
-    position: "relative",
-    backgroundColor: "#E2E8F0",
-  },
-  streamImage: {
-    width: "100%",
-    height: "100%",
-  },
-  arrowCircle: {
-    position: "absolute",
-    bottom: 6,
-    right: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    ...Shadows.soft,
-  },
+
   bottomBanner: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,

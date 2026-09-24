@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { getStoredUser, clearAuthSession } from "../lib/secureStore";
+import { resolveImageUrl } from "../lib/api";
 import ActionDialog from "./ActionDialog";
 
 const { width, height } = Dimensions.get("window");
@@ -321,7 +322,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
               <View style={styles.userAvatarBox}>
                 {user?.avatarUrl || user?.avatar ? (
                   <Image
-                    source={{ uri: user.avatarUrl || user.avatar }}
+                    source={resolveImageUrl(user.avatarUrl || user.avatar)}
                     style={styles.userAvatarImg}
                   />
                 ) : user?.name ? (

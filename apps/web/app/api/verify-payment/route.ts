@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { sendExpoPushNotification } from "@/lib/expo-push";
+import { sendDonationConfirmedNotification } from "@/lib/notifications-service";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +50,8 @@ export async function POST(req: Request) {
     const orderId = body.razorpay_order_id || body.order_id;
     const paymentId = body.razorpay_payment_id || body.payment_id;
     const signature = body.razorpay_signature || body.signature;
+    const expoPushToken = body.expoPushToken || null;
+    const clientUserId = body.userId || null;
 
     // Validate missing fields
     if (!orderId || typeof orderId !== "string" || !orderId.trim()) {
@@ -180,66 +182,23 @@ export async function POST(req: Request) {
         });
       }
 
-      // Dispatch Push Notification for successful verified donation
+      // Dispatch Push Notification for successful verified donation via central hub
       if (donationRecord && donationRecord.status === "SUCCESS") {
-        try {
-          const authUser = await getAuthUser(req);
-          let targetUserId = authUser?.userId || donationRecord.donorId || null;
-
-          if (!targetUserId && donationRecord.donorPhone) {
-            const matchedUser = await prisma.user.findFirst({
-              where: { phone: donationRecord.donorPhone },
-              select: { id: true },
-            });
-            if (matchedUser) {
-              targetUserId = matchedUser.id;
-            }
-          }
-
-          let tokens: string[] = [];
-          if (targetUserId) {
-            const tokenRecords = await prisma.pushToken.findMany({
-              where: { userId: targetUserId },
-              select: { expoPushToken: true },
-            });
-            tokens = tokenRecords.map((t) => t.expoPushToken).filter(Boolean);
-          }
-
-          const donorDispName = donationRecord.donorName || "Supporter";
-          const donationCause = donationRecord.projectOrCause || "General Seva Fund";
-          const receiptNo = donationRecord.receiptNumber || "";
-
-          if (tokens.length > 0) {
-            await sendExpoPushNotification({
-              to: tokens,
-              title: "🙏 Seva Donation Confirmed",
-              body: `Thank you, ${donorDispName}! Your contribution of ₹${donationRecord.amount} for ${donationCause} is confirmed (Receipt #${receiptNo}).`,
-              priority: "high",
-              channelId: "general_announcements",
-              data: {
-                type: "DONATION_RECEIPT",
-                donationId: donationRecord.id,
-                receiptNumber: receiptNo,
-                amount: donationRecord.amount,
-                cause: donationCause,
-              },
-            });
-          }
-
-          if (targetUserId) {
-            await prisma.userNotification.create({
-              data: {
-                userId: targetUserId,
-                title: "🙏 Seva Donation Confirmed",
-                message: `Thank you, ${donorDispName}! Your contribution of ₹${donationRecord.amount} for ${donationCause} is confirmed (Receipt #${receiptNo}).`,
-                type: "DONATION_RECEIPT",
-                isRead: false,
-              },
-            });
-          }
-        } catch (pushErr: any) {
-          console.warn("[Donation Push Notice]", pushErr?.message);
-        }
+        sendDonationConfirmedNotification(
+          {
+            id: donationRecord.id,
+            userId: donationRecord.donorId || clientUserId || null,
+            donorName: donationRecord.donorName,
+            donorPhone: donationRecord.donorPhone,
+            donorEmail: donationRecord.donorEmail,
+            amount: donationRecord.amount,
+            projectOrCause: donationRecord.projectOrCause,
+            receiptNumber: donationRecord.receiptNumber,
+          },
+          { expoPushToken }
+        ).catch((pushErr) => {
+          console.warn("[Verify Payment] Donation push failed:", pushErr?.message);
+        });
       }
     } catch (dbErr: any) {
       console.error("[Verify Payment Database Error]:", dbErr);

@@ -264,7 +264,7 @@ export default function GalleryScreen() {
                 >
                   <View style={styles.albumImageWrapper}>
                     <Image
-                      source={typeof album.image === "string" ? { uri: album.image } : album.image}
+                      source={resolveImageUrl(album.image)}
                       style={styles.albumImage}
                       resizeMode="cover"
                     />
@@ -328,7 +328,7 @@ export default function GalleryScreen() {
                 activeOpacity={0.85}
               >
                 <Image
-                  source={typeof photo.image === "string" ? { uri: photo.image } : photo.image}
+                  source={resolveImageUrl(photo.image)}
                   style={styles.gridPhotoImage}
                   resizeMode="cover"
                 />
@@ -397,7 +397,7 @@ export default function GalleryScreen() {
                 {/* Modal Main Image */}
                 <View style={styles.lightboxImageContainer}>
                   <Image
-                    source={typeof activePhoto.image === "string" ? { uri: activePhoto.image } : activePhoto.image}
+                    source={resolveImageUrl(activePhoto.image)}
                     style={styles.lightboxImage}
                     resizeMode="contain"
                   />
