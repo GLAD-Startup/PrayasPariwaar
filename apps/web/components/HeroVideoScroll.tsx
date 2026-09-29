@@ -24,7 +24,6 @@ export default function HeroVideoScroll({
 }: HeroVideoScrollProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -47,13 +46,6 @@ export default function HeroVideoScroll({
       }
     }
   }, []);
-
-  const [logoPos, setLogoPos] = useState({
-    left: "90.6%",
-    top: "83.3%",
-    size: 54,
-    visible: true,
-  });
 
   // Smoothly settles the hero into the main page state
   const settleHero = useCallback(() => {
@@ -241,71 +233,6 @@ export default function HeroVideoScroll({
     };
   }, [hasCompletedHero, settleHero]);
 
-  // Calculate exact position of the watermark in the video accounting for object-cover
-  useEffect(() => {
-    const updateLogo = () => {
-      const container = videoContainerRef.current;
-      if (!container) return;
-      const cw = container.clientWidth;
-      const ch = container.clientHeight;
-      if (cw === 0 || ch === 0) return;
-
-      const videoAspect = 16 / 9; // 1280 / 720 source video aspect ratio
-      const containerAspect = cw / ch;
-
-      let renderedW = cw;
-      let renderedH = ch;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (containerAspect > videoAspect) {
-        // Wider than 16:9: video fits width, cropped top/bottom
-        renderedW = cw;
-        renderedH = cw / videoAspect;
-        offsetY = (ch - renderedH) / 2;
-      } else {
-        // Taller than 16:9: video fits height, cropped left/right
-        renderedH = ch;
-        renderedW = ch * videoAspect;
-        offsetX = (cw - renderedW) / 2;
-      }
-
-      // Watermark center in the 1280x720 video:
-      // x = 1159.5 / 1280 = 0.905859
-      // y = 600.0 / 720 = 0.833333
-      const wmX = offsetX + renderedW * (1159.5 / 1280);
-      const wmY = offsetY + renderedH * (600.0 / 720);
-
-      // Scale logo size proportionally with the rendered video size
-      const baseLogoSize = Math.max(Math.min(renderedW * 0.044, 66), 38);
-
-      // On narrow mobile screens where video right edge is cropped, ensure the logo stays gracefully within viewport
-      const clampedX = Math.max(Math.min(wmX, cw - baseLogoSize * 0.75), baseLogoSize * 0.75);
-      const clampedY = Math.max(Math.min(wmY, ch - baseLogoSize * 0.75), baseLogoSize * 0.75);
-
-      setLogoPos({
-        left: `${clampedX}px`,
-        top: `${clampedY}px`,
-        size: Math.round(baseLogoSize),
-        visible: true,
-      });
-    };
-
-    updateLogo();
-    window.addEventListener("resize", updateLogo);
-
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined" && videoContainerRef.current) {
-      observer = new ResizeObserver(updateLogo);
-      observer.observe(videoContainerRef.current);
-    }
-
-    return () => {
-      window.removeEventListener("resize", updateLogo);
-      if (observer) observer.disconnect();
-    };
-  }, []);
-
   // =========================================================================
   // ANIMATION CALCULATIONS
   // =========================================================================
@@ -348,7 +275,7 @@ export default function HeroVideoScroll({
         {/* Continuous Background Video (0.85x speed, 100% silent, loop)         */}
         {/* Slow cinematic fade-in when site loads                                */}
         {/* ===================================================================== */}
-        <div ref={videoContainerRef} className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+        <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
           <video
             ref={videoRef}
             src={assetPath("/videos/make_one_more_video_in_the_con.mp4")}
@@ -361,32 +288,6 @@ export default function HeroVideoScroll({
               isVideoLoaded ? "opacity-100" : "opacity-0"
             }`}
           />
-
-          {/* ================================================================= */}
-          {/* Prayas Logo Overlay: Covers Gemini watermark & animates with video */}
-          {/* ================================================================= */}
-          {logoPos.visible && (
-            <div
-              style={{
-                position: "absolute",
-                left: logoPos.left,
-                top: logoPos.top,
-                width: `${logoPos.size}px`,
-                height: `${logoPos.size}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-              className={`pointer-events-none z-1 rounded-full shadow-lg shadow-black/50 will-change-transform transition-opacity duration-[2400ms] ease-out ${
-                isVideoLoaded ? "opacity-100" : "opacity-0"
-              }`}
-              title="Prayas Pariwaar"
-            >
-              <img
-                src={assetPath("/images/prayas-circular-logo.png")}
-                alt="Prayas Pariwaar"
-                className="w-full h-full object-contain rounded-full bg-white/95"
-              />
-            </div>
-          )}
         </div>
 
         {/* ===================================================================== */}
@@ -486,14 +387,6 @@ export default function HeroVideoScroll({
             </div>
           </div>
         </div>
-
-        {/* Live Seva Video Indicator (Bottom-Right) */}
-        {hasCompletedHero && (
-          <div className="absolute bottom-6 right-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] text-white/80 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>On-Ground Seva Footage • Vrindavan</span>
-          </div>
-        )}
       </div>
     </div>
   );

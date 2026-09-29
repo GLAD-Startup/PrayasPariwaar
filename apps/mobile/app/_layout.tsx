@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "../lib/notifications";
 import { getAuthUser } from "../lib/secureStore";
+import { AuthProvider } from "../lib/AuthContext";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -53,7 +54,7 @@ export default function RootLayout() {
   }, [router]);
 
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -80,6 +81,6 @@ export default function RootLayout() {
         <Stack.Screen name="medical-request" options={{ headerShown: false }} />
         <Stack.Screen name="donation-success" options={{ headerShown: false }} />
       </Stack>
-    </>
+    </AuthProvider>
   );
 }

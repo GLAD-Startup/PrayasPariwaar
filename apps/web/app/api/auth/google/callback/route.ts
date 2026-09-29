@@ -30,6 +30,12 @@ export async function GET(req: Request) {
 
   if (error || !code) {
     const errorMsg = error || "No authorization code returned from Google.";
+    if (url.searchParams.get("format") === "json" || req.headers.get("accept")?.includes("application/json")) {
+      return NextResponse.json(
+        { success: false, error: errorMsg },
+        { status: 400 }
+      );
+    }
     const errorDeepLink = `prayas://oauth?error=${encodeURIComponent(errorMsg)}`;
     return new Response(
       `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${errorDeepLink}"/><script>window.location.replace("${errorDeepLink}");</script></head><body style="background:#FFFFFF;margin:0;"></body></html>`,
@@ -85,10 +91,19 @@ export async function GET(req: Request) {
         }
       }
 
+      const clientId =
+        url.searchParams.get("client_id") ||
+        process.env.GOOGLE_CLIENT_ID ||
+        "258806422821-dme2jv73q5cn9ehk8d01i58324qp8n9r.apps.googleusercontent.com";
+      const clientSecret =
+        url.searchParams.get("client_secret") ||
+        process.env.GOOGLE_CLIENT_SECRET ||
+        "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";
+
       const tokenParams: Record<string, string> = {
         code,
-        client_id: process.env.GOOGLE_CLIENT_ID || "",
-        client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
+        client_id: clientId,
+        client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       };

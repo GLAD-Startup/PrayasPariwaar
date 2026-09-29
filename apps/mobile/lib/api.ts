@@ -71,8 +71,13 @@ async function refreshAccessToken(): Promise<string | null> {
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      console.warn("[API Client] Refresh token expired or invalid; clearing session.");
       await clearAuthSession();
+      return null;
+    }
+
+    if (!res.ok) {
       return null;
     }
 
@@ -82,10 +87,10 @@ async function refreshAccessToken(): Promise<string | null> {
       return data.accessToken;
     }
   } catch (error) {
-    console.error("[API Client] Failed to refresh token:", error);
+    console.error("[API Client] Network error during token refresh:", error);
+    return null;
   }
 
-  await clearAuthSession();
   return null;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,13 +17,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { saveAuthSession } from "../../lib/secureStore";
+import { saveAuthSession, getAuthUser } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
 import { useGoogleAuth } from "../../lib/googleAuth";
+import { useAuth } from "../../lib/AuthContext";
 import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileSignupScreen() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, login: authContextLogin } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +34,21 @@ export default function MobileSignupScreen() {
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/(tabs)/home");
+      return;
+    }
+
+    getAuthUser()
+      .then((user) => {
+        if (user?.id) {
+          router.replace("/(tabs)/home");
+        }
+      })
+      .catch(() => {});
+  }, [isAuthenticated, authLoading]);
 
   const { signInWithGoogle, loading: googleLoading } = useGoogleAuth({
     onSuccess: () => {
@@ -94,7 +111,7 @@ export default function MobileSignupScreen() {
     }
 
     if (response.data?.accessToken && response.data?.refreshToken) {
-      await saveAuthSession(
+      await authContextLogin(
         response.data.accessToken,
         response.data.refreshToken,
         response.data.user
@@ -103,6 +120,14 @@ export default function MobileSignupScreen() {
       router.replace("/(tabs)/home");
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>

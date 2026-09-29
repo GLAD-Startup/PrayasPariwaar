@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,14 @@ import {
   Image,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
+import { useAuth } from "../../lib/AuthContext";
+import { getAuthUser } from "../../lib/secureStore";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +26,30 @@ const CENTER_CIRCLE_SIZE = height > 750 ? 82 : 68;
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/(tabs)/home");
+      return;
+    }
+
+    getAuthUser()
+      .then((user) => {
+        if (user?.id) {
+          router.replace("/(tabs)/home");
+        }
+      })
+      .catch(() => {});
+  }, [isAuthenticated, authLoading]);
+
+  if (isAuthenticated) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>

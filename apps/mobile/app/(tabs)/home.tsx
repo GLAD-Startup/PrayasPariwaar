@@ -582,7 +582,39 @@ export default function MobileHomeScreen() {
           </>
         )}
 
-        {/* Dual Action Cards (Donate & Volunteer) */}
+        {/* ===================== SEPARATE EMERGENCY BLOOD DESK CARD ===================== */}
+        <View style={styles.bloodDeskContainer}>
+          <TouchableOpacity
+            style={styles.bloodDeskFullCard}
+            onPress={() => router.push("/blood-request")}
+            activeOpacity={0.88}
+          >
+            <View style={styles.bloodDeskCardLeftRow}>
+              <View style={[styles.actionIconCircle, styles.bloodIconCircle]}>
+                <MaterialCommunityIcons name="water" size={20} color="#DC2626" />
+              </View>
+              <View style={styles.bloodBannerContent}>
+                <View style={styles.bloodHeadlineRow}>
+                  <Text style={[styles.actionBannerTitle, { color: "#DC2626", marginBottom: 0 }]}>
+                    Emergency Blood Desk
+                  </Text>
+                  <View style={styles.blood24Badge}>
+                    <Text style={styles.blood24BadgeText}>24/7</Text>
+                  </View>
+                </View>
+                <Text style={styles.actionBannerSubtitle} numberOfLines={2}>
+                  Urgent blood dispatch & voluntary donor network across Mathura & Vrindavan.
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.actionArrowCircle, { backgroundColor: "#DC2626", alignSelf: "center", marginTop: 0 }]}>
+              <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Dual Action Cards (Donate & Volunteer - Kept to 2 Only) */}
         <View style={styles.dualActionRow}>
           {/* Donate Card */}
           <TouchableOpacity
@@ -1003,11 +1035,62 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* Dual Action */
+  /* Separate Blood Desk Card */
+  bloodDeskContainer: {
+    paddingHorizontal: 16,
+    marginTop: 14,
+  },
+  bloodDeskFullCard: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...Shadows.soft,
+  },
+  bloodDeskCardLeftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    paddingRight: 8,
+  },
+  bloodHeadlineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 2,
+  },
+  blood24Badge: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  blood24BadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#DC2626",
+  },
+  bloodBannerContent: {
+    flex: 1,
+  },
+  bloodIconCircle: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FECACA",
+    marginBottom: 0,
+  },
+
+  /* Dual Action (Keep 2 Only) */
   dualActionRow: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    marginTop: 12,
+    marginTop: 10,
     gap: 10,
   },
   actionBannerCard: {
@@ -1029,8 +1112,8 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   actionIconCircle: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: 8,
     backgroundColor: "#FFFFFF",
     alignItems: "center",

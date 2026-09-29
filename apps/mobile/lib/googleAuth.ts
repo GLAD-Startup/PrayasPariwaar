@@ -25,6 +25,10 @@ const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
   "258806422821-dme2jv73q5cn9ehk8d01i58324qp8n9r.apps.googleusercontent.com";
 
+const GOOGLE_CLIENT_SECRET =
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_SECRET ||
+  "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";
+
 /**
  * Returns an authorized Google OAuth redirect URI.
  * Google OAuth strictly forbids private IP addresses (e.g. 192.168.x.x).
@@ -72,9 +76,66 @@ export async function redeemGoogleAuthCode(code: string, state?: string): Promis
       const redirectUri = getGoogleRedirectUri();
       const storedVerifier = await getItem("oauth_code_verifier");
 
+      // Strategy 1: Exchange code directly with Google OAuth2 token endpoint,
+      // then authenticate against backend POST /auth/google (resilient to missing backend env vars)
+      try {
+        const googleBody = new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: redirectUri,
+          client_id: GOOGLE_WEB_CLIENT_ID,
+          client_secret: GOOGLE_CLIENT_SECRET,
+        });
+
+        if (storedVerifier) {
+          googleBody.append("code_verifier", storedVerifier);
+        }
+
+        const googleRes = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: googleBody.toString(),
+        });
+
+        const googleTokens = await googleRes.json().catch(() => null);
+
+        if (googleRes.ok && googleTokens && (googleTokens.id_token || googleTokens.access_token)) {
+          const authRes = await fetch(`${getApiBaseUrl()}/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              idToken: googleTokens.id_token,
+              accessToken: googleTokens.access_token,
+            }),
+          });
+
+          const authData = await authRes.json().catch(() => null);
+
+          if (authRes.ok && authData?.success && authData?.accessToken) {
+            await deleteItem("oauth_code_verifier").catch(() => {});
+            await saveAuthSession(authData.accessToken, authData.refreshToken, authData.user);
+
+            if (authData.user?.id) {
+              registerForPushNotificationsAsync(authData.user.id);
+            }
+
+            return authData.user;
+          }
+        }
+      } catch (directErr) {
+        console.warn("[GoogleAuth] Direct token exchange fallback error:", directErr);
+      }
+
+      // Strategy 2: Call backend GET /auth/google/callback with client_id parameter
       const queryParams = new URLSearchParams({
         code,
         redirect_uri: redirectUri,
+        client_id: GOOGLE_WEB_CLIENT_ID,
         format: "json",
       });
 
@@ -93,15 +154,15 @@ export async function redeemGoogleAuthCode(code: string, state?: string): Promis
         },
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data.success || !data.accessToken) {
+      if (!res.ok || !data?.success || !data?.accessToken) {
         // If server failed but user is already logged in, resolve cleanly
         const existingUser = await getAuthUser().catch(() => null);
         if (existingUser?.id) {
           return existingUser;
         }
-        throw new Error(data.error || "Failed to exchange Google authorization code.");
+        throw new Error(data?.error || "Failed to exchange Google authorization code.");
       }
 
       await deleteItem("oauth_code_verifier").catch(() => {});
@@ -196,6 +257,37 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
           setLoading(false);
           options.onSuccess?.(user);
           return true;
+        }
+
+        // Direct Google id_token or access_token returned
+        if (params.id_token || params.access_token) {
+          try {
+            const authRes = await fetch(`${getApiBaseUrl()}/auth/google`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                idToken: params.id_token,
+                accessToken: params.access_token,
+              }),
+            });
+
+            const authData = await authRes.json().catch(() => null);
+
+            if (authRes.ok && authData?.success && authData?.accessToken) {
+              await saveAuthSession(authData.accessToken, authData.refreshToken, authData.user);
+              if (authData.user?.id) {
+                registerForPushNotificationsAsync(authData.user.id);
+              }
+              setLoading(false);
+              options.onSuccess?.(authData.user);
+              return true;
+            }
+          } catch (tokenErr) {
+            console.warn("[GoogleAuth] Direct token verification failed:", tokenErr);
+          }
         }
 
         // If authorization code is returned, exchange it with backend

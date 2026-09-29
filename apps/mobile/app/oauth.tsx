@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { saveAuthSession, getAuthUser } from "../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../lib/notifications";
 import { redeemGoogleAuthCode } from "../lib/googleAuth";
+import { getApiBaseUrl } from "../lib/api";
 
 export default function OAuthCallbackScreen() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function OAuthCallbackScreen() {
     error?: string;
     code?: string;
     state?: string;
+    id_token?: string;
+    access_token?: string;
   }>();
 
   useEffect(() => {
@@ -61,6 +64,37 @@ export default function OAuthCallbackScreen() {
         if (isMounted) setStatusMessage("Sign-in successful! Entering app...");
         router.replace("/(tabs)/home");
         return;
+      }
+
+      // Case 1b: Direct Google id_token / access_token returned
+      if (params.id_token || params.access_token) {
+        try {
+          if (isMounted) setStatusMessage("Verifying Google token with Prayas server...");
+          const authRes = await fetch(`${getApiBaseUrl()}/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              idToken: params.id_token,
+              accessToken: params.access_token,
+            }),
+          });
+
+          const authData = await authRes.json().catch(() => null);
+          if (authRes.ok && authData?.success && authData?.accessToken) {
+            await saveAuthSession(authData.accessToken, authData.refreshToken, authData.user);
+            if (authData.user?.id) {
+              registerForPushNotificationsAsync(authData.user.id);
+            }
+            if (isMounted) setStatusMessage("Sign-in successful! Entering app...");
+            router.replace("/(tabs)/home");
+            return;
+          }
+        } catch (tokenErr) {
+          console.warn("[OAuth Screen] Token exchange error:", tokenErr);
+        }
       }
 
       // Case 2: Authorization code returned from Google / Expo Auth proxy

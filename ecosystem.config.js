@@ -23,6 +23,8 @@ module.exports = {
         NEXT_PUBLIC_APP_URL: "https://gladstudio.net/prayas",
         NEXT_PUBLIC_API_URL: "https://gladstudio.net/prayas/api",
         EXPO_PUBLIC_API_URL: "https://gladstudio.net/prayas/api",
+        GOOGLE_CLIENT_ID: "258806422821-dme2jv73q5cn9ehk8d01i58324qp8n9r.apps.googleusercontent.com",
+        GOOGLE_CLIENT_SECRET: "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",
       },
     },
   ],
