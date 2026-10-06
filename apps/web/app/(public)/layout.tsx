@@ -186,6 +186,9 @@ export default function PublicLayout({
               <Link href="/about" className="hover:text-white transition-colors">
                 Transparency & Governance
               </Link>
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
               <Link href="/contact" className="hover:text-white transition-colors">
                 Contact Office
               </Link>
