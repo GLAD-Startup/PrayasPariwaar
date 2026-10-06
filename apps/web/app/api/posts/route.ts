@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { PostSchema, formatZodError } from "@prayas/utils";
 import { syncImagesToAlbum } from "@/lib/gallery-sync";
+import { broadcastNewDispatchNotification } from "@/lib/notifications-service";
 
 // GET /api/posts - Public posts or filter
 export async function GET(req: Request) {
@@ -111,6 +112,13 @@ export async function POST(req: Request) {
           location: location || undefined,
         });
       }
+    }
+
+    // Broadcast push notification if published
+    if (post.published) {
+      broadcastNewDispatchNotification(post).catch((err) => {
+        console.warn("[Posts] Broadcast dispatch push failed:", err);
+      });
     }
 
     return NextResponse.json({ success: true, data: post }, { status: 201 });

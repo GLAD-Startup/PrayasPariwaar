@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
-import { api, resolveImageUrl } from "../../lib/api";
+import { api, resolveImageUrl, getImageUri } from "../../lib/api";
 import { getCachedData, setCachedData } from "../../lib/cache";
 import { prefetchRemoteImages } from "../../lib/assetPreloader";
 import SidebarDrawer from "../../components/SidebarDrawer";
@@ -139,13 +139,15 @@ export default function BlogsScreen() {
         // Extract and prefetch remote images so everything appears at once
         const imageUrls: string[] = [];
         livePosts.forEach((p: LiveBlogPost) => {
-          if (p.coverImage && typeof p.coverImage === "string" && p.coverImage.startsWith("http")) {
-            imageUrls.push(p.coverImage);
+          const coverUri = getImageUri(p.coverImage);
+          if (coverUri) {
+            imageUrls.push(coverUri);
           }
           if (Array.isArray(p.images)) {
             p.images.forEach((img) => {
-              if (img?.url && typeof img.url === "string" && img.url.startsWith("http")) {
-                imageUrls.push(img.url);
+              const imgUri = getImageUri(img?.url);
+              if (imgUri) {
+                imageUrls.push(imgUri);
               }
             });
           }

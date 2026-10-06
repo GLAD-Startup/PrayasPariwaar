@@ -84,7 +84,7 @@ export default async function HomePage() {
   try {
     if ((prisma as any).galleryPhoto) {
       galleryPhotos = await (prisma as any).galleryPhoto.findMany({
-        take: 8,
+        take: 12,
         orderBy: { createdAt: "desc" },
         include: { album: true },
       });
@@ -101,82 +101,6 @@ export default async function HomePage() {
     console.warn("Could not query gallery photos/albums in HomePage:", e);
   }
 
-  // Authentic Vrindavan field photography fallbacks
-  const fallbackGalleryPhotos = [
-    {
-      id: "fb-1",
-      url: assetPath("/images/child-hope-vrindavan.jpg"),
-      title: "Hope in Her Eyes",
-      caption: "Project Aashayein student Radha with her new notebook at our evening learning center",
-      category: "Free Education",
-      location: "Vrindavan, UP",
-      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
-    },
-    {
-      id: "fb-2",
-      url: assetPath("/images/banyan-study-vrindavan.jpg"),
-      title: "Evening Study Circle",
-      caption: "Classroom under the ancient banyan tree along Yamuna riverbank",
-      category: "Free Education",
-      location: "Kesi Ghat, Vrindavan",
-      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
-    },
-    {
-      id: "fb-3",
-      url: assetPath("/images/vrindavan-plantation.jpg"),
-      title: "Native Neem Afforestation",
-      caption: "Native Neem & Kadamba sapling plantation with protective tree guards along Parikrama Marg",
-      category: "Plantation",
-      location: "Govardhan Parikrama",
-      album: { title: "Harit Kranti", id: "alb-plantation" },
-    },
-    {
-      id: "fb-4",
-      url: assetPath("/images/medical-blood-seva.jpg"),
-      title: "10L Oxygen Bank Delivery",
-      caption: "Emergency medical equipment dispatch for elderly home patient recovery",
-      category: "Medical Seva",
-      location: "Mathura City",
-      album: { title: "Medical Equipment", id: "alb-blood" },
-    },
-    {
-      id: "fb-5",
-      url: assetPath("/images/health-camp-vrindavan.jpg"),
-      title: "Jan Swasthya Eye Screening",
-      caption: "Free geriatric eye screening & cataract surgery diagnosis camp in Raman Reti",
-      category: "Health Camps",
-      location: "Raman Reti, Vrindavan",
-      album: { title: "FREE HOME", id: "cmtqo5fri0003ag5akayoq1pd" },
-    },
-    {
-      id: "fb-6",
-      url: assetPath("/images/youth-skills-vrindavan.jpg"),
-      title: "Digital Youth Mentorship",
-      caption: "Digital literacy & basic computer learning center for rural village youth",
-      category: "Free Education",
-      location: "Mathura Rural",
-      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
-    },
-    {
-      id: "fb-7",
-      url: assetPath("/images/hero-education-vrindavan.jpg"),
-      title: "Classroom Learning Circle",
-      caption: "Children engaging in evening foundation literacy and math classes",
-      category: "Free Education",
-      location: "Vrindavan Learning Center",
-      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
-    },
-    {
-      id: "fb-8",
-      url: assetPath("/images/child-hero-portrait.jpg"),
-      title: "Nurturing Young Aspirations",
-      caption: "Providing school stationery and uniform support to daily-wage family children",
-      category: "Free Education",
-      location: "Mathura Rural",
-      album: { title: "Education", id: "cmtqo4l0t0000ag5a8iqmpc8a" },
-    },
-  ];
-
   // Filter out test screenshots/documents so only authentic field photography is displayed
   const cleanedGalleryPhotos = galleryPhotos.filter((p: any) => {
     const url = (p.url || "").toLowerCase();
@@ -184,14 +108,11 @@ export default async function HomePage() {
     if (url.includes("screenshot") || title.includes("credential") || title.includes("abcd") || url.includes("-removebg-")) {
       return false;
     }
-    return true;
+    return Boolean(p.url);
   });
 
-  // Merge database photos with curated authentic fallbacks (4 photos per row, 2 rows)
-  const displayPhotos = [
-    ...cleanedGalleryPhotos,
-    ...fallbackGalleryPhotos.filter((fb) => !cleanedGalleryPhotos.some((gp: any) => gp.url === fb.url)),
-  ].slice(0, 8);
+  // Only live uploaded photos from the database - zero hardcoded fallback images
+  const displayPhotos = cleanedGalleryPhotos.slice(0, 8);
 
   // Find Aashayein project specifically
   const aashayeinProject = activeProjects.find((p: any) => p.slug === "aashayein-education") || activeProjects[0] || {
@@ -535,73 +456,83 @@ export default async function HomePage() {
         </ScrollReveal>
 
         {/* Dynamic Photo Gallery Grid (Clean 4-Column Uniform Cards) */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 md:gap-4">
-          {displayPhotos.map((photo: any, idx: number) => {
-            const targetUrl = photo.albumId ? `/gallery?albumId=${photo.albumId}` : "/gallery";
-            const albumName = photo.album?.title;
-            const categoryName = photo.category && photo.category !== "All" ? photo.category : "Field Seva";
-            const badgeLabel = albumName || categoryName;
+        {displayPhotos.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 md:gap-4">
+            {displayPhotos.map((photo: any, idx: number) => {
+              const targetUrl = photo.albumId ? `/gallery?albumId=${photo.albumId}` : "/gallery";
+              const albumName = photo.album?.title;
+              const categoryName = photo.category && photo.category !== "All" ? photo.category : "Field Seva";
+              const badgeLabel = albumName || categoryName;
 
-            return (
-              <ScrollReveal key={photo.id || idx} delay={idx * 50}>
-                <Link
-                  href={targetUrl}
-                  className="group relative overflow-hidden rounded-xl bg-prayas-stone border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
-                >
-                  <Image
-                    src={assetPath(photo.url || photo.src)}
-                    alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  {/* Rich Dark Gradient for 100% Text Legibility */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
+              return (
+                <ScrollReveal key={photo.id || idx} delay={idx * 50}>
+                  <Link
+                    href={targetUrl}
+                    className="group relative overflow-hidden rounded-xl bg-prayas-stone border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
+                  >
+                    <Image
+                      src={assetPath(photo.url || photo.src)}
+                      alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    {/* Rich Dark Gradient for 100% Text Legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
 
-                  {/* Top Badge: Single, Dignified Glassmorphic Pill */}
-                  <div className="absolute top-2.5 left-2.5 z-20">
-                    <span className="px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold border border-white/25 shadow-sm flex items-center gap-1">
-                      <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
-                      <span className="truncate max-w-[140px]">{badgeLabel}</span>
-                    </span>
-                  </div>
-
-                  {/* Bottom Text Details */}
-                  <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 z-20 space-y-1">
-                    <h4
-                      className="font-serif font-bold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
-                      style={{ color: "#ffffff" }}
-                    >
-                      {photo.title || photo.caption}
-                    </h4>
-                    {photo.caption && photo.title && photo.caption !== photo.title && (
-                      <p
-                        className="text-[10px] sm:text-[11px] text-slate-200 line-clamp-1 leading-tight font-light drop-shadow"
-                        style={{ color: "#e2e8f0" }}
-                      >
-                        {photo.caption}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between pt-1 text-[10px] border-t border-white/20">
-                      <span className="flex items-center gap-1" style={{ color: "#e2e8f0" }}>
-                        <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                        <span className="truncate max-w-[100px]">{photo.location || "Vrindavan, UP"}</span>
-                      </span>
-                      <span
-                        className="font-semibold group-hover:underline flex items-center gap-0.5 transition-colors shrink-0"
-                        style={{ color: "#6ee7b7" }}
-                      >
-                        <span>View</span>
-                        <ArrowRight className="w-2.5 h-2.5" />
+                    {/* Top Badge: Single, Dignified Glassmorphic Pill */}
+                    <div className="absolute top-2.5 left-2.5 z-20">
+                      <span className="px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold border border-white/25 shadow-sm flex items-center gap-1">
+                        <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                        <span className="truncate max-w-[140px]">{badgeLabel}</span>
                       </span>
                     </div>
-                  </div>
-                </Link>
-              </ScrollReveal>
-            );
-          })}
-        </div>
+
+                    {/* Bottom Text Details */}
+                    <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 z-20 space-y-1">
+                      <h4
+                        className="font-serif font-bold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
+                        style={{ color: "#ffffff" }}
+                      >
+                        {photo.title || photo.caption}
+                      </h4>
+                      {photo.caption && photo.title && photo.caption !== photo.title && (
+                        <p
+                          className="text-[10px] sm:text-[11px] text-slate-200 line-clamp-1 leading-tight font-light drop-shadow"
+                          style={{ color: "#e2e8f0" }}
+                        >
+                          {photo.caption}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between pt-1 text-[10px] border-t border-white/20">
+                        <span className="flex items-center gap-1" style={{ color: "#e2e8f0" }}>
+                          <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span className="truncate max-w-[100px]">{photo.location || "Vrindavan, UP"}</span>
+                        </span>
+                        <span
+                          className="font-semibold group-hover:underline flex items-center gap-0.5 transition-colors shrink-0"
+                          style={{ color: "#6ee7b7" }}
+                        >
+                          <span>View</span>
+                          <ArrowRight className="w-2.5 h-2.5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-12 text-center rounded-2xl bg-white border border-prayas-rule shadow-xs space-y-2">
+            <Camera className="w-8 h-8 text-emerald-700/40 mx-auto" />
+            <p className="font-serif text-base font-bold text-prayas-ink">No Field Photos Uploaded Yet</p>
+            <p className="text-xs text-prayas-muted max-w-md mx-auto">
+              Live field photography captures published through the Admin panel will appear here automatically.
+            </p>
+          </div>
+        )}
 
         {/* Bottom Reassurance Banner linking to full gallery archive */}
         <ScrollReveal>
@@ -625,7 +556,7 @@ export default async function HomePage() {
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2E5339] text-white text-xs sm:text-sm font-bold hover:bg-[#23432b] transition-all shadow-md text-center whitespace-nowrap"
               style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
             >
-              Browse Complete Gallery ({galleryPhotos.length > 0 ? "Live Records" : "50+ Photos"}) →
+              Browse Complete Gallery ({displayPhotos.length > 0 ? `${displayPhotos.length} Live Records` : "Explore Archive"}) →
             </Link>
           </div>
         </ScrollReveal>

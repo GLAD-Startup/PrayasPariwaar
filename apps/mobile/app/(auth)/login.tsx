@@ -20,16 +20,34 @@ import { api } from "../../lib/api";
 import { saveAuthSession, getAuthUser } from "../../lib/secureStore";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
 import { useGoogleAuth } from "../../lib/googleAuth";
+import { useAuth } from "../../lib/AuthContext";
 import { Colors, Shadows } from "../../lib/theme";
 
 export default function MobileLoginScreen() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, login: authContextLogin } = useAuth();
   const searchParams = useLocalSearchParams<{ oauthError?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/(tabs)/home");
+      return;
+    }
+
+    // Direct check in case context is still resolving
+    getAuthUser()
+      .then((user) => {
+        if (user?.id) {
+          router.replace("/(tabs)/home");
+        }
+      })
+      .catch(() => {});
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (searchParams.oauthError) {
@@ -98,7 +116,7 @@ export default function MobileLoginScreen() {
     }
 
     if (response.data?.accessToken && response.data?.refreshToken) {
-      await saveAuthSession(
+      await authContextLogin(
         response.data.accessToken,
         response.data.refreshToken,
         response.data.user
@@ -107,6 +125,14 @@ export default function MobileLoginScreen() {
       router.replace("/(tabs)/home");
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>

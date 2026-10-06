@@ -15,9 +15,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
     ],
   },
   experimental: {
+    serverActions: {
+      bodySizeLimit: "60mb",
+    },
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
   },
   async headers() {
@@ -97,6 +104,18 @@ const nextConfig = {
         {
           source: "/admin",
           destination: `${basePath}/admin`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/uploads/:path*",
+          destination: `${basePath}/uploads/:path*`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/api/uploads/:path*",
+          destination: `${basePath}/api/uploads/:path*`,
           permanent: false,
           basePath: false,
         },

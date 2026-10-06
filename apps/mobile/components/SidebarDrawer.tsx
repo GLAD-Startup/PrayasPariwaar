@@ -18,6 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../lib/theme";
 import { getStoredUser, clearAuthSession } from "../lib/secureStore";
+import { resolveImageUrl } from "../lib/api";
+import { useAuth } from "../lib/AuthContext";
 import ActionDialog from "./ActionDialog";
 
 const { width, height } = Dimensions.get("window");
@@ -43,11 +45,27 @@ interface MenuItem {
 
 export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user: authUser, isAuthenticated, logout: authLogout, refreshUser } = useAuth();
+  const [localUser, setLocalUser] = useState<any>(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Active user: prefer authUser from context, fallback to localUser
+  const currentUser = authUser || localUser;
+  const isUserLoggedIn = Boolean(
+    isAuthenticated || (currentUser && (currentUser.id || currentUser.userId || currentUser.email))
+  );
+
+  useEffect(() => {
+    // Initial load on mount
+    getStoredUser()
+      .then((stored) => {
+        if (stored) setLocalUser(stored);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -83,9 +101,16 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const loadUserData = async () => {
     try {
       const stored = await getStoredUser();
-      setUser(stored);
+      if (stored) {
+        setLocalUser(stored);
+      }
+      refreshUser()
+        .then((fresh) => {
+          if (fresh) setLocalUser(fresh);
+        })
+        .catch(() => {});
     } catch (e) {
-      setUser(null);
+      // keep current context user
     }
   };
 
@@ -98,8 +123,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
 
   const handleCallDesk = () => {
     onClose();
-    Linking.openURL("tel:+919412279001").catch(() => {
-      Alert.alert("Helpline", "Prayas 24/7 Seva Coordination Desk: +91 94122 79001");
+    Linking.openURL("tel:+919927081650").catch(() => {
+      Alert.alert("Helpline", "Prayas 24/7 Seva Coordination Desk: +91 99270 81650");
     });
   };
 
@@ -120,8 +145,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await clearAuthSession();
-      setUser(null);
+      await authLogout();
+      setLocalUser(null);
       setLogoutDialogOpen(false);
       onClose();
       router.replace("/(auth)/login" as any);
@@ -261,12 +286,12 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     {
       id: "helpline",
       title: "Emergency Helpline Desk",
-      subtitle: "One-Tap Call (+91 94122 79001)",
+      subtitle: "One-Tap Call (+91 99270 81650)",
       icon: "call-outline",
       iconType: "ionicons",
       badge: "Direct Line",
-      badgeBg: "#EFF6FF",
-      badgeColor: "#1D4ED8",
+      badgeBg: "#F0FDF4",
+      badgeColor: "#166534",
       onPress: handleCallDesk,
     },
   ];
@@ -315,18 +340,18 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
             {/* User Profile / Guest Card */}
             <TouchableOpacity
               style={styles.userCard}
-              onPress={() => handleNavigate(user ? "/(tabs)/profile" : "/(auth)/login")}
+              onPress={() => handleNavigate(isUserLoggedIn ? "/(tabs)/profile" : "/(auth)/login")}
               activeOpacity={0.85}
             >
               <View style={styles.userAvatarBox}>
-                {user?.avatarUrl || user?.avatar ? (
+                {currentUser?.avatarUrl || currentUser?.avatar ? (
                   <Image
-                    source={{ uri: user.avatarUrl || user.avatar }}
+                    source={resolveImageUrl(currentUser.avatarUrl || currentUser.avatar)}
                     style={styles.userAvatarImg}
                   />
-                ) : user?.name ? (
+                ) : currentUser?.name ? (
                   <Text style={styles.userAvatarInitials}>
-                    {user.name.substring(0, 2).toUpperCase()}
+                    {currentUser.name.substring(0, 2).toUpperCase()}
                   </Text>
                 ) : (
                   <MaterialCommunityIcons name="account" size={24} color="#1D4ED8" />
@@ -335,10 +360,10 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
 
               <View style={styles.userInfoCol}>
                 <Text style={styles.userName} numberOfLines={1}>
-                  {user?.name || "Seva Supporter"}
+                  {currentUser?.name || (isUserLoggedIn ? "Prayas Sevak" : "Seva Supporter")}
                 </Text>
                 <Text style={styles.userEmail} numberOfLines={1}>
-                  {user?.email || "Tap to sign in / manage account"}
+                  {currentUser?.email || (isUserLoggedIn ? "Verified Member" : "Tap to sign in / manage account")}
                 </Text>
               </View>
 
@@ -455,7 +480,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
               </View>
 
               {/* Sign In / Sign Out Button */}
-              {user ? (
+              {isUserLoggedIn ? (
                 <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
                   <Ionicons name="log-out-outline" size={18} color="#DC2626" style={{ marginRight: 6 }} />
                   <Text style={styles.logoutBtnText}>Sign Out</Text>

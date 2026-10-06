@@ -71,3 +71,11 @@ Thumbs.db
 ehthumbs.db
 *.pem
 
+# User Uploads & Media Assets (Keep directory tracked via .gitkeep)
+apps/web/public/uploads/*
+!apps/web/public/uploads/.gitkeep
+!apps/web/public/uploads/gallery-data.json
+public/uploads/*
+!public/uploads/.gitkeep
+!public/uploads/gallery-data.json
+

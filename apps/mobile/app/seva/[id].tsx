@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,11 +10,14 @@ import {
   StatusBar,
   Alert,
   Modal,
+  ActivityIndicator,
+  Share,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
+import { api, resolveImageUrl } from "../../lib/api";
 import ActionDialog from "../../components/ActionDialog";
 
 const { width } = Dimensions.get("window");
@@ -40,7 +43,6 @@ interface StreamDetailConfig {
   metrics: { value: string; label: string; icon: string }[];
   aboutText: string;
   whatWeDo: { title: string; subtitle: string; icon: string; iconType: "ionicons" | "material" }[];
-  gallery: any[];
   actions: StreamAction[];
 }
 
@@ -66,12 +68,6 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Study Materials", subtitle: "Books, notebooks and learning resources", icon: "book-outline", iconType: "ionicons" },
       { title: "School Support", subtitle: "Uniforms, bags and stationery support", icon: "bag-handle-outline", iconType: "ionicons" },
       { title: "Career Guidance", subtitle: "Mentorship and career counselling", icon: "person-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/images/hero-education-vrindavan.jpg"),
-      require("../../assets/images/banyan-study-vrindavan.jpg"),
-      require("../../assets/images/child-hope-vrindavan.jpg"),
-      require("../../assets/images/child-hero-portrait.jpg"),
     ],
     actions: [
       {
@@ -125,11 +121,6 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Donor Network", subtitle: "Direct verified WhatsApp & Push alerts", icon: "notifications-outline", iconType: "ionicons" },
       { title: "Rare Groups", subtitle: "Specialized registry for rare blood types", icon: "heart-outline", iconType: "ionicons" },
     ],
-    gallery: [
-      require("../../assets/images/medical-blood-seva.jpg"),
-      require("../../assets/images/health-camp-vrindavan.jpg"),
-      require("../../assets/images/hero-education-vrindavan.jpg"),
-    ],
     actions: [
       {
         title: "Register as Blood Donor",
@@ -181,11 +172,6 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Tree Adoption", subtitle: "Community maintenance and drip watering", icon: "water-outline", iconType: "ionicons" },
       { title: "Native Species", subtitle: "Preserving biodiversity with sacred flora", icon: "flower-outline", iconType: "ionicons" },
       { title: "School Nurseries", subtitle: "Educating students about eco-conservation", icon: "school-outline", iconType: "ionicons" },
-    ],
-    gallery: [
-      require("../../assets/images/vrindavan-plantation.jpg"),
-      require("../../assets/onboarding/banner_plantation.jpg"),
-      require("../../assets/onboarding/jeev_jal.jpg"),
     ],
     actions: [
       {
@@ -239,10 +225,6 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Daily Refill", subtitle: "Volunteer teams keeping bowls filled", icon: "refresh-outline", iconType: "ionicons" },
       { title: "Medical Rescue", subtitle: "First aid for dehydrated street animals", icon: "medkit-outline", iconType: "ionicons" },
     ],
-    gallery: [
-      require("../../assets/onboarding/jeev_jal.jpg"),
-      require("../../assets/images/vrindavan-plantation.jpg"),
-    ],
     actions: [
       {
         title: "Join Jal Taskforce",
@@ -295,11 +277,6 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
       { title: "Women Tailoring", subtitle: "Sewing machines & garment manufacturing", icon: "cut-outline", iconType: "ionicons" },
       { title: "Job Placement", subtitle: "Direct placement with regional employers", icon: "briefcase-outline", iconType: "ionicons" },
     ],
-    gallery: [
-      require("../../assets/images/youth-skills-vrindavan.jpg"),
-      require("../../assets/onboarding/tailoring.jpg"),
-      require("../../assets/images/banyan-study-vrindavan.jpg"),
-    ],
     actions: [
       {
         title: "Enroll for Free Training",
@@ -332,6 +309,22 @@ const STREAM_DETAILS: Record<string, StreamDetailConfig> = {
   },
 };
 
+const PILLAR_CATEGORY_MAP: Record<string, string[]> = {
+  education: ["Free Education", "Education"],
+  "blood-donation": ["Blood Donation", "Blood", "Health", "Healthcare", "Medical"],
+  plantation: ["Plantation", "Plantation & Ecology"],
+  "jeev-jal": ["Jeev Jal Seva", "Jeev Jal"],
+  vocational: ["Vocational Training", "Vocational"],
+};
+
+interface LivePhotoItem {
+  id: string;
+  title?: string;
+  url: string;
+  category?: string;
+  location?: string;
+}
+
 export default function SevaDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -342,6 +335,70 @@ export default function SevaDetailScreen() {
   const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [bookmarkModalVisible, setBookmarkModalVisible] = useState(false);
+  const [livePhotos, setLivePhotos] = useState<LivePhotoItem[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [activePhoto, setActivePhoto] = useState<LivePhotoItem | null>(null);
+
+  useEffect(() => {
+    loadLiveGallery();
+  }, [streamKey]);
+
+  const loadLiveGallery = async () => {
+    try {
+      setLoadingPhotos(true);
+      const res = await api.get<any>("/gallery");
+      if (res.data?.success && res.data.data) {
+        const allowed = PILLAR_CATEGORY_MAP[streamKey] || [];
+        const recentPhotos: any[] = res.data.data.recentPhotos || [];
+        const albums: any[] = res.data.data.albums || [];
+        const collected: LivePhotoItem[] = [];
+
+        // 1. Check recent photos
+        for (const p of recentPhotos) {
+          const cat = (p.category || "").toLowerCase();
+          const title = (p.title || "").toLowerCase();
+          const matches = allowed.some((c) => cat.includes(c.toLowerCase()) || title.includes(c.toLowerCase()));
+          if (matches && p.url && !p.url.includes("unsplash.com")) {
+            if (!collected.some((existing) => existing.id === p.id || existing.url === p.url)) {
+              collected.push({
+                id: p.id,
+                title: p.title || p.caption || "Seva Moment",
+                url: p.url,
+                category: p.category,
+                location: p.location,
+              });
+            }
+          }
+        }
+
+        // 2. Check albums
+        for (const a of albums) {
+          const aCat = (a.category || "").toLowerCase();
+          const aTitle = (a.title || "").toLowerCase();
+          const aMatches = allowed.some((c) => aCat.includes(c.toLowerCase()) || aTitle.includes(c.toLowerCase()));
+          if (aMatches && Array.isArray(a.photos)) {
+            for (const ap of a.photos) {
+              if (ap.url && !ap.url.includes("unsplash.com") && !collected.some((existing) => existing.id === ap.id || existing.url === ap.url)) {
+                collected.push({
+                  id: ap.id,
+                  title: ap.title || ap.caption || a.title || "Seva Moment",
+                  url: ap.url,
+                  category: ap.category || a.category,
+                  location: ap.location,
+                });
+              }
+            }
+          }
+        }
+
+        setLivePhotos(collected);
+      }
+    } catch (e) {
+      console.warn("Failed to load live gallery for pillar:", e);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -443,21 +500,59 @@ export default function SevaDetailScreen() {
           ))}
         </View>
 
-        {/* Photo Gallery */}
+        {/* Live Photo Gallery (Only Live Uploaded Data) */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Photo Gallery</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.sectionHeading}>Live Photo Gallery</Text>
+            {livePhotos.length > 0 && (
+              <View style={styles.liveCountBadge}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveCountText}>{livePhotos.length} Live</Text>
+              </View>
+            )}
+          </View>
           <TouchableOpacity onPress={() => router.push("/gallery")} activeOpacity={0.7}>
             <Text style={styles.viewAllText}>View All ›</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryScroll}>
-          {stream.gallery.map((img, i) => (
-            <View key={i} style={styles.galleryThumb}>
-              <Image source={img} style={styles.galleryImage} resizeMode="cover" />
-            </View>
-          ))}
-        </ScrollView>
+        {loadingPhotos ? (
+          <View style={styles.galleryLoadingBox}>
+            <ActivityIndicator size="small" color="#166534" />
+            <Text style={styles.galleryLoadingText}>Loading live field photos...</Text>
+          </View>
+        ) : livePhotos.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryScroll}>
+            {livePhotos.map((photo) => (
+              <TouchableOpacity
+                key={photo.id}
+                style={styles.galleryThumb}
+                onPress={() => setActivePhoto(photo)}
+                activeOpacity={0.88}
+              >
+                <Image source={resolveImageUrl(photo.url)} style={styles.galleryImage} resizeMode="cover" />
+                <View style={styles.galleryExpandBadge}>
+                  <Ionicons name="expand-outline" size={11} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyGalleryBox}>
+            <Ionicons name="camera-outline" size={24} color="#94A3B8" />
+            <Text style={styles.emptyGalleryTitle}>No live photos uploaded yet</Text>
+            <Text style={styles.emptyGallerySub}>
+              Real field photos uploaded for this pillar will appear here automatically.
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyGalleryBtn}
+              onPress={() => router.push("/gallery")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyGalleryBtnText}>Explore All Seva Photos ›</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Get Involved Action Cards (Properly Implemented for Each Pillar) */}
         <Text style={styles.sectionHeading}>Get Involved</Text>
@@ -596,6 +691,58 @@ export default function SevaDetailScreen() {
           confirmText="Got It"
           showCancel={false}
         />
+
+        {/* Fullscreen Live Photo Lightbox */}
+        {activePhoto && (
+          <Modal visible={!!activePhoto} transparent animationType="fade">
+            <View style={styles.lightboxOverlay}>
+              <SafeAreaView style={styles.lightboxSafeArea}>
+                <View style={styles.lightboxTopBar}>
+                  <TouchableOpacity
+                    style={styles.lightboxCloseBtn}
+                    onPress={() => setActivePhoto(null)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="close" size={24} color="#FFFFFF" />
+                  </TouchableOpacity>
+
+                  <View style={styles.lightboxBadge}>
+                    <Text style={styles.lightboxBadgeText}>{activePhoto.category || stream.title}</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.lightboxCloseBtn}
+                    onPress={() => {
+                      Share.share({
+                        message: `${activePhoto.title || stream.title} - Prayas Pariwaar Seva in Vrindavan`,
+                      });
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.lightboxImageWrapper}>
+                  <Image
+                    source={resolveImageUrl(activePhoto.url)}
+                    style={styles.lightboxFullImage}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                {activePhoto.title ? (
+                  <View style={styles.lightboxCaptionBox}>
+                    <Text style={styles.lightboxCaptionText}>{activePhoto.title}</Text>
+                    {activePhoto.location ? (
+                      <Text style={styles.lightboxLocationText}>📍 {activePhoto.location}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
+              </SafeAreaView>
+            </View>
+          </Modal>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -824,14 +971,162 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   galleryThumb: {
-    width: 95,
-    height: 75,
+    width: 100,
+    height: 80,
     borderRadius: 10,
     overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#F1F5F9",
   },
   galleryImage: {
     width: "100%",
     height: "100%",
+  },
+  liveCountBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
+    marginBottom: 8,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#16A34A",
+    marginRight: 4,
+  },
+  liveCountText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#166534",
+  },
+  galleryLoadingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 16,
+    gap: 8,
+  },
+  galleryLoadingText: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "500",
+  },
+  galleryExpandBadge: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    padding: 3,
+    borderRadius: 4,
+  },
+  emptyGalleryBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 16,
+    borderStyle: "dashed",
+  },
+  emptyGalleryTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#475569",
+    marginTop: 8,
+  },
+  emptyGallerySub: {
+    fontSize: 11,
+    color: "#94A3B8",
+    textAlign: "center",
+    marginTop: 3,
+    marginBottom: 10,
+    lineHeight: 15,
+  },
+  emptyGalleryBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "#DCFCE7",
+    borderRadius: 8,
+  },
+  emptyGalleryBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#166534",
+  },
+  lightboxOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+  },
+  lightboxSafeArea: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  lightboxTopBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  lightboxCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lightboxBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  lightboxBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  lightboxImageWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  lightboxFullImage: {
+    width: "100%",
+    height: "100%",
+  },
+  lightboxCaptionBox: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+  },
+  lightboxCaptionText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  lightboxLocationText: {
+    color: "#A7F3D0",
+    fontSize: 11,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 4,
   },
   actionsList: {
     gap: 8,

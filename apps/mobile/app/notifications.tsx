@@ -45,7 +45,7 @@ const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
     id: "notif-1",
     category: "Emergency Blood",
     title: "🚨 URGENT: O+ Blood Needed at Ramakrishna Mission Hospital",
-    message: "2 units of O-Positive blood needed urgently for emergency patient in Vrindavan. Call +91 94122 79000.",
+    message: "2 units of O-Positive blood needed urgently for emergency patient in Vrindavan. Call +91 99270 81650.",
     time: "Just now",
     read: false,
     type: "BLOOD_REQUEST",

@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { getStoredUser, saveAuthSession, clearAuthSession, getAccessToken, getRefreshToken } from "../../lib/secureStore";
-import { api, uploadFile, getApiBaseUrl } from "../../lib/api";
+import { api, uploadFile, getApiBaseUrl, resolveImageUrl } from "../../lib/api";
 import { pickImageFromGallery, captureImageWithCamera } from "../../lib/imagePickerHelper";
 import {
   sendLocalNotification,
@@ -190,11 +190,12 @@ export default function ProfileScreen() {
     setUploadingPhoto(true);
     try {
       let finalAvatarUrl = localUri;
-      if (!localUri.startsWith("http")) {
+      if (!localUri.startsWith("http") && !localUri.startsWith("data:")) {
         const uploadRes = await uploadFile(localUri, `avatar-${Date.now()}.jpg`, "image/jpeg");
         if (uploadRes.url) {
-          const baseUrl = getApiBaseUrl().replace(/\/api$/, "");
-          finalAvatarUrl = uploadRes.url.startsWith("http") ? uploadRes.url : `${baseUrl}${uploadRes.url}`;
+          finalAvatarUrl = uploadRes.url;
+        } else if (uploadRes.error) {
+          throw new Error(uploadRes.error);
         }
       }
 
@@ -402,7 +403,7 @@ export default function ProfileScreen() {
       subtitle: "850+ Seva volunteers in Braj",
       icon: "clipboard-outline",
       iconType: "ionicons",
-      iconColor: "#1D4ED8",
+      iconColor: "#166534",
       onPress: () => router.push("/volunteer-form"),
     },
     {
@@ -429,7 +430,7 @@ export default function ProfileScreen() {
       subtitle: notifPrefs.pushEnabled ? "Alerts enabled (Blood & Seva)" : "Push notifications paused",
       icon: notifPrefs.pushEnabled ? "options-outline" : "notifications-off-outline",
       iconType: "ionicons",
-      iconColor: notifPrefs.pushEnabled ? "#1D4ED8" : "#DC2626",
+      iconColor: notifPrefs.pushEnabled ? "#166534" : "#DC2626",
       onPress: () => setNotifModalVisible(true),
     },
     {
@@ -451,14 +452,14 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1E3A8A" />
+      <StatusBar barStyle="light-content" backgroundColor="#166534" />
 
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Curve Banner in Royal Blue */}
+        {/* Header Curve Banner in Forest Green */}
         <View style={styles.headerArc}>
           <SafeAreaView edges={["top"]} style={styles.safeHeader}>
             <View style={styles.headerRow}>
@@ -476,7 +477,7 @@ export default function ProfileScreen() {
             <View style={styles.profileBadge}>
               <View style={styles.avatarWrapper}>
                 {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={styles.avatarImg} resizeMode="cover" />
+                  <Image source={resolveImageUrl(avatarUri)} style={styles.avatarImg} resizeMode="cover" />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Text style={styles.avatarInitialsText}>
@@ -506,7 +507,7 @@ export default function ProfileScreen() {
                 onPress={() => setPhotoSheetVisible(true)}
                 activeOpacity={0.85}
               >
-                <Ionicons name="cloud-upload-outline" size={13} color="#1D4ED8" style={{ marginRight: 4 }} />
+                <Ionicons name="cloud-upload-outline" size={13} color="#166534" style={{ marginRight: 4 }} />
                 <Text style={styles.uploadPhotoPillText}>
                   {avatarUri ? "Change Profile Photo" : "Upload Profile Photo"}
                 </Text>
@@ -522,7 +523,7 @@ export default function ProfileScreen() {
                   onPress={() => setEditModalVisible(true)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="call-outline" size={12} color="#93C5FD" style={{ marginRight: 4 }} />
+                  <Ionicons name="call-outline" size={12} color="#BBF7D0" style={{ marginRight: 4 }} />
                   <Text style={styles.addPhonePillText}>+ Add Phone Number</Text>
                 </TouchableOpacity>
               )}
@@ -540,7 +541,7 @@ export default function ProfileScreen() {
               {/* Seva Impact Badges */}
               <View style={styles.impactBadgesRow}>
                 <View style={styles.impactBadge}>
-                  <Ionicons name="sparkles" size={12} color="#1D4ED8" style={{ marginRight: 4 }} />
+                  <Ionicons name="sparkles" size={12} color="#166534" style={{ marginRight: 4 }} />
                   <Text style={styles.impactBadgeText}>Active Sevak</Text>
                 </View>
                 <View style={[styles.impactBadge, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
@@ -635,8 +636,8 @@ export default function ProfileScreen() {
 
             {/* Native Options */}
             <TouchableOpacity style={styles.sheetOption} onPress={handleTakePhoto} activeOpacity={0.8}>
-              <View style={[styles.sheetIconCircle, { backgroundColor: "#EFF6FF" }]}>
-                <Ionicons name="camera-outline" size={22} color="#1D4ED8" />
+              <View style={[styles.sheetIconCircle, { backgroundColor: "#F0FDF4" }]}>
+                <Ionicons name="camera-outline" size={22} color="#166534" />
               </View>
               <View style={styles.sheetOptionTextCol}>
                 <Text style={styles.sheetOptionTitle}>Take Photo with Camera</Text>
@@ -829,7 +830,7 @@ export default function ProfileScreen() {
           <View style={styles.notifModalCard}>
             <View style={styles.notifModalHeader}>
               <View style={styles.notifModalTitleRow}>
-                <Ionicons name="notifications" size={22} color="#1D4ED8" />
+                <Ionicons name="notifications" size={22} color="#166534" />
                 <Text style={styles.notifModalTitle}>Push Notification Settings</Text>
               </View>
               <TouchableOpacity onPress={() => setNotifModalVisible(false)}>
@@ -853,8 +854,8 @@ export default function ProfileScreen() {
                 <Switch
                   value={notifPrefs.pushEnabled}
                   onValueChange={(val) => handleToggleNotifPref("pushEnabled", val)}
-                  trackColor={{ false: "#CBD5E1", true: "#BFDBFE" }}
-                  thumbColor={notifPrefs.pushEnabled ? "#1D4ED8" : "#94A3B8"}
+                  trackColor={{ false: "#CBD5E1", true: "#BBF7D0" }}
+                  thumbColor={notifPrefs.pushEnabled ? "#166534" : "#94A3B8"}
                 />
               </View>
 
@@ -904,8 +905,8 @@ export default function ProfileScreen() {
                   value={notifPrefs.soundEnabled}
                   disabled={!notifPrefs.pushEnabled}
                   onValueChange={(val) => handleToggleNotifPref("soundEnabled", val)}
-                  trackColor={{ false: "#CBD5E1", true: "#BFDBFE" }}
-                  thumbColor={notifPrefs.soundEnabled && notifPrefs.pushEnabled ? "#1D4ED8" : "#94A3B8"}
+                  trackColor={{ false: "#CBD5E1", true: "#BBF7D0" }}
+                  thumbColor={notifPrefs.soundEnabled && notifPrefs.pushEnabled ? "#166534" : "#94A3B8"}
                 />
               </View>
             </View>
@@ -973,7 +974,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerArc: {
-    backgroundColor: "#1E3A8A",
+    backgroundColor: "#166534",
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     paddingBottom: 24,
@@ -1024,20 +1025,20 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 48,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarInitialsText: {
     fontSize: 32,
     fontWeight: "900",
-    color: "#1D4ED8",
+    color: "#166534",
   },
   editAvatarBtn: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#1D4ED8",
+    backgroundColor: "#166534",
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -1057,13 +1058,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: "#BBF7D0",
     ...Shadows.soft,
   },
   uploadPhotoPillText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#1D4ED8",
+    color: "#166534",
   },
   profileName: {
     fontSize: 18,
@@ -1074,7 +1075,7 @@ const styles = StyleSheet.create({
   },
   profileEmail: {
     fontSize: 12,
-    color: "#BFDBFE",
+    color: "#BBF7D0",
     marginTop: 2,
   },
   profilePhone: {
@@ -1093,7 +1094,7 @@ const styles = StyleSheet.create({
   },
   addPhonePillText: {
     fontSize: 11,
-    color: "#93C5FD",
+    color: "#BBF7D0",
     fontWeight: "700",
   },
   editDetailsBtn: {
@@ -1120,9 +1121,9 @@ const styles = StyleSheet.create({
   impactBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EFF6FF",
+    backgroundColor: "#F0FDF4",
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: "#BBF7D0",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -1130,7 +1131,7 @@ const styles = StyleSheet.create({
   impactBadgeText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#1D4ED8",
+    color: "#166534",
   },
   statsCard: {
     flexDirection: "row",
@@ -1153,7 +1154,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 16,
     fontWeight: "900",
-    color: "#1E3A8A",
+    color: "#166534",
   },
   statLabel: {
     fontSize: 10,
@@ -1320,7 +1321,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     borderWidth: 1.5,
-    borderColor: "#BFDBFE",
+    borderColor: "#BBF7D0",
   },
   presetImg: {
     width: "100%",
@@ -1375,7 +1376,7 @@ const styles = StyleSheet.create({
     color: "#0F172A",
   },
   saveProfileBtn: {
-    backgroundColor: "#1D4ED8",
+    backgroundColor: "#166534",
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
@@ -1450,7 +1451,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   notifSaveBtn: {
-    backgroundColor: "#1D4ED8",
+    backgroundColor: "#166534",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

@@ -1,0 +1,19 @@
+# Next.js Build Outputs
+.next/
+out/
+build/
+dist/
+
+# User Uploads
+public/uploads/*
+!public/uploads/.gitkeep
+!public/uploads/gallery-data.json
+
+# Environment
+.env*.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*

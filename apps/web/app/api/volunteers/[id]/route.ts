@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { sendVolunteerStatusNotification } from "@/lib/notifications-service";
 
 // PATCH /api/volunteers/[id] - Update status or details
 export async function PATCH(
@@ -22,6 +23,13 @@ export async function PATCH(
         ...(status && { status }),
       },
     });
+
+    // Send push notification for all volunteer status changes via central notification hub
+    if (status) {
+      sendVolunteerStatusNotification(volunteer, status).catch((err) => {
+        console.warn("[Volunteer PATCH] Status push failed:", err);
+      });
+    }
 
     return NextResponse.json({ success: true, data: volunteer });
   } catch (error: any) {

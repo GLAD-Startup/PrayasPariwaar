@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
 import { getStoredUser, saveAuthSession, getAccessToken, getRefreshToken } from "../../lib/secureStore";
-import { api } from "../../lib/api";
+import { api, resolveImageUrl } from "../../lib/api";
 import { registerForPushNotificationsAsync } from "../../lib/notifications";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
@@ -119,7 +119,7 @@ export default function CompleteProfileScreen() {
           <View style={styles.welcomeCard}>
             <View style={styles.avatarWrapper}>
               {user?.avatarUrl ? (
-                <Image source={{ uri: user.avatarUrl }} style={styles.avatarImg} />
+                <Image source={resolveImageUrl(user.avatarUrl)} style={styles.avatarImg} />
               ) : (
                 <View style={styles.avatarFallback}>
                   <Text style={styles.avatarFallbackText}>

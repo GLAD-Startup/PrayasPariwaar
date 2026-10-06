@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { sendDonationConfirmedNotification } from "@/lib/notifications-service";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,8 @@ export async function POST(req: Request) {
     const orderId = body.razorpay_order_id || body.order_id;
     const paymentId = body.razorpay_payment_id || body.payment_id;
     const signature = body.razorpay_signature || body.signature;
+    const expoPushToken = body.expoPushToken || null;
+    const clientUserId = body.userId || null;
 
     // Validate missing fields
     if (!orderId || typeof orderId !== "string" || !orderId.trim()) {
@@ -129,7 +133,7 @@ export async function POST(req: Request) {
         if (body.donorName && (!donationRecord.donorName || donationRecord.donorName === "Supporter")) {
           updateFields.donorName = String(body.donorName).trim();
         }
-        if (body.donorEmail && (!donationRecord.donorEmail || donationRecord.donorEmail === "donor@prayas.org")) {
+        if (body.donorEmail && (!donationRecord.donorEmail || donationRecord.donorEmail === "av.prayas@gmail.com")) {
           updateFields.donorEmail = String(body.donorEmail).trim().toLowerCase();
         }
 
@@ -165,7 +169,7 @@ export async function POST(req: Request) {
             frequency: "ONE_TIME",
             paymentMethod: "Razorpay Standard Checkout",
             donorName: body.donorName || "Supporter",
-            donorEmail: (body.donorEmail || "donor@prayas.org").toLowerCase().trim(),
+            donorEmail: (body.donorEmail || "av.prayas@gmail.com").toLowerCase().trim(),
             donorPhone: body.donorPhone || null,
             projectOrCause: body.projectOrCause || "General Seva Fund",
             receiptNumber,
@@ -175,6 +179,25 @@ export async function POST(req: Request) {
             razorpaySignature: signature.trim(),
             status: "SUCCESS",
           },
+        });
+      }
+
+      // Dispatch Push Notification for successful verified donation via central hub
+      if (donationRecord && donationRecord.status === "SUCCESS") {
+        sendDonationConfirmedNotification(
+          {
+            id: donationRecord.id,
+            userId: donationRecord.donorId || clientUserId || null,
+            donorName: donationRecord.donorName,
+            donorPhone: donationRecord.donorPhone,
+            donorEmail: donationRecord.donorEmail,
+            amount: donationRecord.amount,
+            projectOrCause: donationRecord.projectOrCause,
+            receiptNumber: donationRecord.receiptNumber,
+          },
+          { expoPushToken }
+        ).catch((pushErr) => {
+          console.warn("[Verify Payment] Donation push failed:", pushErr?.message);
         });
       }
     } catch (dbErr: any) {

@@ -39,6 +39,17 @@ export function getWebBaseUrl(): string {
   return apiUrl.replace(/\/api\/?$/, "");
 }
 
+export function getWebOrigin(): string {
+  const webBase = getWebBaseUrl();
+  try {
+    const parsed = new URL(webBase);
+    return parsed.origin;
+  } catch {
+    const match = webBase.match(/^(https?:\/\/[^\/]+)/i);
+    return match ? match[1] : webBase;
+  }
+}
+
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
@@ -60,8 +71,13 @@ async function refreshAccessToken(): Promise<string | null> {
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      console.warn("[API Client] Refresh token expired or invalid; clearing session.");
       await clearAuthSession();
+      return null;
+    }
+
+    if (!res.ok) {
       return null;
     }
 
@@ -71,10 +87,10 @@ async function refreshAccessToken(): Promise<string | null> {
       return data.accessToken;
     }
   } catch (error) {
-    console.error("[API Client] Failed to refresh token:", error);
+    console.error("[API Client] Network error during token refresh:", error);
+    return null;
   }
 
-  await clearAuthSession();
   return null;
 }
 
@@ -162,19 +178,83 @@ export const api = {
     apiRequest<T>(endpoint, { ...options, method: "DELETE" }),
 };
 
+/**
+ * Resolves any image URL (relative, absolute, uploaded from web, localhost dev legacy)
+ * to an absolute URI object `{ uri: string }` or local required asset suitable for React Native <Image source={...} />.
+ */
 export function resolveImageUrl(url: any, fallback?: any): any {
-  if (!url) return fallback || require("../assets/onboarding/education.jpg");
-  if (typeof url === "object" && url.uri) return url;
+  const defaultFallback = fallback || require("../assets/onboarding/education.jpg");
+  if (!url) return defaultFallback;
+
+  // If already a local asset required with require(...)
   if (typeof url === "number") return url;
-  if (typeof url !== "string") return fallback || require("../assets/onboarding/education.jpg");
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://") || url.startsWith("data:")) {
-    return { uri: url };
+
+  // If an object with uri property
+  let rawUrl = typeof url === "object" && url !== null && "uri" in url ? (url as any).uri : url;
+
+  if (typeof rawUrl !== "string") return defaultFallback;
+
+  rawUrl = rawUrl.trim();
+  if (!rawUrl || rawUrl === "null" || rawUrl === "undefined") {
+    return defaultFallback;
   }
-  if (url.startsWith("/")) {
-    const baseUrl = getApiBaseUrl().replace(/\/api$/, "");
-    return { uri: `${baseUrl}${url}` };
+
+  // Local device file or data URI
+  if (rawUrl.startsWith("file://") || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+    return { uri: rawUrl };
   }
-  return fallback || require("../assets/onboarding/education.jpg");
+
+  const webBase = getWebBaseUrl(); // e.g. "https://gladstudio.net/prayas" or "http://192.168.1.41:3005/prayas"
+  const origin = getWebOrigin();   // e.g. "https://gladstudio.net" or "http://192.168.1.41:3005"
+
+  // Check if it's an absolute URL
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    try {
+      const parsed = new URL(rawUrl);
+      const isLoopbackOrLocal =
+        parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname === "10.0.2.2";
+
+      // If it's a localhost link from dev upload or local test in DB, rewrite to active backend
+      if (isLoopbackOrLocal) {
+        let cleanPath = parsed.pathname;
+        if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
+        if (cleanPath.startsWith("/prayas/")) {
+          return { uri: `${origin}${cleanPath}${parsed.search}` };
+        }
+        return { uri: `${webBase}${cleanPath}${parsed.search}` };
+      }
+
+      // Valid remote external URL (Unsplash, R2/S3, production domain, etc.)
+      return { uri: rawUrl };
+    } catch {
+      // If URL parsing fails, continue to path logic below
+    }
+  }
+
+  // Clean relative path (e.g. "uploads/xxx.jpg", "/uploads/xxx.jpg", "/prayas/uploads/xxx.jpg")
+  let pathStr = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+
+  // If already prefixed with /prayas/ (e.g. /prayas/uploads/... or /prayas/api/uploads/...)
+  // Prepend origin ONLY to avoid duplicated /prayas/prayas/
+  if (pathStr.startsWith("/prayas/")) {
+    return { uri: `${origin}${pathStr}` };
+  }
+
+  // Standard relative uploads path (/uploads/... or /api/uploads/...)
+  return { uri: `${webBase}${pathStr}` };
+}
+
+/**
+ * Returns string URI directly for prefetching or caching remote images
+ */
+export function getImageUri(url: any, fallbackStr?: string): string | null {
+  const resolved = resolveImageUrl(url);
+  if (resolved && typeof resolved === "object" && resolved.uri) {
+    return resolved.uri;
+  }
+  return fallbackStr || null;
 }
 
 export async function uploadFile(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { sendMedicalRequestStatusNotification } from "@/lib/notifications-service";
 
 // PATCH /api/equipment/requests/[id] - Update borrower request status
 export async function PATCH(
@@ -21,7 +22,19 @@ export async function PATCH(
       data: {
         ...(status && { status }),
       },
+      include: {
+        equipment: {
+          select: { name: true },
+        },
+      },
     });
+
+    // Send push notification for all status changes via central notification hub
+    if (status) {
+      sendMedicalRequestStatusNotification(request, status).catch((err) => {
+        console.warn("[Equipment Request PATCH] Status push failed:", err);
+      });
+    }
 
     return NextResponse.json({ success: true, data: request });
   } catch (error: any) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { syncImagesToAlbum } from "@/lib/gallery-sync";
+import { broadcastNewDispatchNotification } from "@/lib/notifications-service";
 
 // GET /api/posts/[id] - Fetch single post by id or slug with author and images
 export async function GET(
@@ -113,6 +114,13 @@ export async function PATCH(
           location: location || post.location || undefined,
         });
       }
+    }
+
+    // Broadcast push notification if published
+    if (post.published && (published === true || body.broadcast === true)) {
+      broadcastNewDispatchNotification(post).catch((err) => {
+        console.warn("[Posts PATCH] Broadcast dispatch push failed:", err);
+      });
     }
 
     return NextResponse.json({ success: true, data: post });

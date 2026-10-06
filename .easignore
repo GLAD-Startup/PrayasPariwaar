@@ -11,6 +11,10 @@ apps/web/
 .next/
 out/
 
+# User Uploads
+apps/web/public/uploads/
+public/uploads/
+
 # Build caches & outputs
 .turbo/
 dist/

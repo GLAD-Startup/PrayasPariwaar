@@ -101,7 +101,7 @@ export default function ContactUsScreen() {
           {/* Call Us */}
           <TouchableOpacity
             style={styles.contactCard}
-            onPress={() => Linking.openURL("tel:+919676543210")}
+            onPress={() => Linking.openURL("tel:+919927081650")}
             activeOpacity={0.85}
           >
             <View style={styles.iconCircle}>
@@ -109,7 +109,7 @@ export default function ContactUsScreen() {
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardHeading}>Call Us</Text>
-              <Text style={styles.cardMainText}>+91 96765 43210</Text>
+              <Text style={styles.cardMainText}>+91 99270 81650</Text>
               <Text style={styles.cardSubText}>Monday to Saturday, 9 AM - 6 PM</Text>
             </View>
           </TouchableOpacity>
@@ -117,15 +117,15 @@ export default function ContactUsScreen() {
           {/* Email Us */}
           <TouchableOpacity
             style={styles.contactCard}
-            onPress={() => Linking.openURL("mailto:info@sevadhamtrust.org")}
+            onPress={() => Linking.openURL("mailto:av.prayas@gmail.com")}
             activeOpacity={0.85}
           >
-            <View style={[styles.iconCircle, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-              <Ionicons name="mail-outline" size={20} color="#1D4ED8" />
+            <View style={[styles.iconCircle, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]}>
+              <Ionicons name="mail-outline" size={20} color="#166534" />
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardHeading}>Email Us</Text>
-              <Text style={styles.cardMainText}>info@sevadhamtrust.org</Text>
+              <Text style={styles.cardMainText}>av.prayas@gmail.com</Text>
               <Text style={styles.cardSubText}>We will respond within 24 hours</Text>
             </View>
           </TouchableOpacity>

@@ -376,11 +376,11 @@ export default function BloodDonorRegistrationScreen() {
             </Text>
             <TouchableOpacity
               style={styles.emergencyCallBtn}
-              onPress={() => Linking.openURL("tel:+919412279000")}
+              onPress={() => Linking.openURL("tel:+919927081650")}
               activeOpacity={0.88}
             >
               <Ionicons name="call" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.emergencyCallBtnText}>Call Helpline: +91 94122 79000</Text>
+              <Text style={styles.emergencyCallBtnText}>Call Helpline: +91 99270 81650</Text>
             </TouchableOpacity>
           </View>
 

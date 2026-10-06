@@ -19,7 +19,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { Colors, Shadows } from "../../lib/theme";
-import { api, resolveImageUrl } from "../../lib/api";
+import { api, resolveImageUrl, getImageUri } from "../../lib/api";
 import { getCachedData, setCachedData } from "../../lib/cache";
 import { prefetchRemoteImages } from "../../lib/assetPreloader";
 import SidebarDrawer from "../../components/SidebarDrawer";
@@ -289,8 +289,9 @@ export default function MobileHomeScreen() {
           await setCachedData("prayas_gallery", photos);
           nextGallery = photos;
           photos.forEach((p: any) => {
-            if (p.url && p.url.startsWith("http")) {
-              remoteImageUrlsToPrefetch.push(p.url);
+            const uri = getImageUri(p.url);
+            if (uri) {
+              remoteImageUrlsToPrefetch.push(uri);
             }
           });
         }
@@ -319,7 +320,7 @@ export default function MobileHomeScreen() {
   };
 
   const handleCallEmergency = () => {
-    Linking.openURL("tel:+919412279001").catch(() => {
+    Linking.openURL("tel:+919927081650").catch(() => {
       setHelplineModalVisible(true);
     });
   };
@@ -393,7 +394,7 @@ export default function MobileHomeScreen() {
             renderItem={({ item }) => (
               <View style={[styles.heroCard, { width: HERO_CARD_WIDTH }]}>
                 <Image
-                  source={typeof item.image === "string" ? { uri: item.image } : item.image}
+                  source={resolveImageUrl(item.image, require("../../assets/images/hero-education-vrindavan.jpg"))}
                   style={styles.heroImage}
                   resizeMode="cover"
                 />
@@ -511,7 +512,7 @@ export default function MobileHomeScreen() {
             >
               <View style={styles.updateImageWrapper}>
                 <Image
-                  source={typeof card.image === "string" ? { uri: card.image } : card.image}
+                  source={resolveImageUrl(card.image, require("../../assets/images/banyan-study-vrindavan.jpg"))}
                   style={styles.updateImage}
                   resizeMode="cover"
                 />
@@ -581,7 +582,39 @@ export default function MobileHomeScreen() {
           </>
         )}
 
-        {/* Dual Action Cards (Donate & Volunteer) */}
+        {/* ===================== SEPARATE EMERGENCY BLOOD DESK CARD ===================== */}
+        <View style={styles.bloodDeskContainer}>
+          <TouchableOpacity
+            style={styles.bloodDeskFullCard}
+            onPress={() => router.push("/blood-request")}
+            activeOpacity={0.88}
+          >
+            <View style={styles.bloodDeskCardLeftRow}>
+              <View style={[styles.actionIconCircle, styles.bloodIconCircle]}>
+                <MaterialCommunityIcons name="water" size={20} color="#DC2626" />
+              </View>
+              <View style={styles.bloodBannerContent}>
+                <View style={styles.bloodHeadlineRow}>
+                  <Text style={[styles.actionBannerTitle, { color: "#DC2626", marginBottom: 0 }]}>
+                    Emergency Blood Desk
+                  </Text>
+                  <View style={styles.blood24Badge}>
+                    <Text style={styles.blood24BadgeText}>24/7</Text>
+                  </View>
+                </View>
+                <Text style={styles.actionBannerSubtitle} numberOfLines={2}>
+                  Urgent blood dispatch & voluntary donor network across Mathura & Vrindavan.
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.actionArrowCircle, { backgroundColor: "#DC2626", alignSelf: "center", marginTop: 0 }]}>
+              <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Dual Action Cards (Donate & Volunteer - Kept to 2 Only) */}
         <View style={styles.dualActionRow}>
           {/* Donate Card */}
           <TouchableOpacity
@@ -697,10 +730,10 @@ export default function MobileHomeScreen() {
         description="Connect with Prayas Seva Coordination Desk for immediate emergency blood, ambulance, or medical oxygen support in Vrindavan & Mathura."
         icon="call-outline"
         type="primary"
-        confirmText="Call +91 94122 79001"
+        confirmText="Call +91 99270 81650"
         onConfirm={() => {
           setHelplineModalVisible(false);
-          Linking.openURL("tel:+919412279001");
+          Linking.openURL("tel:+919927081650");
         }}
         cancelText="Close"
         showCancel={true}
@@ -952,16 +985,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   updateCard: {
-    width: 170,
+    width: 200,
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     overflow: "hidden",
     ...Shadows.soft,
   },
   updateImageWrapper: {
-    height: 100,
+    height: 115,
     position: "relative",
   },
   updateImage: {
@@ -970,43 +1003,94 @@ const styles = StyleSheet.create({
   },
   updatePill: {
     position: "absolute",
-    bottom: 6,
-    left: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
+    bottom: 8,
+    left: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   updatePillText: {
     color: "#FFFFFF",
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: "800",
   },
   updateContent: {
-    padding: 10,
+    padding: 12,
   },
   updateTitle: {
-    fontSize: 11,
+    fontSize: 13.5,
     fontWeight: "700",
     color: "#0F172A",
-    lineHeight: 15,
-    height: 30,
+    lineHeight: 19,
+    minHeight: 38,
+    marginBottom: 6,
   },
   updateDateRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
   },
   updateDateText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#94A3B8",
     fontWeight: "600",
   },
 
-  /* Dual Action */
+  /* Separate Blood Desk Card */
+  bloodDeskContainer: {
+    paddingHorizontal: 16,
+    marginTop: 14,
+  },
+  bloodDeskFullCard: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    ...Shadows.soft,
+  },
+  bloodDeskCardLeftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    paddingRight: 8,
+  },
+  bloodHeadlineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 2,
+  },
+  blood24Badge: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  blood24BadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#DC2626",
+  },
+  bloodBannerContent: {
+    flex: 1,
+  },
+  bloodIconCircle: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FECACA",
+    marginBottom: 0,
+  },
+
+  /* Dual Action (Keep 2 Only) */
   dualActionRow: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    marginTop: 12,
+    marginTop: 10,
     gap: 10,
   },
   actionBannerCard: {
@@ -1028,8 +1112,8 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   actionIconCircle: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: 8,
     backgroundColor: "#FFFFFF",
     alignItems: "center",

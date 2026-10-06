@@ -106,7 +106,7 @@ export default function VolunteerPage() {
         setError(data.error || "Failed to submit volunteer application. Please check all fields.");
       }
     } catch (err) {
-      setError("Network error. Please call our office directly at +91 96765 43210.");
+      setError("Network error. Please call our office directly at +91 99270 81650.");
     } finally {
       setSubmitting(false);
     }

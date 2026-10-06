@@ -71,7 +71,7 @@ export const Shadows = {
     elevation: 3,
   },
   primaryBtn: {
-    shadowColor: "#1E3A8A",
+    shadowColor: "#166534",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
