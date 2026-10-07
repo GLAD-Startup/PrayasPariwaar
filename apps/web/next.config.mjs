@@ -119,6 +119,12 @@ const nextConfig = {
           permanent: false,
           basePath: false,
         },
+        {
+          source: "/images/:path*",
+          destination: `${basePath}/images/:path*`,
+          permanent: false,
+          basePath: false,
+        },
       ];
     }
     return [];

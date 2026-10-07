@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { assetPath } from "@/lib/api";
+import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 import {
   MILESTONES,
   getCategoryStyle,
@@ -18,10 +19,16 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-export default function HomeHorizontalTimeline() {
+interface HomeHorizontalTimelineProps {
+  milestones?: TimelineMilestone[];
+}
+
+export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTimelineProps) {
+  const displayMilestones = milestones && milestones.length > 0 ? milestones : MILESTONES;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
 
   const checkScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -123,7 +130,7 @@ export default function HomeHorizontalTimeline() {
               </div>
 
               {/* Milestones Nodes */}
-              {MILESTONES.map((milestone, idx) => {
+              {displayMilestones.map((milestone, idx) => {
                 const isEven = idx % 2 === 0;
                 const catStyle = getCategoryStyle(milestone.category);
 
@@ -166,14 +173,29 @@ export default function HomeHorizontalTimeline() {
                         {/* Top / Bottom Small Thumbnail & Badges */}
                         <div className="flex items-center gap-3 sm:gap-3.5">
                           <div className="relative w-28 h-22 sm:w-32 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-prayas-rule/80 bg-stone-100 shadow-xs group-hover:shadow-md transition-shadow">
-                            <Image
-                              src={assetPath(milestone.imageUrl)}
-                              alt={milestone.title}
-                              fill
-                              sizes="(max-width: 640px) 112px, 128px"
-                              className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                            {typeof milestone.imageUrl === "string" &&
+                            milestone.imageUrl.trim().length > 0 &&
+                            milestone.imageUrl !== "null" &&
+                            milestone.imageUrl !== "undefined" &&
+                            !brokenImages[milestone.id] ? (
+                              <Image
+                                src={assetPath(milestone.imageUrl)}
+                                alt={milestone.title}
+                                fill
+                                sizes="(max-width: 640px) 112px, 128px"
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                onError={() =>
+                                  setBrokenImages((prev) => ({ ...prev, [milestone.id]: true }))
+                                }
+                              />
+                            ) : (
+                              <TimelineImagePlaceholder
+                                category={milestone.category}
+                                year={milestone.year}
+                                compact={true}
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -184,7 +206,7 @@ export default function HomeHorizontalTimeline() {
                               <span
                                 className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${catStyle.badgeBg}`}
                               >
-                                {milestone.categoryLabel.split(" ")[0]}
+                                {(milestone.categoryLabel || "Seva").split(" ")[0]}
                               </span>
                             </div>
 

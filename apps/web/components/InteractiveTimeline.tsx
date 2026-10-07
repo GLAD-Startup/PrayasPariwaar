@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { assetPath } from "@/lib/api";
+import TimelineImagePlaceholder from "./TimelineImagePlaceholder";
 import {
   Calendar,
   MapPin,
@@ -314,6 +315,7 @@ export default function InteractiveTimeline() {
   const [showFullStory, setShowFullStory] = useState<boolean>(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [mounted, setMounted] = useState<boolean>(false);
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setMounted(true);
@@ -947,16 +949,32 @@ export default function InteractiveTimeline() {
                 title="Click to open stage card on top"
               >
                 <div key={activeMilestone.id} className="relative w-full h-full min-h-[380px] sm:min-h-[460px] lg:min-h-[560px]">
-                  <Image
-                    src={assetPath(activeMilestone.imageUrl)}
-                    alt={activeMilestone.title}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                    className={`object-cover object-center transition-all ease-out ${
-                      isPlaying ? "scale-105 duration-[4800ms] ease-linear" : "duration-700 group-hover:scale-105"
-                    }`}
-                    priority
-                  />
+                  {typeof activeMilestone.imageUrl === "string" &&
+                  activeMilestone.imageUrl.trim().length > 0 &&
+                  activeMilestone.imageUrl !== "null" &&
+                  activeMilestone.imageUrl !== "undefined" &&
+                  !brokenImages[activeMilestone.id] ? (
+                    <Image
+                      src={assetPath(activeMilestone.imageUrl)}
+                      alt={activeMilestone.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className={`object-cover object-center transition-all ease-out ${
+                        isPlaying ? "scale-105 duration-[4800ms] ease-linear" : "duration-700 group-hover:scale-105"
+                      }`}
+                      priority
+                      onError={() =>
+                        setBrokenImages((prev) => ({ ...prev, [activeMilestone.id]: true }))
+                      }
+                    />
+                  ) : (
+                    <TimelineImagePlaceholder
+                      category={activeMilestone.category}
+                      year={activeMilestone.year}
+                      title={activeMilestone.title}
+                      location={activeMilestone.location}
+                    />
+                  )}
                 </div>
 
                 {/* Dark vignette gradient for contrast */}
@@ -1201,14 +1219,31 @@ export default function InteractiveTimeline() {
                           onClick={() => handleSelectStage(idx, milestone)}
                           title="Click to open stage card on top"
                         >
-                          <Image
-                            src={assetPath(milestone.imageUrl)}
-                            alt={milestone.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 40vw"
-                            className="object-cover group-hover/img:scale-105 transition-transform duration-500"
-                            loading="lazy"
-                          />
+                          {typeof milestone.imageUrl === "string" &&
+                          milestone.imageUrl.trim().length > 0 &&
+                          milestone.imageUrl !== "null" &&
+                          milestone.imageUrl !== "undefined" &&
+                          !brokenImages[milestone.id] ? (
+                            <Image
+                              src={assetPath(milestone.imageUrl)}
+                              alt={milestone.title}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 40vw"
+                              className="object-cover group-hover/img:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                              onError={() =>
+                                setBrokenImages((prev) => ({ ...prev, [milestone.id]: true }))
+                              }
+                            />
+                          ) : (
+                            <TimelineImagePlaceholder
+                              category={milestone.category}
+                              year={milestone.year}
+                              title={milestone.title}
+                              location={milestone.location}
+                              compact
+                            />
+                          )}
                           <div className="absolute inset-0 bg-black/35 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                             <span
                               className="px-4 py-2 rounded-xl bg-black/85 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-2 shadow-lg border border-white/30"
@@ -1432,14 +1467,30 @@ export default function InteractiveTimeline() {
 
             {/* High-Resolution Photo */}
             <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-inner group">
-              <Image
-                src={assetPath(activeModalMilestone.imageUrl)}
-                alt={activeModalMilestone.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 850px"
-                className="object-cover transition-transform duration-700 group-hover:scale-103"
-                priority
-              />
+              {typeof activeModalMilestone.imageUrl === "string" &&
+              activeModalMilestone.imageUrl.trim().length > 0 &&
+              activeModalMilestone.imageUrl !== "null" &&
+              activeModalMilestone.imageUrl !== "undefined" &&
+              !brokenImages[activeModalMilestone.id] ? (
+                <Image
+                  src={assetPath(activeModalMilestone.imageUrl)}
+                  alt={activeModalMilestone.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 850px"
+                  className="object-cover transition-transform duration-700 group-hover:scale-103"
+                  priority
+                  onError={() =>
+                    setBrokenImages((prev) => ({ ...prev, [activeModalMilestone.id]: true }))
+                  }
+                />
+              ) : (
+                <TimelineImagePlaceholder
+                  category={activeModalMilestone.category}
+                  year={activeModalMilestone.year}
+                  title={activeModalMilestone.title}
+                  location={activeModalMilestone.location}
+                />
+              )}
               <div
                 className="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-sm text-[11px] flex items-center gap-1.5 font-medium border border-white/20"
                 style={{ color: "#ffffff" }}

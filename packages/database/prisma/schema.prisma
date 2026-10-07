@@ -385,6 +385,34 @@ model Award {
   @@map("awards")
 }
 
+// "Timeline Milestones" for 15-Year Chronicle of Nishkam Seva
+model TimelineMilestone {
+  id            String   @id @default(cuid())
+  year          Int
+  dateLabel     String
+  category      String   // "education" | "health" | "plantation" | "institutional"
+  categoryLabel String
+  title         String
+  subtitle      String
+  location      String
+  imageUrl      String
+  impactBadge   String
+  summary       String   @db.Text
+  story         String   @db.Text
+  quote         String?  @db.Text
+  keyStats      Json?    // Array of { label: string, value: string }
+  highlightTag  String?
+  linkUrl       String?
+  linkLabel     String?
+  order         Int      @default(0)
+  published     Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("timeline_milestones")
+}
+
 // Homepage testimonial carousel
 model Testimonial {
   id          String  @id @default(cuid())

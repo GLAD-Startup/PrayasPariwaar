@@ -27,6 +27,8 @@ import {
   Image as ImageIcon,
   HeartHandshake,
   ShieldCheck,
+  History,
+  Award,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -126,6 +128,22 @@ export default function AdminLayout({
           icon: Newspaper,
           badge: null,
           color: "text-emerald-700",
+        },
+        {
+          href: "/admin/timeline",
+          label: "Timeline Chronicle",
+          icon: History,
+          badge: "Photos",
+          badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
+          color: "text-emerald-700",
+        },
+        {
+          href: "/admin/awards",
+          label: "Awards & Honors",
+          icon: Award,
+          badge: null,
+          badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+          color: "text-amber-700",
         },
       ],
     },

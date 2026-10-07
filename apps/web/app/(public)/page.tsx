@@ -101,6 +101,19 @@ export default async function HomePage() {
     console.warn("Could not query gallery photos/albums in HomePage:", e);
   }
 
+  // Fetch timeline milestones from database (with static fallback)
+  let dbMilestones: any[] = [];
+  try {
+    if ((prisma as any).timelineMilestone) {
+      dbMilestones = await (prisma as any).timelineMilestone.findMany({
+        where: { published: true },
+        orderBy: [{ year: "asc" }, { order: "asc" }],
+      });
+    }
+  } catch (e) {
+    console.warn("Could not query timeline milestones in HomePage:", e);
+  }
+
   // Filter out test screenshots/documents so only authentic field photography is displayed
   const cleanedGalleryPhotos = galleryPhotos.filter((p: any) => {
     const url = (p.url || "").toLowerCase();
@@ -257,8 +270,8 @@ export default async function HomePage() {
               {/* Main Primary Image */}
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-[4/3] bg-prayas-stone border border-prayas-rule/60">
                 <Image
-                  src={assetPath("/images/youth-skills-vrindavan.jpg")}
-                  alt="Volunteer mentor guiding students at e-Pathshala center in Vrindavan"
+                  src={assetPath("/images/Copy of DSC06322.JPG")}
+                  alt="Prayas Pariwaar founders, volunteers and children gathered together in Vrindavan"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
@@ -266,13 +279,13 @@ export default async function HomePage() {
               </div>
 
               {/* Overlapping Secondary Portrait (Bottom-Right) */}
-              <div className="absolute -bottom-2 sm:-bottom-4 right-0 sm:right-2 w-5/12 sm:w-1/2 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-4 border-white shadow-2xl aspect-[4/3] bg-prayas-stone">
+              <div className="absolute -bottom-2 sm:-bottom-4 right-0 sm:right-2 w-5/12 sm:w-1/2 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-4 border-white shadow-2xl aspect-[3/4] bg-prayas-stone">
                 <Image
-                  src={assetPath("/images/child-hope-vrindavan.jpg")}
-                  alt="Smiling student holding notebook in Vrindavan classroom"
+                  src={assetPath("/images/DSCF2107 (2).JPG")}
+                  alt="Young student in Prayas school uniform with backpack in Vrindavan"
                   fill
                   sizes="(max-width: 1024px) 50vw, 25vw"
-                  className="object-cover"
+                  className="object-cover object-top"
                 />
               </div>
 
@@ -365,7 +378,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 3.5. 15-YEAR HISTORICAL JOURNEY HORIZONTAL TIMELINE (2011 - 2026)         */}
       {/* ========================================================================= */}
-      <HomeHorizontalTimeline />
+      <HomeHorizontalTimeline milestones={dbMilestones} />
 
       {/* ========================================================================= */}
       {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { assetPath } from "@/lib/api";
+import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 import {
   MILESTONES,
   MilestoneCategory,
@@ -23,11 +24,16 @@ import {
   ChevronUp,
 } from "lucide-react";
 
-export default function AboutVerticalTimeline() {
+interface AboutVerticalTimelineProps {
+  milestones?: TimelineMilestone[];
+}
+
+export default function AboutVerticalTimeline({ milestones }: AboutVerticalTimelineProps) {
+  const displayMilestones = milestones && milestones.length > 0 ? milestones : MILESTONES;
   const [selectedCategory, setSelectedCategory] = useState<MilestoneCategory>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filteredMilestones = MILESTONES.filter(
+  const filteredMilestones = displayMilestones.filter(
     (m) => selectedCategory === "all" || m.category === selectedCategory
   );
 
@@ -207,8 +213,16 @@ function TimelineCardItem({
   isExpanded: boolean;
   onToggleExpand: () => void;
 }) {
+  const [imgError, setImgError] = useState(false);
   const catStyle = getCategoryStyle(milestone.category);
   const CategoryIcon = catStyle.icon;
+
+  const hasValidImage =
+    typeof milestone.imageUrl === "string" &&
+    milestone.imageUrl.trim().length > 0 &&
+    milestone.imageUrl !== "null" &&
+    milestone.imageUrl !== "undefined" &&
+    !imgError;
 
   return (
     <div id={`milestone-${milestone.id}`} className="relative scroll-mt-32 group">
@@ -262,13 +276,13 @@ function TimelineCardItem({
             <span
               className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${catStyle.badgeBg}`}
             >
-              {milestone.categoryLabel.split(" ")[0]}
+              {(milestone.categoryLabel || "Seva").split(" ")[0]}
             </span>
           </div>
 
           <span className="inline-flex items-center gap-1 text-[11px] text-prayas-muted truncate max-w-[180px]">
             <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
-            <span>{milestone.location.split(",")[0]}</span>
+            <span>{(milestone.location || "Vrindavan").split(",")[0]}</span>
           </span>
         </div>
 
@@ -279,15 +293,25 @@ function TimelineCardItem({
 
         {/* Compact Documentary Image */}
         <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden border border-prayas-rule bg-stone-100 shadow-2xs">
-          <Image
-            src={assetPath(milestone.imageUrl)}
-            alt={milestone.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 45vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-          <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-[11px]">
+          {hasValidImage ? (
+            <Image
+              src={assetPath(milestone.imageUrl)}
+              alt={milestone.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 45vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <TimelineImagePlaceholder
+              category={milestone.category}
+              year={milestone.year}
+              title={milestone.title}
+              location={milestone.location}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 pointer-events-none" />
+          <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-[11px] pointer-events-none">
             <span className="font-bold px-2 py-0.5 rounded bg-black/50 backdrop-blur-xs">
               {milestone.impactBadge}
             </span>
@@ -338,7 +362,7 @@ function TimelineCardItem({
               href={milestone.linkUrl}
               className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2E5339] hover:underline"
             >
-              <span>{milestone.linkLabel.split(" ")[0]} Project</span>
+              <span>{(milestone.linkLabel || "Explore").split(" ")[0]} Project</span>
               <ExternalLink className="w-3 h-3" />
             </Link>
           )}

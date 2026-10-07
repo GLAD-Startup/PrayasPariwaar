@@ -6,11 +6,17 @@ import AboutVerticalTimeline from "@/components/AboutVerticalTimeline";
 export const revalidate = 60;
 
 export default async function AboutPage() {
-  const [aboutPage, missionPage, awards, stats] = await Promise.all([
-    prisma.page.findUnique({ where: { slug: "about-us" } }),
-    prisma.page.findUnique({ where: { slug: "mission-vision" } }),
-    prisma.award.findMany({ orderBy: { order: "asc" }, take: 3 }),
-    prisma.siteStat.findMany({ orderBy: { order: "asc" } }),
+  const [aboutPage, missionPage, awards, stats, milestones] = await Promise.all([
+    prisma.page.findUnique({ where: { slug: "about-us" } }).catch(() => null),
+    prisma.page.findUnique({ where: { slug: "mission-vision" } }).catch(() => null),
+    prisma.award.findMany({ orderBy: { order: "asc" }, take: 3 }).catch(() => []),
+    prisma.siteStat.findMany({ orderBy: { order: "asc" } }).catch(() => []),
+    prisma.timelineMilestone
+      ? prisma.timelineMilestone.findMany({
+          where: { published: true },
+          orderBy: [{ year: "asc" }, { order: "asc" }],
+        }).catch(() => [])
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -111,7 +117,7 @@ export default async function AboutPage() {
       </div>
 
       {/* 3. 15-Year Chronicle & Vertical Left-Right Timeline */}
-      <AboutVerticalTimeline />
+      <AboutVerticalTimeline milestones={milestones} />
     </div>
   );
 }

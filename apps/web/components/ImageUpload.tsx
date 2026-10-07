@@ -14,7 +14,8 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, assetPath } from "@/lib/api";
+import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 
 interface ImageUploadProps {
   value?: string | string[];
@@ -115,6 +116,7 @@ export default function ImageUpload({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInputValue, setUrlInputValue] = useState("");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Normalize value to array for multi or string for single
@@ -364,13 +366,24 @@ export default function ImageUpload({
 
       {/* Single Mode with Existing Image */}
       {!multiple && imageList.length > 0 ? (
-        <div className="relative rounded-2xl overflow-hidden border border-prayas-rule bg-slate-100 aspect-[16/9] max-h-60 group shadow-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageList[0]}
-            alt="Uploaded preview"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          />
+        <div className="relative rounded-2xl overflow-hidden border border-prayas-rule bg-slate-900 aspect-[16/9] max-h-60 group shadow-sm">
+          {!failedImages[imageList[0]] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={assetPath(imageList[0])}
+              alt="Uploaded preview"
+              onError={() =>
+                setFailedImages((prev) => ({ ...prev, [imageList[0]]: true }))
+              }
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          ) : (
+            <TimelineImagePlaceholder
+              category="education"
+              title="Documentary Photo Staged"
+              className="w-full h-full"
+            />
+          )}
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2.5 backdrop-blur-[2px]">
             <button
               type="button"
@@ -381,7 +394,7 @@ export default function ImageUpload({
               Replace Photo
             </button>
             <a
-              href={imageList[0]}
+              href={assetPath(imageList[0])}
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-xl bg-white text-prayas-ink text-xs shadow-md hover:bg-slate-100 transition-all"
@@ -472,12 +485,19 @@ export default function ImageUpload({
                 key={idx}
                 className="relative rounded-xl overflow-hidden border border-prayas-rule bg-slate-100 aspect-square group shadow-sm"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`Gallery photo ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                {!failedImages[url] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={assetPath(url)}
+                    alt={`Gallery photo ${idx + 1}`}
+                    onError={() =>
+                      setFailedImages((prev) => ({ ...prev, [url]: true }))
+                    }
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <TimelineImagePlaceholder compact={true} />
+                )}
                 <button
                   type="button"
                   onClick={() => handleRemove(url, idx)}
