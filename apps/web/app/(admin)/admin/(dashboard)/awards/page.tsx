@@ -346,7 +346,8 @@ export default function AdminAwardsPage() {
                 </div>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
 

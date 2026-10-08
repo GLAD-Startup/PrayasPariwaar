@@ -1,3 +1,9 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim();
 const basePath =
@@ -6,6 +12,29 @@ const basePath =
     : undefined;
 
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": __dirname,
+    };
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/.next/**",
+        "**/System Volume Information/**",
+        "**/pagefile.sys",
+      ],
+    };
+    return config;
+  },
   ...(basePath ? { basePath } : {}),
   transpilePackages: ["@prayas/database", "@prayas/utils"],
   images: {

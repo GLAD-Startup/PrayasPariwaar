@@ -70,7 +70,9 @@ export async function POST(req: Request) {
       });
     }
 
-    const tokenList = Array.from(new Set(pushTokens.map((t) => t.expoPushToken).filter(Boolean)));
+    const tokenList: string[] = Array.from(
+      new Set(pushTokens.map((t: any) => t.expoPushToken).filter(Boolean) as string[])
+    );
 
     // 2. Select appropriate Android channel & priority
     const isEmergency = type === "BLOOD_REQUEST" || title.includes("EMERGENCY") || title.includes("🚨");

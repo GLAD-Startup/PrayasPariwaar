@@ -4,13 +4,15 @@
 // 2. Start: pm2 start ecosystem.config.js
 // 3. Save:  pm2 save
 
+const path = require("path");
+
 module.exports = {
   apps: [
     {
       name: "prayas-web-3005",
-      script: "node_modules/next/dist/bin/next",
+      script: path.resolve(__dirname, "node_modules/next/dist/bin/next"),
       args: "start -p 3005",
-      cwd: "./apps/web",
+      cwd: path.resolve(__dirname, "apps/web"),
       instances: 1,
       exec_mode: "fork",
       autorestart: true,

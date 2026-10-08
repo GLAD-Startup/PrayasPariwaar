@@ -11,8 +11,6 @@ export async function GET() {
       hasTimeline: Boolean((prisma as any)?.timelineMilestone),
       hasAward: Boolean((prisma as any)?.award),
       keys: (prisma as any) ? Object.keys(prisma).filter((k: string) => !k.startsWith("$") && !k.startsWith("_")) : [],
-      resolveClient: typeof require !== "undefined" ? require.resolve("@prisma/client") : null,
-      resolveDotPrisma: typeof require !== "undefined" ? require.resolve(".prisma/client") : null,
     };
     if ((prisma as any)?.timelineMilestone) {
       try {

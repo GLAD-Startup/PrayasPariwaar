@@ -89,7 +89,9 @@ export async function broadcastNewDispatchNotification(post: {
       take: 1000,
     });
 
-    const uniqueTokens = Array.from(new Set(allTokens.map((t) => t.expoPushToken).filter(Boolean)));
+    const uniqueTokens: string[] = Array.from(
+      new Set(allTokens.map((t: any) => t.expoPushToken).filter(Boolean) as string[])
+    );
     if (uniqueTokens.length === 0) {
       console.log("[NotificationsHub] No active push tokens registered for dispatch broadcast.");
       return;
