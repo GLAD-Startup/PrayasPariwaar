@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { assetPath } from "@/lib/api";
+import { assetPath } from "../lib/api";
 import {
   Phone,
   Droplet,

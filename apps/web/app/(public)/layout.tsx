@@ -1,12 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { assetPath } from "@/lib/api";
+import { assetPath } from "../../lib/api";
 import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope, Camera } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import MobileFooterNav from "@/components/MobileFooterNav";
-import SmoothScroll from "@/components/SmoothScroll";
-import JsonLd from "@/components/JsonLd";
-import { getRootPublicGraph } from "@/lib/schema";
+import Navbar from "../../components/Navbar";
+import MobileFooterNav from "../../components/MobileFooterNav";
+import SmoothScroll from "../../components/SmoothScroll";
+import JsonLd from "../../components/JsonLd";
+import { getRootPublicGraph } from "../../lib/schema";
 
 export default function PublicLayout({
   children,
