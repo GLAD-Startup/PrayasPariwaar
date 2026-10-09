@@ -125,6 +125,30 @@ const nextConfig = {
     if (basePath) {
       return [
         {
+          source: "/favicon.ico",
+          destination: `${basePath}/favicon.ico`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/favicon.png",
+          destination: `${basePath}/favicon.png`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/apple-touch-icon.png",
+          destination: `${basePath}/apple-touch-icon.png`,
+          permanent: false,
+          basePath: false,
+        },
+        {
+          source: "/icon.png",
+          destination: `${basePath}/icon.png`,
+          permanent: false,
+          basePath: false,
+        },
+        {
           source: "/admin/:path*",
           destination: `${basePath}/admin/:path*`,
           permanent: false,

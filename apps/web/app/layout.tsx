@@ -21,6 +21,12 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
+const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim();
+const basePath =
+  rawBasePath && rawBasePath !== ""
+    ? (rawBasePath.startsWith("/") ? rawBasePath : `/${rawBasePath}`)
+    : "";
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://prayaspariwaar.com"),
   title: {
@@ -31,8 +37,15 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: [
+      { url: `${basePath}/favicon.ico`, sizes: "any" },
+      { url: `${basePath}/favicon.png`, type: "image/png" },
+    ],
+    apple: [
+      { url: `${basePath}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
+      { url: `${basePath}/favicon.png` },
+    ],
+    shortcut: [`${basePath}/favicon.ico`],
   },
   description:
     "Registered grassroots non-profit society in Vrindavan, Mathura District, UP. Serving rural communities through free education, 24/7 volunteer emergency blood coordination, medical equipment lending bank, tree plantation, and healthcare camps.",
@@ -93,6 +106,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lora.variable} ${sourceSans.variable} scroll-smooth`}>
       <head>
+        <link rel="icon" href={`${basePath}/favicon.ico`} sizes="any" />
+        <link rel="icon" type="image/png" href={`${basePath}/favicon.png`} />
+        <link rel="apple-touch-icon" href={`${basePath}/apple-touch-icon.png`} />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(window.location.pathname==='/'){document.documentElement.classList.add('is-home');if(window.scrollY<80 && sessionStorage.getItem('prayas_hero_settled')!=='1'){document.documentElement.classList.add('hero-video-fullscreen');}}}catch(e){}`,
