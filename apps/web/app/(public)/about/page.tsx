@@ -87,6 +87,28 @@ export default async function AboutPage() {
             </ul>
           </div>
 
+          {/* Seva Team Callout */}
+          <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-prayas-neem uppercase tracking-wider">
+              <Users className="w-4 h-4 text-prayas-neem" />
+              <span>Office Bearers & Coordinators</span>
+            </div>
+            <h3 className="font-serif text-lg font-bold text-prayas-ink">
+              The Seva Team of Prayas Sanstha
+            </h3>
+            <p className="text-xs text-prayas-muted leading-relaxed">
+              Meet the patrons, trustees, healthcare leads, and field coordinators guiding our humanitarian operations across Vrindavan.
+            </p>
+            <div className="pt-1 border-t border-prayas-rule">
+              <Link
+                href="/about/team"
+                className="text-xs font-semibold text-prayas-neem hover:underline"
+              >
+                View all team members & coordinators →
+              </Link>
+            </div>
+          </div>
+
           <div className="border border-prayas-rule bg-white rounded p-6 shadow-card space-y-4">
             <h3 className="font-serif text-lg font-bold text-prayas-ink border-b border-prayas-rule pb-2">
               Recent Honors & Empanelment

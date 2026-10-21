@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 
-// GET /api/team - List team members (Strictly restricted to Admin and Editor roles)
+// GET /api/team - List team members (Public can view active members; Admin/Editor can view all)
 export async function GET(req: Request) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || (authUser.role !== "ADMIN" && authUser.role !== "EDITOR")) {
-      return NextResponse.json(
-        { error: "Unauthorized access. The team registry is restricted to admin portal operations." },
-        { status: 403 }
-      );
-    }
+    const isAdminOrEditor = authUser && (authUser.role === "ADMIN" || authUser.role === "EDITOR");
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim();
@@ -20,11 +15,10 @@ export async function GET(req: Request) {
 
     const where: any = {};
 
-    if (category && category !== "ALL") {
-      where.category = category;
-    }
-
-    if (status && status !== "ALL") {
+    // For public visitors, strictly only return active members
+    if (!isAdminOrEditor) {
+      where.isActive = true;
+    } else if (status && status !== "ALL") {
       if (status === "ACTIVE") where.isActive = true;
       if (status === "INACTIVE") where.isActive = false;
     }

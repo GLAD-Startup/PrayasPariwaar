@@ -453,8 +453,18 @@ export default function Navbar() {
                       >
                         <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="block font-bold">18-Year Legacy & Team</strong>
+                          <strong className="block font-bold">18-Year Legacy & Story</strong>
                           <span className="text-[11px] text-slate-500">History & governance</span>
+                        </div>
+                      </Link>
+                      <Link
+                        href="/about/team"
+                        className="flex items-start gap-2.5 px-4 py-2 text-xs hover:bg-prayas-stone text-slate-800 border-t border-prayas-rule transition-colors"
+                      >
+                        <Users className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block font-bold">Sanstha Seva Team</strong>
+                          <span className="text-[11px] text-slate-500">Office bearers & coordinators</span>
                         </div>
                       </Link>
                       <Link
@@ -807,6 +817,13 @@ export default function Navbar() {
                         className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700"
                       >
                         18-Year Legacy & Governance
+                      </Link>
+                      <Link
+                        href="/about/team"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700 font-semibold text-emerald-800"
+                      >
+                        Sanstha Seva Team
                       </Link>
                       <Link
                         href="/about/awards"

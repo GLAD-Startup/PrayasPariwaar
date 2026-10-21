@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { assetPath } from "../../lib/api";
-import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope, Camera } from "lucide-react";
+import { Phone, Droplet, Heart, Trees, Award, Newspaper, BookOpen, Stethoscope, Camera, Users } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import MobileFooterNav from "../../components/MobileFooterNav";
 import SmoothScroll from "../../components/SmoothScroll";
@@ -98,7 +98,13 @@ export default function PublicLayout({
               <ul className="space-y-2 text-sm text-[#A0ACA6]">
                 <li>
                   <Link href="/about" className="hover:text-white transition-colors">
-                    18-Year Legacy & Team
+                    18-Year Legacy & Story
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about/team" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-400" />
+                    Sanstha Seva Team
                   </Link>
                 </li>
                 <li>
