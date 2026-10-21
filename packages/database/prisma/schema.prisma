@@ -640,3 +640,42 @@ model Donation {
   @@index([status])
   @@map("donations")
 }
+
+// ==========================================================================
+// INSTITUTIONAL TEAM MEMBERS (Prayas Sanstha Leadership & Coordinators)
+// Strictly restricted to internal admin portal operations.
+// ==========================================================================
+
+enum TeamCategory {
+  LEADERSHIP      // Patrons, President, Vice President, General Secretary
+  TRUSTEE         // Board of Trustees & Governance
+  EXECUTIVE       // Executive Committee Members
+  OPERATIONS      // Field Seva & Project Coordinators
+  HEALTHCARE      // Doctors, Medical Equipment & Blood Bank Coordinators
+  VOLUNTEER_LEAD  // Youth Wing, Education & Volunteer Coordinators
+  ADVISORY        // Advisory Board & Elder Mentors
+  OTHER           // Other Seva Support
+}
+
+model TeamMember {
+  id          String        @id @default(cuid())
+  name        String
+  designation String        // e.g. "General Secretary", "Field Coordinator"
+  category    TeamCategory  @default(OPERATIONS)
+  department  String?       // e.g. "Vrindavan Blood Seva Desk", "Free Education Wing"
+  imageUrl    String?       // Portrait photo URL
+  phone       String?       // Mobile/Phone number
+  email       String?       // Email address
+  bio         String?       @db.Text
+  joinedYear  Int?          // e.g. 2011
+  location    String?       // e.g. "Vrindavan", "Mathura"
+  order       Int           @default(0) // Sorting order in list
+  isActive    Boolean       @default(true)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([category, isActive])
+  @@index([order])
+  @@map("team_members")
+} 

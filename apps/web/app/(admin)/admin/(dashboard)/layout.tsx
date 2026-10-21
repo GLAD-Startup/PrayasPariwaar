@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   History,
   Award,
+  UserCheck,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -86,6 +87,14 @@ export default function AdminLayout({
           icon: Users,
           badge: null,
           color: "text-emerald-700",
+        },
+        {
+          href: "/admin/team",
+          label: "Sanstha Team",
+          icon: UserCheck,
+          badge: "Internal",
+          badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+          color: "text-amber-700",
         },
       ],
     },

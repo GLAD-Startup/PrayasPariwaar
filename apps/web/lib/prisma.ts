@@ -3,7 +3,7 @@ import { prisma as basePrisma } from "@prayas/database";
 let prisma: any = basePrisma;
 
 if (process.env.NODE_ENV !== "production") {
-  if (prisma && (!prisma.timelineMilestone || !prisma.award)) {
+  if (prisma && (!prisma.timelineMilestone || !prisma.award || !prisma.teamMember)) {
     try {
       const nodeRequire = eval("require");
       if (nodeRequire.cache) {

@@ -8,7 +8,7 @@ declare global {
 let prismaInstance: any = global.prisma;
 
 if (process.env.NODE_ENV !== "production") {
-  if (prismaInstance && (!prismaInstance.timelineMilestone || !prismaInstance.award)) {
+  if (prismaInstance && (!prismaInstance.timelineMilestone || !prismaInstance.award || !prismaInstance.teamMember)) {
     try {
       prismaInstance.$disconnect();
     } catch {}
