@@ -125,6 +125,12 @@ const nextConfig = {
     if (basePath) {
       return [
         {
+          source: "/",
+          destination: basePath,
+          permanent: false,
+          basePath: false,
+        },
+        {
           source: "/favicon.ico",
           destination: `${basePath}/favicon.ico`,
           permanent: false,
