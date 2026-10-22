@@ -238,7 +238,7 @@ export default function HeroVideoScroll({
   // =========================================================================
   // Smooth cubic ease transition as progress goes from 0 to 1
   const contentEase = 1 - Math.pow(1 - progress, 3);
-  const dimOpacity = contentEase * 0.6;
+  const dimOpacity = contentEase * 0.32;
   const contentOpacity = contentEase;
   const contentTranslateY = (1 - contentEase) * 20;
   const isContentInteractive = contentOpacity > 0.6;
@@ -278,7 +278,7 @@ export default function HeroVideoScroll({
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
           <video
             ref={videoRef}
-            src={assetPath("/videos/make_one_more_video_in_the_con.mp4")}
+            src={assetPath("/videos/prayas_by_jatin.mp4")}
             autoPlay
             muted
             loop
@@ -294,7 +294,7 @@ export default function HeroVideoScroll({
         {/* Gentle Vignette: Leaves video vibrant & clear, protects text contrast */}
         {/* ===================================================================== */}
         <div
-          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-700 ease-out bg-gradient-to-t from-black/85 via-black/35 to-transparent lg:bg-gradient-to-r lg:from-black/80 lg:via-black/25 lg:to-transparent"
+          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-700 ease-out bg-gradient-to-t from-black/60 via-black/20 to-transparent lg:bg-gradient-to-r lg:from-black/50 lg:via-black/15 lg:to-transparent"
           style={{ opacity: dimOpacity }}
         />
 
@@ -320,62 +320,62 @@ export default function HeroVideoScroll({
         {/* Settled Hero Content: Focused, minimal narrative over video           */}
         {/* ===================================================================== */}
         <div
-          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[110px] xs:pt-[116px] sm:pt-32 lg:pt-28 2xl:pt-32 pb-16 sm:pb-20 lg:pb-16 flex flex-col justify-end lg:justify-center min-h-[100dvh]"
+          className="relative z-20 w-full max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20 pt-[110px] xs:pt-[116px] sm:pt-32 lg:pt-28 2xl:pt-32 pb-16 sm:pb-20 lg:pb-16 flex flex-col justify-end lg:justify-center min-h-[100dvh]"
           style={{
             pointerEvents: isContentInteractive ? "auto" : "none",
           }}
         >
           <div
-            className="max-w-2xl 2xl:max-w-3xl space-y-4 sm:space-y-5 text-left text-white will-change-transform transition-all duration-700 ease-out"
+            className="max-w-xl 2xl:max-w-2xl space-y-4 sm:space-y-5 text-left text-white will-change-transform transition-all duration-700 ease-out"
             style={{
               opacity: contentOpacity,
               transform: `translateY(${contentTranslateY}px)`,
             }}
           >
             {/* Minimal Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/75 border border-emerald-500/30 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/45 border border-white/20 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>18 Years of Nishkam Seva in Vrindavan</span>
+              <span>18 Years of Community Service</span>
             </div>
 
             {/* Inspiring Headline */}
-            <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-xl">
-              In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
+            <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold tracking-tight text-white leading-[1.2] drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] max-w-xl">
+              Empowering children with education, dignity, and hope.
             </h1>
 
-            {/* Concise 1-Sentence Tagline */}
-            <p className="text-sm sm:text-base md:text-lg text-slate-100/90 leading-relaxed font-light drop-shadow max-w-xl">
-              Empowering underprivileged rural children through free evening tutoring, school supplies, and direct community seva across Mathura district.
+            {/* Concise Tagline */}
+            <p className="text-sm sm:text-base md:text-lg text-slate-100/95 leading-relaxed font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)] max-w-lg">
+              Free evening learning centers, school supplies, and direct community support driven by 100% volunteer dedication.
             </p>
 
             {/* Direct Primary Actions */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/donate?project=aashayein-education"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
               >
                 <Heart className="w-4 h-4 fill-white text-white shrink-0" />
-                <span>Sponsor a Child — ₹500/mo</span>
+                <span>Sponsor a Child</span>
               </Link>
 
               <Link
-                href="/projects/aashayein-education"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all backdrop-blur-md"
+                href="/projects"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all backdrop-blur-md shadow-sm"
               >
                 <BookOpen className="w-4 h-4 text-emerald-300 shrink-0" />
-                <span>Explore Projects</span>
+                <span>Explore Programs</span>
               </Link>
             </div>
 
             {/* Minimal Trust Strip */}
-            <div className="pt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium border-t border-white/15 max-w-xl">
+            <div className="pt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium drop-shadow max-w-lg">
               <span className="flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 100% Direct Allocation
               </span>
               <span className="text-white/30">•</span>
-              <span>Registered Non-Profit</span>
+              <span>Registered Society</span>
               <span className="text-white/30">•</span>
               <Link
                 href="/blood-donation"

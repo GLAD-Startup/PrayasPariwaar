@@ -444,7 +444,7 @@ export default function ProgramsCarousel({ projects = [] }: ProgramsCarouselProp
       {/* ========================================================================= */}
       {/* 3. ACTIVE PROGRAM IMPLYING DEEP-DIVE DESK (MATCHING REFERENCE 3-COLUMN)   */}
       {/* ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-4">
+      <div className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20 pt-6 sm:pt-8 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
           {/* Column 1: On-Ground Grassroots Mission */}
           <div className="space-y-2.5">
