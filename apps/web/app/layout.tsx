@@ -111,7 +111,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href={`${basePath}/apple-touch-icon.png`} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(window.location.pathname==='/'){document.documentElement.classList.add('is-home');if(window.scrollY<80 && sessionStorage.getItem('prayas_hero_settled')!=='1'){document.documentElement.classList.add('hero-video-fullscreen');}}}catch(e){}`,
+            __html: `try{var p=window.location.pathname;if(p==='/'||p==='/prayas'||p==='/prayas/'){document.documentElement.classList.add('is-home');}}catch(e){}`,
           }}
         />
       </head>
