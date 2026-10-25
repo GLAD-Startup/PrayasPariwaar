@@ -44,32 +44,68 @@ export default function Navbar() {
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
 
   // Smooth scroll-driven visibility state
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/" && window.scrollY < 80) {
+      return false;
+    }
+    return true;
+  });
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    const isHeroSettled = () => {
+      if (typeof window === "undefined") return false;
+      return (
+        sessionStorage.getItem("prayas_hero_settled") === "1" ||
+        document.documentElement.dataset.heroVideoSettled === "true"
+      );
+    };
+
     const isHome = pathname === "/" || pathname === "/prayas" || pathname === "/prayas/";
+
+    // Immediately configure navbar on homepage if user is at top of page
     if (isHome) {
       document.documentElement.classList.add("is-home");
+      const settled = isHeroSettled();
+      const p = settled ? 1 : parseFloat(document.documentElement.dataset.heroVideoProgress || "0");
+      if (!settled && window.scrollY < 120 && p < 0.18) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+      } else {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+      }
     } else {
       document.documentElement.classList.remove("is-home");
+      document.documentElement.classList.remove("hero-video-fullscreen");
+      setIsVisible(true);
     }
-    document.documentElement.classList.remove("hero-video-fullscreen");
-    setIsVisible(true);
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const settled = isHeroSettled();
+      const heroProgressRaw = document.documentElement.dataset.heroVideoProgress;
+      const heroProgress = settled ? 1 : (heroProgressRaw ? parseFloat(heroProgressRaw) : 0);
+      // On homepage: in fullscreen intro mode (< 0.18 progress)
+      if (!settled && isHome && heroProgress < 0.18 && currentScrollY < 140 && !mobileMenuOpen) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      document.documentElement.classList.remove("hero-video-fullscreen");
+
+      // While near top on homepage (scrollY <= 160), ensure the header is VISIBLE.
+      if (isHome && currentScrollY <= 160) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
 
       // Keep header visible if mobile drawer is actively open
       if (mobileMenuOpen) {
         setIsVisible(true);
-        return;
-      }
-
-      // While near top or in hero runway (scrollY <= 450), ensure the header is VISIBLE.
-      if (isHome && currentScrollY <= 450) {
-        setIsVisible(true);
-        lastScrollY.current = currentScrollY;
         return;
       }
 
@@ -92,10 +128,29 @@ export default function Navbar() {
       lastScrollY.current = currentScrollY;
     };
 
+    const handleHeroProgress = (e: any) => {
+      if (!isHome) return;
+      if (isHeroSettled()) {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+        return;
+      }
+      const p = e?.detail?.progress ?? 0;
+      if (p >= 0.18) {
+        setIsVisible(true);
+        document.documentElement.classList.remove("hero-video-fullscreen");
+      } else if (p < 0.15 && window.scrollY < 140 && !mobileMenuOpen) {
+        setIsVisible(false);
+        document.documentElement.classList.add("hero-video-fullscreen");
+      }
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("hero-video-scroll", handleHeroProgress);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("hero-video-scroll", handleHeroProgress);
     };
   }, [mobileMenuOpen, pathname]);
 

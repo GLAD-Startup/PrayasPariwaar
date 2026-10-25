@@ -7,6 +7,8 @@ import JsonLd from "@/components/JsonLd";
 import HeroVideoScroll from "@/components/HeroVideoScroll";
 import ProgramsCarousel from "@/components/ProgramsCarousel";
 import HomeHorizontalTimeline from "@/components/HomeHorizontalTimeline";
+import HomeImpactLedger from "@/components/HomeImpactLedger";
+import HomeInteractiveCta from "@/components/HomeInteractiveCta";
 import { getWebPageGraph, getFAQPageSchema } from "@/lib/schema";
 import { assetPath } from "@/lib/api";
 import {
@@ -190,74 +192,13 @@ export default async function HomePage() {
 
       <div className="space-y-6 sm:space-y-8 lg:space-y-10 pb-12 pt-4 sm:pt-6">
         {/* ========================================================================= */}
-        {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND                                */}
+        {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND (ANIMATED & DYNAMIC)          */}
         {/* ========================================================================= */}
         <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
-        <ScrollReveal>
-          <div className="border border-prayas-rule bg-white rounded-2xl shadow-card overflow-hidden">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-prayas-rule text-center">
-              {/* Stat 1 */}
-              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
-                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-prayas-neem block">
-                  320+
-                </span>
-                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Children Tutored Daily</p>
-                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">6 Evening learning centers in Vrindavan</p>
-              </div>
-
-              {/* Stat 2 */}
-              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
-                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-emerald-800 block">
-                  5,400+
-                </span>
-                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Native Trees Planted</p>
-                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">Neem & Kadamba with protective guards</p>
-              </div>
-
-              {/* Stat 3 */}
-              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
-                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-rose-700 block">
-                  8,200+
-                </span>
-                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Blood Units Coordinated</p>
-                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">24/7 volunteer emergency donor network</p>
-              </div>
-
-              {/* Stat 4 */}
-              <div className="p-5 sm:p-6 lg:p-7 space-y-1 hover:bg-prayas-stone/40 transition-colors">
-                <span className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-amber-700 block">
-                  18 Years
-                </span>
-                <p className="text-xs sm:text-sm font-bold text-prayas-ink">Unbroken Nishkam Seva</p>
-                <p className="text-[11px] sm:text-xs text-prayas-muted leading-tight">100% Direct • Zero Admin Deductions</p>
-              </div>
-            </div>
-
-            {/* Bottom mini-bar: Statutory trust reassurance */}
-            <div className="bg-prayas-stone/60 border-t border-prayas-rule px-4 py-2.5 flex flex-wrap items-center justify-around gap-2 text-[11px] sm:text-xs text-prayas-muted font-medium text-center">
-              <span className="flex items-center gap-1.5 text-slate-700">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Society Reg: <strong>142/2006-07</strong></span>
-              </span>
-              <span className="hidden sm:inline text-slate-300">•</span>
-              <span className="flex items-center gap-1.5 text-slate-700">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Income Tax: <strong>12A Certified</strong></span>
-              </span>
-              <span className="hidden sm:inline text-slate-300">•</span>
-              <span className="flex items-center gap-1.5 text-slate-700">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>NITI Aayog Darpan: <strong>UP/2017/0154210</strong></span>
-              </span>
-              <span className="hidden sm:inline text-slate-300">•</span>
-              <span className="flex items-center gap-1.5 text-emerald-900 font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>100% Volunteer Driven Society</span>
-              </span>
-            </div>
-          </div>
-        </ScrollReveal>
-      </section>
+          <ScrollReveal>
+            <HomeImpactLedger />
+          </ScrollReveal>
+        </section>
 
       {/* ========================================================================= */}
       {/* 3. ABOUT PRAYAS PARIWAAR — 18-YEAR LEGACY                                 */}
@@ -592,22 +533,32 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 2xl:gap-10">
               {testimonials.map((item: any) => (
-                <div key={item.id} className="space-y-4 flex flex-col justify-between">
+                <div
+                  key={item.id}
+                  className="group bg-slate-50/50 hover:bg-white p-5 sm:p-6 rounded-2xl border border-prayas-rule/80 hover:border-emerald-500/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+                >
                   <div className="space-y-3">
-                    <Quote className="w-6 h-6 2xl:w-7 2xl:h-7 text-prayas-marigold" />
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shadow-2xs group-hover:scale-110 transition-transform">
+                      <Quote className="w-4 h-4 text-prayas-marigold" />
+                    </div>
                     <p className="text-xs sm:text-sm 2xl:text-base text-prayas-ink leading-relaxed italic font-serif">
                       "{item.quote}"
                     </p>
                   </div>
-                  <div className="border-t border-prayas-rule pt-3">
-                    <strong className="block text-xs sm:text-sm 2xl:text-base font-bold text-prayas-ink">
-                      {item.authorName}
-                    </strong>
-                    {item.designation && (
-                      <span className="text-[11px] 2xl:text-xs text-prayas-muted block">
-                        {item.designation}
-                      </span>
-                    )}
+                  <div className="border-t border-prayas-rule pt-3 mt-4 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-emerald-900/10 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-300/40 shrink-0">
+                      {(item.authorName || "P")[0]}
+                    </div>
+                    <div>
+                      <strong className="block text-xs sm:text-sm 2xl:text-base font-bold text-prayas-ink">
+                        {item.authorName}
+                      </strong>
+                      {item.designation && (
+                        <span className="text-[11px] 2xl:text-xs text-prayas-muted block">
+                          {item.designation}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -636,13 +587,15 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-4 2xl:gap-6">
               {/* Step 1 */}
-              <div className="text-center space-y-3 journey-connector">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem">
+              <div className="group text-center space-y-3 journey-connector p-4 rounded-2xl bg-slate-50/40 hover:bg-white border border-transparent hover:border-emerald-500/30 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem group-hover:scale-110 group-hover:bg-green-100 transition-all shadow-xs">
                   <Banknote className="w-6 h-6 sm:w-7 sm:h-7 2xl:w-8 2xl:h-8" />
                 </div>
                 <div>
-                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem">Step 1</span>
-                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink">You Donate</h4>
+                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem px-2 py-0.5 rounded-full bg-green-100/70 border border-green-300/40 inline-block">
+                    Step 1
+                  </span>
+                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink mt-1">You Donate</h4>
                 </div>
                 <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
                   Secure online donation with instant confirmation sent to your email.
@@ -650,13 +603,15 @@ export default async function HomePage() {
               </div>
 
               {/* Step 2 */}
-              <div className="text-center space-y-3 journey-connector">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem">
+              <div className="group text-center space-y-3 journey-connector p-4 rounded-2xl bg-slate-50/40 hover:bg-white border border-transparent hover:border-emerald-500/30 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem group-hover:scale-110 group-hover:bg-green-100 transition-all shadow-xs">
                   <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 2xl:w-8 2xl:h-8" />
                 </div>
                 <div>
-                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem">Step 2</span>
-                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink">Zero Admin Cut</h4>
+                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem px-2 py-0.5 rounded-full bg-green-100/70 border border-green-300/40 inline-block">
+                    Step 2
+                  </span>
+                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink mt-1">Zero Admin Cut</h4>
                 </div>
                 <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
                   100% direct allocation. Founding members cover all administrative costs separately.
@@ -664,13 +619,15 @@ export default async function HomePage() {
               </div>
 
               {/* Step 3 */}
-              <div className="text-center space-y-3 journey-connector">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem">
+              <div className="group text-center space-y-3 journey-connector p-4 rounded-2xl bg-slate-50/40 hover:bg-white border border-transparent hover:border-emerald-500/30 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-prayas-neem group-hover:scale-110 group-hover:bg-green-100 transition-all shadow-xs">
                   <Send className="w-6 h-6 sm:w-7 sm:h-7 2xl:w-8 2xl:h-8" />
                 </div>
                 <div>
-                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem">Step 3</span>
-                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink">Direct to Child</h4>
+                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-prayas-neem px-2 py-0.5 rounded-full bg-green-100/70 border border-green-300/40 inline-block">
+                    Step 3
+                  </span>
+                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink mt-1">Direct to Child</h4>
                 </div>
                 <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
                   Textbooks, uniforms, evening tuition centers, and nutrition for the named student.
@@ -678,13 +635,15 @@ export default async function HomePage() {
               </div>
 
               {/* Step 4 */}
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+              <div className="group text-center space-y-3 p-4 rounded-2xl bg-slate-50/40 hover:bg-white border border-transparent hover:border-amber-500/30 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 2xl:w-16 2xl:h-16 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 group-hover:scale-110 group-hover:bg-amber-100 transition-all shadow-xs">
                   <FileCheck2 className="w-6 h-6 sm:w-7 sm:h-7 2xl:w-8 2xl:h-8" />
                 </div>
                 <div>
-                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-amber-800">Step 4</span>
-                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink">Report Card to You</h4>
+                  <span className="text-[10px] 2xl:text-xs font-bold uppercase text-amber-800 px-2 py-0.5 rounded-full bg-amber-100/70 border border-amber-300/40 inline-block">
+                    Step 4
+                  </span>
+                  <h4 className="font-serif text-sm 2xl:text-base font-bold text-prayas-ink mt-1">Report Card to You</h4>
                 </div>
                 <p className="text-[11px] 2xl:text-xs text-prayas-muted leading-relaxed">
                   Quarterly academic report cards, attendance, and direct handwritten letters from the child.
@@ -717,58 +676,11 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 9. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)                */}
+      {/* 9. CALL TO ACTION BANNER (DYNAMIC GIVING CHIPS & CSR PARTNER)             */}
       {/* ========================================================================= */}
       <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
-          <div className="border border-prayas-rule bg-prayas-stone rounded-2xl p-6 sm:p-10 2xl:p-14 text-center space-y-5 sm:space-y-6 shadow-card">
-            {/* Logo in CTA */}
-            <div className="flex justify-center">
-              <Image
-                src={assetPath("/images/prayas-logo.png")}
-                alt="Prayas Pariwaar Logo"
-                width={180}
-                height={50}
-                className="h-10 sm:h-12 2xl:h-16 w-auto object-contain"
-              />
-            </div>
-
-            <div className="max-w-2xl 2xl:max-w-3xl mx-auto space-y-2">
-              <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem">
-                Support Grassroots Community Seva in Vrindavan
-              </span>
-              <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink leading-tight">
-                For just ₹500 a month, you can ensure a child in Vrindavan stays in school and builds a brighter future.
-              </h2>
-            </div>
-
-            <p className="text-xs sm:text-sm 2xl:text-base text-prayas-muted max-w-xl 2xl:max-w-2xl mx-auto leading-relaxed">
-              All educational sponsorships directly support children with learning materials, uniforms, and tutoring. You will receive direct progress report cards and handwritten letters from the student you sponsor.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-3.5 pt-2">
-              <Link
-                href="/donate?project=aashayein-education"
-                className="w-full sm:w-auto px-6 py-3.5 2xl:px-8 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-md flex items-center justify-center gap-2 text-center"
-                style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-              >
-                <Heart className="w-4 h-4 fill-white text-white" />
-                <span>Sponsor a Student Today →</span>
-              </Link>
-              <Link
-                href="/volunteer"
-                className="w-full sm:w-auto text-center px-6 py-3.5 2xl:px-8 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-semibold border border-prayas-rule bg-white text-prayas-ink hover:bg-prayas-subtle transition-colors shadow-sm"
-              >
-                Join as a Volunteer
-              </Link>
-              <Link
-                href="/partner/corporate"
-                className="w-full sm:w-auto text-center px-6 py-3.5 2xl:px-8 2xl:py-4 rounded-xl text-xs sm:text-sm 2xl:text-base font-semibold border border-prayas-rule bg-white text-slate-800 hover:bg-prayas-subtle transition-colors shadow-sm"
-              >
-                Corporate CSR Partnership
-              </Link>
-            </div>
-          </div>
+          <HomeInteractiveCta />
         </ScrollReveal>
       </section>
     </div>

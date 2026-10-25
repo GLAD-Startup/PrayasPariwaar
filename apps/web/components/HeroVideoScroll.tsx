@@ -23,81 +23,81 @@ export default function HeroVideoScroll({
   percentAashayein,
 }: HeroVideoScrollProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentContainerRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isDimmed, setIsDimmed] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [centerOffsetX, setCenterOffsetX] = useState(0);
+  const [hasCompletedHero, setHasCompletedHero] = useState(false);
+  const hasCompletedHeroRef = useRef(false);
+  const progressRef = useRef(0);
+  progressRef.current = progress;
 
-  // Measure container and card to compute exact horizontal distance needed to center
+  // Reduce video brightness after 2 seconds once website loads
   useEffect(() => {
-    const updateOffset = () => {
-      if (!contentContainerRef.current || !cardRef.current) return;
-      const style = window.getComputedStyle(contentContainerRef.current);
-      const paddingLeft = parseFloat(style.paddingLeft) || 0;
-      const paddingRight = parseFloat(style.paddingRight) || 0;
-      const contentW = contentContainerRef.current.clientWidth - paddingLeft - paddingRight;
-      const cardW = cardRef.current.clientWidth;
-      const offset = Math.max(0, (contentW - cardW) / 2);
-      setCenterOffsetX(offset);
-    };
-
-    updateOffset();
-    window.addEventListener("resize", updateOffset);
-    return () => window.removeEventListener("resize", updateOffset);
+    const timer = setTimeout(() => {
+      setIsDimmed(true);
+    }, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Responsive RAF-driven scroll listener tied to the sticky hero track runway
+  // Initialize flag from sessionStorage or current scroll position on client
   useEffect(() => {
-    let ticking = false;
-
-    const updateScrollProgress = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const scrollDistance = containerRef.current.offsetHeight - window.innerHeight;
-      if (scrollDistance <= 0) {
-        setProgress(0);
-        return;
-      }
-      const scrolled = -rect.top;
-      const rawProgress = Math.min(Math.max(scrolled / scrollDistance, 0), 1);
-      setProgress(rawProgress);
-
-      // Keep dataset synced for any consumer listeners
-      document.documentElement.dataset.heroVideoProgress = rawProgress.toFixed(3);
-      if (rawProgress >= 0.95) {
+    if (typeof window !== "undefined") {
+      const storedSettled = sessionStorage.getItem("prayas_hero_settled") === "1";
+      if (storedSettled || window.scrollY >= 80) {
+        hasCompletedHeroRef.current = true;
+        setHasCompletedHero(true);
+        setProgress(1);
         document.documentElement.dataset.heroVideoSettled = "true";
-      } else {
-        document.documentElement.dataset.heroVideoSettled = "false";
+        document.documentElement.dataset.heroVideoProgress = "1.000";
+        document.documentElement.classList.remove("hero-video-fullscreen");
       }
-
-      window.dispatchEvent(
-        new CustomEvent("hero-video-scroll", { detail: { progress: rawProgress } })
-      );
-
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateScrollProgress);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    updateScrollProgress();
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    }
   }, []);
 
-  // Background Video: 0.85x speed, muted, looped, slow cinematic fade-in
+  // Smoothly settles the hero into the main page state
+  const settleHero = useCallback(() => {
+    if (hasCompletedHeroRef.current) return;
+    hasCompletedHeroRef.current = true;
+    setHasCompletedHero(true);
+
+    try {
+      sessionStorage.setItem("prayas_hero_settled", "1");
+    } catch (e) {}
+
+    document.documentElement.dataset.heroVideoSettled = "true";
+    document.documentElement.dataset.heroVideoProgress = "1.000";
+    document.documentElement.classList.remove("hero-video-fullscreen");
+
+    window.dispatchEvent(
+      new CustomEvent("hero-video-scroll", { detail: { progress: 1 } })
+    );
+
+    // Smoothly animate progress from current value to 1.0
+    const startProgress = progressRef.current;
+    const duration = 750; // 750ms silky-smooth cubic ease-out
+    const startTime = performance.now();
+
+    const animateTransition = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const currentVal = startProgress + (1 - startProgress) * ease;
+      setProgress(currentVal);
+
+      if (t < 1) {
+        requestAnimationFrame(animateTransition);
+      } else {
+        setProgress(1);
+      }
+    };
+
+    requestAnimationFrame(animateTransition);
+  }, []);
+
+  // Strictly enforce 0.85x playback speed and permanent silence (zero voice/sound),
+  // and trigger auto-settlement after 3-5 seconds of video playing (not full video)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -113,6 +113,7 @@ export default function HeroVideoScroll({
     enforceSettings();
 
     let fadeTimer: NodeJS.Timeout;
+    let autoSettleTimer: NodeJS.Timeout | null = null;
     let triggered = false;
 
     const triggerSlowFade = () => {
@@ -123,9 +124,34 @@ export default function HeroVideoScroll({
         enforceSettings();
         video.play().catch(() => {});
       });
-      fadeTimer = setTimeout(() => {
+      // If already scrolled down, reveal immediately; otherwise give 150ms black buffer before slow fade
+      if (typeof window !== "undefined" && window.scrollY > 100) {
         setIsVideoLoaded(true);
-      }, 150);
+      } else {
+        fadeTimer = setTimeout(() => {
+          setIsVideoLoaded(true);
+        }, 150);
+      }
+    };
+
+    // Auto-transition to main page after 3-5 seconds of video playback
+    const handlePlaying = () => {
+      enforceSettings();
+      if (hasCompletedHeroRef.current) return;
+      if (!autoSettleTimer) {
+        // ~3.8 seconds from actual playback start ensures visitor enjoys 3-5s of intro video
+        autoSettleTimer = setTimeout(() => {
+          settleHero();
+        }, 3800);
+      }
+    };
+
+    const handleTimeUpdate = () => {
+      if (hasCompletedHeroRef.current) return;
+      // 3.5s video currentTime at 0.85x speed equals ~4.1 real-world seconds
+      if (video.currentTime >= 3.5) {
+        settleHero();
+      }
     };
 
     if (video.readyState >= 2) {
@@ -136,6 +162,8 @@ export default function HeroVideoScroll({
       video.addEventListener("playing", triggerSlowFade, { once: true });
     }
 
+    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("play", enforceSettings);
     video.addEventListener("loadedmetadata", enforceSettings);
     video.addEventListener("ratechange", () => {
@@ -153,39 +181,111 @@ export default function HeroVideoScroll({
       enforceSettings();
     }, 1200);
 
+    // Safety fallback: if video stalls or network is slow, reveal main page within 5 seconds
+    const safetyTimer = setTimeout(() => {
+      if (!hasCompletedHeroRef.current) {
+        settleHero();
+      }
+    }, 5000);
+
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(fallbackTimer);
+      clearTimeout(safetyTimer);
+      if (autoSettleTimer) clearTimeout(autoSettleTimer);
       video.removeEventListener("loadeddata", triggerSlowFade);
       video.removeEventListener("canplaythrough", triggerSlowFade);
       video.removeEventListener("playing", triggerSlowFade);
+      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("play", enforceSettings);
       video.removeEventListener("loadedmetadata", enforceSettings);
     };
+  }, [settleHero]);
+
+  // Initial fullscreen check on mount: only add fullscreen if hero has not completed
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/" ||
+        window.location.pathname === "/prayas" ||
+        window.location.pathname === "/prayas/") &&
+      window.scrollY < 80
+    ) {
+      const storedSettled = sessionStorage.getItem("prayas_hero_settled") === "1";
+      if (!storedSettled && !hasCompletedHeroRef.current) {
+        document.documentElement.classList.add("hero-video-fullscreen");
+      }
+    }
   }, []);
+
+  // Listen for user scroll or interaction during intro to settle immediately without waiting
+  useEffect(() => {
+    if (hasCompletedHero) return;
+
+    const handleEarlyInteraction = () => {
+      if (!hasCompletedHeroRef.current) {
+        settleHero();
+      }
+    };
+
+    window.addEventListener("scroll", handleEarlyInteraction, { passive: true });
+    window.addEventListener("wheel", handleEarlyInteraction, { passive: true });
+    window.addEventListener("touchmove", handleEarlyInteraction, { passive: true });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (["ArrowDown", "PageDown", "Space"].includes(e.code)) {
+        handleEarlyInteraction();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("scroll", handleEarlyInteraction);
+      window.removeEventListener("wheel", handleEarlyInteraction);
+      window.removeEventListener("touchmove", handleEarlyInteraction);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [hasCompletedHero, settleHero]);
 
   // =========================================================================
   // ANIMATION CALCULATIONS
   // =========================================================================
-  // Smooth cubic ease-out transition as progress goes from 0 to 1
-  const ease = 1 - Math.pow(1 - progress, 3);
-
-  // When progress = 0: translateX = centerOffsetX (middle of hero section)
-  // When progress = 1: translateX = 0 (settles into left side of hero section)
-  const currentTranslateX = (1 - ease) * centerOffsetX;
-
-  // Crossfade between centered presentation (initial load) and left-settled presentation
-  const centeredOpacity = Math.max(0, 1 - progress * 2.2);
-  const settledOpacity = Math.min(1, Math.max(0, (progress - 0.22) * 2.2));
+  // Smooth cubic ease transition as progress goes from 0 to 1
+  const contentEase = 1 - Math.pow(1 - progress, 3);
+  const dimOpacity = contentEase * 0.6;
+  const contentOpacity = contentEase;
+  const contentTranslateY = (1 - contentEase) * 20;
+  const isContentInteractive = contentOpacity > 0.6;
 
   return (
     <div
       ref={containerRef}
       className="relative w-full"
-      style={{ height: "calc(100dvh + 480px)" }}
+      style={{ minHeight: "100dvh" }}
       id="hero-video-track"
     >
-      <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black border-b border-prayas-rule">
+      <div
+        style={
+          !hasCompletedHero
+            ? {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                width: "100%",
+                height: "100dvh",
+                zIndex: 10,
+              }
+            : {
+                position: "relative",
+                width: "100%",
+                minHeight: "100dvh",
+                zIndex: 10,
+              }
+        }
+        className="w-full overflow-hidden flex items-start lg:items-center justify-center bg-black border-b border-prayas-rule"
+      >
         {/* ===================================================================== */}
         {/* Continuous Background Video (0.85x speed, 100% silent, loop)         */}
         {/* Slow cinematic fade-in when site loads                                */}
@@ -193,192 +293,116 @@ export default function HeroVideoScroll({
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
           <video
             ref={videoRef}
-            src={assetPath("/videos/prayas_by_jatin.mp4")}
+            src={assetPath("/videos/make_one_more_video_in_the_con.mp4")}
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
-            className={`w-full h-full object-cover object-center will-change-transform transition-opacity duration-[2000ms] ease-out ${
+            style={{
+              filter: isDimmed ? "brightness(0.52)" : "brightness(1)",
+              transition: "filter 1400ms ease-in-out, opacity 2400ms ease-out",
+            }}
+            className={`w-full h-full object-cover object-center will-change-transform ${
               isVideoLoaded ? "opacity-100" : "opacity-0"
             }`}
           />
         </div>
 
         {/* ===================================================================== */}
-        {/* Vignette Overlays: Centered contrast for load, Left contrast for settle */}
+        {/* Gentle Vignette: Leaves video vibrant & clear, protects text contrast */}
         {/* ===================================================================== */}
-        {/* Base dark backdrop for text legibility in the center */}
         <div
-          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 ease-out bg-black/40"
-          style={{ opacity: 0.45 + (1 - ease) * 0.3 }}
+          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-700 ease-out bg-gradient-to-t from-black/85 via-black/35 to-transparent lg:bg-gradient-to-r lg:from-black/80 lg:via-black/25 lg:to-transparent"
+          style={{ opacity: dimOpacity }}
         />
 
-        {/* Left-settled gradient vignette: smoothly enriches on the left as text settles */}
-        <div
-          className="absolute inset-0 z-10 pointer-events-none transition-opacity duration-500 ease-out bg-gradient-to-t from-black/90 via-black/45 to-transparent lg:bg-gradient-to-r lg:from-black/85 lg:via-black/35 lg:to-transparent"
-          style={{ opacity: 0.35 + ease * 0.65 }}
-        />
+        {/* ===================================================================== */}
+        {/* Skip Intro Button: Minimal glassmorphic action during 3-5s intro      */}
+        {/* ===================================================================== */}
+        {!hasCompletedHero && isVideoLoaded && (
+          <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto transition-opacity duration-500">
+            <button
+              onClick={settleHero}
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 hover:bg-black/80 text-white/90 hover:text-white border border-white/25 backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-xl hover:scale-105 active:scale-95 group focus:outline-none cursor-pointer"
+              aria-label="Skip intro to main page"
+              title="Skip intro to main page"
+            >
+              <span>Skip Intro</span>
+              <span className="text-emerald-400 group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
+        )}
 
-        {/* Subtle "Scroll to explore" cue at the bottom, fades out immediately on scroll */}
+        {/* ===================================================================== */}
+        {/* Settled Hero Content: Focused, minimal narrative over video           */}
+        {/* ===================================================================== */}
         <div
-          className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-opacity duration-300 flex flex-col items-center gap-1.5 text-white/75"
+          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[110px] xs:pt-[116px] sm:pt-32 lg:pt-28 2xl:pt-32 pb-16 sm:pb-20 lg:pb-16 flex flex-col justify-end lg:justify-center min-h-[100dvh]"
           style={{
-            opacity: Math.max(0, 1 - progress * 5),
+            pointerEvents: isContentInteractive ? "auto" : "none",
           }}
         >
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-widest font-mono text-white/70 drop-shadow">
-            Scroll to explore
-          </span>
-          <span className="w-4 h-7 rounded-full border border-white/50 flex items-start justify-center p-1 backdrop-blur-xs">
-            <span className="w-1 h-2 rounded-full bg-emerald-400 animate-bounce" />
-          </span>
-        </div>
-
-        {/* ===================================================================== */}
-        {/* Hero Content: Centered on Load -> Smoothly Animates & Settles on Left */}
-        {/* ===================================================================== */}
-        <div
-          ref={contentContainerRef}
-          className="relative z-20 w-full max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-[100px] xs:pt-[106px] sm:pt-28 lg:pt-24 pb-12 sm:pb-16 flex flex-col justify-center min-h-[100dvh]"
-        >
           <div
-            ref={cardRef}
-            className="relative w-full max-w-2xl 2xl:max-w-3xl will-change-transform"
+            className="max-w-2xl 2xl:max-w-3xl space-y-4 sm:space-y-5 text-left text-white will-change-transform transition-all duration-700 ease-out"
             style={{
-              transform: `translate3d(${currentTranslateX}px, 0, 0)`,
+              opacity: contentOpacity,
+              transform: `translateY(${contentTranslateY}px)`,
             }}
           >
-            {/* ----------------------------------------------------------------- */}
-            {/* SETTLED VIEW (Left-aligned): Defines card bounding box in normal flow */}
-            {/* ----------------------------------------------------------------- */}
-            <div
-              className="space-y-4 sm:space-y-5 text-left flex flex-col items-start text-white will-change-transform"
-              style={{
-                opacity: settledOpacity,
-                pointerEvents: progress >= 0.35 ? "auto" : "none",
-                visibility: progress < 0.05 ? "hidden" : "visible",
-              }}
-            >
-              {/* Minimal Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/75 border border-emerald-500/30 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-md">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>18 Years of Nishkam Seva in Vrindavan</span>
-              </div>
-
-              {/* Inspiring Headline */}
-              <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-xl text-left">
-                In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
-              </h1>
-
-              {/* Concise Tagline */}
-              <p className="text-sm sm:text-base md:text-lg text-slate-100/90 leading-relaxed font-light drop-shadow max-w-xl text-left">
-                Empowering underprivileged rural children through free evening tutoring, school supplies, and direct community seva across Mathura district.
-              </p>
-
-              {/* Primary Actions */}
-              <div className="flex flex-wrap items-center justify-start gap-3 pt-1">
-                <Link
-                  href="/donate?project=aashayein-education"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  <Heart className="w-4 h-4 fill-white text-white shrink-0" />
-                  <span>Sponsor a Child — ₹500/mo</span>
-                </Link>
-
-                <Link
-                  href="/projects/aashayein-education"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all backdrop-blur-md"
-                >
-                  <BookOpen className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span>Explore Projects</span>
-                </Link>
-              </div>
-
-              {/* Minimal Trust Strip */}
-              <div className="pt-2 flex flex-wrap items-center justify-start gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium border-t border-white/15 max-w-xl">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  100% Direct Allocation
-                </span>
-                <span className="text-white/30">•</span>
-                <span>Registered Non-Profit</span>
-                <span className="text-white/30">•</span>
-                <Link
-                  href="/blood-donation"
-                  className="text-rose-300 hover:text-rose-200 hover:underline flex items-center gap-1 font-semibold"
-                >
-                  <Droplet className="w-3 h-3 fill-rose-400 text-rose-400 shrink-0" />
-                  24/7 Blood Registry →
-                </Link>
-              </div>
+            {/* Minimal Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/75 border border-emerald-500/30 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>18 Years of Nishkam Seva in Vrindavan</span>
             </div>
 
-            {/* ----------------------------------------------------------------- */}
-            {/* CENTERED VIEW (Middle): Absolute overlay positioned in middle on load */}
-            {/* ----------------------------------------------------------------- */}
-            <div
-              className="absolute inset-0 space-y-4 sm:space-y-5 text-center flex flex-col items-center justify-start text-white will-change-transform"
-              style={{
-                opacity: centeredOpacity,
-                pointerEvents: progress < 0.35 ? "auto" : "none",
-                visibility: progress > 0.95 ? "hidden" : "visible",
-              }}
-            >
-              {/* Minimal Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/35 text-[11px] sm:text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-lg">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>18 Years of Nishkam Seva in Vrindavan</span>
-              </div>
+            {/* Inspiring Headline */}
+            <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-xl">
+              In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
+            </h1>
 
-              {/* Inspiring Headline */}
-              <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.18] drop-shadow-2xl text-center">
-                In the holy soil of Vrindavan, no child&apos;s dream should end for want of a notebook.
-              </h1>
+            {/* Concise 1-Sentence Tagline */}
+            <p className="text-sm sm:text-base md:text-lg text-slate-100/90 leading-relaxed font-light drop-shadow max-w-xl">
+              Empowering underprivileged rural children through free evening tutoring, school supplies, and direct community seva across Mathura district.
+            </p>
 
-              {/* Concise Tagline */}
-              <p className="text-sm sm:text-base md:text-lg text-slate-100/90 leading-relaxed font-light drop-shadow-lg max-w-xl text-center mx-auto">
-                Empowering underprivileged rural children through free evening tutoring, school supplies, and direct community seva across Mathura district.
-              </p>
+            {/* Direct Primary Actions */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href="/donate?project=aashayein-education"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
+                style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
+              >
+                <Heart className="w-4 h-4 fill-white text-white shrink-0" />
+                <span>Sponsor a Child — ₹500/mo</span>
+              </Link>
 
-              {/* Primary Actions */}
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                <Link
-                  href="/donate?project=aashayein-education"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-[#2E5339] text-white hover:bg-[#23432b] transition-all shadow-2xl hover:shadow-emerald-950/50 hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ backgroundColor: "#2E5339", color: "#ffffff" }}
-                >
-                  <Heart className="w-4 h-4 fill-white text-white shrink-0" />
-                  <span>Sponsor a Child — ₹500/mo</span>
-                </Link>
+              <Link
+                href="/projects/aashayein-education"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all backdrop-blur-md"
+              >
+                <BookOpen className="w-4 h-4 text-emerald-300 shrink-0" />
+                <span>Explore Projects</span>
+              </Link>
+            </div>
 
-                <Link
-                  href="/projects/aashayein-education"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all backdrop-blur-md"
-                >
-                  <BookOpen className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span>Explore Projects</span>
-                </Link>
-              </div>
-
-              {/* Minimal Trust Strip */}
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium border-t border-white/20 max-w-xl mx-auto">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  100% Direct Allocation
-                </span>
-                <span className="text-white/40">•</span>
-                <span>Registered Non-Profit</span>
-                <span className="text-white/40">•</span>
-                <Link
-                  href="/blood-donation"
-                  className="text-rose-300 hover:text-rose-200 hover:underline flex items-center gap-1 font-semibold"
-                >
-                  <Droplet className="w-3 h-3 fill-rose-400 text-rose-400 shrink-0" />
-                  24/7 Blood Registry →
-                </Link>
-              </div>
+            {/* Minimal Trust Strip */}
+            <div className="pt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-200/90 font-medium border-t border-white/15 max-w-xl">
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                100% Direct Allocation
+              </span>
+              <span className="text-white/30">•</span>
+              <span>Registered Non-Profit</span>
+              <span className="text-white/30">•</span>
+              <Link
+                href="/blood-donation"
+                className="text-rose-300 hover:text-rose-200 hover:underline flex items-center gap-1 font-semibold"
+              >
+                <Droplet className="w-3 h-3 fill-rose-400 text-rose-400 shrink-0" />
+                24/7 Blood Registry →
+              </Link>
             </div>
           </div>
         </div>
