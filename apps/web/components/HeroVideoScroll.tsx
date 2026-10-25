@@ -193,7 +193,7 @@ export default function HeroVideoScroll({
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
           <video
             ref={videoRef}
-            src={assetPath("/videos/make_one_more_video_in_the_con.mp4")}
+            src={assetPath("/videos/prayas_by_jatin.mp4")}
             autoPlay
             muted
             loop

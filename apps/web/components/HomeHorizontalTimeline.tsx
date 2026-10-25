@@ -7,7 +7,6 @@ import { assetPath } from "@/lib/api";
 import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 import {
   MILESTONES,
-  getCategoryStyle,
   TimelineMilestone,
 } from "@/lib/timeline-data";
 import {
@@ -47,42 +46,32 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
   };
 
   return (
-    <section className="relative w-full py-12 sm:py-18 bg-gradient-to-b from-[#F9F7F2] via-[#F4F0E8] to-[#EFECE5] border-y border-prayas-rule overflow-hidden">
-      {/* Decorative ambient glowing radial lighting */}
-      <div
-        className="absolute top-1/3 left-1/4 -translate-y-1/2 w-[34rem] h-[34rem] bg-emerald-200/20 rounded-full blur-3xl pointer-events-none -z-10"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute bottom-1/3 right-1/4 translate-y-1/2 w-[30rem] h-[30rem] bg-amber-200/20 rounded-full blur-3xl pointer-events-none -z-10"
-        aria-hidden="true"
-      />
-
-      <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+    <section className="relative w-full py-6 sm:py-8 bg-[#FAF9F6] border-y border-prayas-rule/80 overflow-hidden">
+      <div className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-prayas-rule/80">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60 text-xs font-semibold shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>15-Year Historical Odyssey • 2011 to 2026</span>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-prayas-rule/70">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-[#2E5339] border border-emerald-200 text-xs font-semibold shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>15-Year Chronicle • 2011 to 2026</span>
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-prayas-ink leading-tight">
-              Our Journey of Nishkam Seva
+              Our Journey of Community Service
             </h2>
             <p className="text-xs sm:text-sm text-prayas-muted leading-relaxed">
-              From an evening pathshala under an ancient banyan tree on Kesi Ghat to modern solar classrooms and 24/7 medical lifelines.
+              From our first evening pathshala on Kesi Ghat to permanent tutoring centers and 24/7 emergency medical lifelines.
             </p>
           </div>
 
           {/* Navigation Controls & Direct Full Timeline Link */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden sm:flex items-center gap-1.5 bg-[#E8E3D8] p-1.5 rounded-xl border border-prayas-rule/90 shadow-2xs">
+            <div className="hidden sm:flex items-center gap-1.5 bg-white p-1 rounded-xl border border-prayas-rule shadow-2xs">
               <button
                 type="button"
                 onClick={() => handleScroll("left")}
                 disabled={!canScrollLeft}
                 aria-label="Scroll timeline left"
-                className="p-2 rounded-lg bg-white/90 hover:bg-white text-prayas-ink disabled:opacity-30 disabled:hover:bg-white/90 transition-all shadow-xs"
+                className="p-2 rounded-lg bg-white hover:bg-stone-50 text-prayas-ink border border-transparent hover:border-prayas-rule disabled:opacity-30 disabled:hover:bg-white transition-all shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -91,7 +80,7 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                 onClick={() => handleScroll("right")}
                 disabled={!canScrollRight}
                 aria-label="Scroll timeline right"
-                className="p-2 rounded-lg bg-white/90 hover:bg-white text-prayas-ink disabled:opacity-30 disabled:hover:bg-white/90 transition-all shadow-xs"
+                className="p-2 rounded-lg bg-white hover:bg-stone-50 text-prayas-ink border border-transparent hover:border-prayas-rule disabled:opacity-30 disabled:hover:bg-white transition-all shadow-xs"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -99,7 +88,7 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
 
             <Link
               href="/about#timeline"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#2E5339] to-[#23432B] hover:from-[#23432B] hover:to-[#1B3422] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all group"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2E5339] hover:bg-[#23432B] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all group"
             >
               <span>See Full Timeline</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -110,29 +99,25 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
         {/* ========================================================================= */}
         {/* HORIZONTAL TIMELINE TRACK WITH TOP / BOTTOM ALTERNATING CARDS            */}
         {/* ========================================================================= */}
-        <div className="relative pt-6 pb-2">
+        <div className="relative pt-4 pb-2">
           {/* Scrollable track container */}
           <div
             ref={scrollContainerRef}
             onScroll={checkScroll}
-            className="overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0"
+            className="overflow-x-auto no-scrollbar scroll-smooth pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0"
             style={{ scrollbarWidth: "none" }}
           >
             {/* The flex track containing all alternating milestones + final callout card */}
-            <div className="relative flex items-center min-w-max h-[490px] gap-10 sm:gap-12">
+            <div className="relative flex items-center min-w-max h-[450px] gap-8 sm:gap-10">
               {/* Continuous Center Horizontal Line */}
               <div
-                className="absolute left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-800 via-amber-600 to-emerald-800 top-1/2 -translate-y-1/2 rounded-full shadow-xs"
+                className="absolute left-0 right-0 h-0.5 bg-prayas-rule/90 top-1/2 -translate-y-1/2"
                 aria-hidden="true"
-              >
-                {/* Center ambient glow halo */}
-                <div className="absolute inset-0 bg-emerald-400/20 blur-xs rounded-full" />
-              </div>
+              />
 
               {/* Milestones Nodes */}
               {displayMilestones.map((milestone, idx) => {
                 const isEven = idx % 2 === 0;
-                const catStyle = getCategoryStyle(milestone.category);
 
                 return (
                   <div
@@ -141,19 +126,19 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                   >
                     {/* Node marker on the central horizontal line */}
                     <div
-                      className={`z-20 w-10 h-10 rounded-full border-2 border-white ${catStyle.pillBg} text-white shadow-md flex items-center justify-center transition-all duration-300 group-hover:scale-125 group-hover:ring-4 group-hover:ring-emerald-200 group-hover:shadow-lg`}
+                      className="z-20 w-9 h-9 rounded-full border-2 border-[#2E5339] bg-white text-[#2E5339] shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#2E5339] group-hover:text-white group-hover:shadow-md"
                     >
                       <span className="text-[11px] font-bold font-mono tracking-tight">
                         '{String(milestone.year).slice(-2)}
                       </span>
                     </div>
 
-                    {/* Connecting Stem with micro-diamond to Card */}
+                    {/* Connecting Stem to Card */}
                     <div
-                      className={`absolute w-0.5 ${
+                      className={`absolute w-px transition-colors duration-300 ${
                         isEven
-                          ? "bottom-1/2 -translate-y-5 h-12 bg-gradient-to-t from-emerald-700/80 to-emerald-400/60"
-                          : "top-1/2 translate-y-5 h-12 bg-gradient-to-b from-emerald-700/80 to-emerald-400/60"
+                          ? "bottom-1/2 -translate-y-4.5 h-11 bg-stone-300 group-hover:bg-[#2E5339]"
+                          : "top-1/2 translate-y-4.5 h-11 bg-stone-300 group-hover:bg-[#2E5339]"
                       }`}
                       aria-hidden="true"
                     />
@@ -162,17 +147,17 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                     <div
                       className={`absolute w-72 sm:w-80 transition-all duration-300 ${
                         isEven
-                          ? "bottom-1/2 mb-[68px] group-hover:-translate-y-1.5"
-                          : "top-1/2 mt-[68px] group-hover:translate-y-1.5"
+                          ? "bottom-1/2 mb-[60px] group-hover:-translate-y-1"
+                          : "top-1/2 mt-[60px] group-hover:translate-y-1"
                       }`}
                     >
                       <Link
                         href={`/about#milestone-${milestone.id}`}
-                        className="block p-3.5 sm:p-4 rounded-2xl border border-prayas-rule/90 bg-white/95 backdrop-blur-md hover:bg-white shadow-[0_2px_14px_rgba(28,36,33,0.06)] hover:shadow-[0_10px_28px_rgba(46,83,57,0.15)] hover:border-emerald-600/50 transition-all duration-300 text-left"
+                        className="block p-3.5 sm:p-4 rounded-2xl border border-prayas-rule bg-white hover:border-[#2E5339] shadow-xs hover:shadow-lg transition-all duration-300 text-left"
                       >
                         {/* Top / Bottom Small Thumbnail & Badges */}
                         <div className="flex items-center gap-3 sm:gap-3.5">
-                          <div className="relative w-28 h-22 sm:w-32 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-prayas-rule/80 bg-stone-100 shadow-xs group-hover:shadow-md transition-shadow">
+                          <div className="relative w-24 h-20 sm:w-28 sm:h-22 rounded-xl overflow-hidden shrink-0 border border-prayas-rule bg-stone-100 shadow-2xs">
                             {typeof milestone.imageUrl === "string" &&
                             milestone.imageUrl.trim().length > 0 &&
                             milestone.imageUrl !== "null" &&
@@ -182,8 +167,8 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                                 src={assetPath(milestone.imageUrl)}
                                 alt={milestone.title}
                                 fill
-                                sizes="(max-width: 640px) 112px, 128px"
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                sizes="(max-width: 640px) 96px, 112px"
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                                 onError={() =>
                                   setBrokenImages((prev) => ({ ...prev, [milestone.id]: true }))
                                 }
@@ -195,17 +180,14 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                                 compact={true}
                               />
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
                           </div>
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="font-serif font-bold text-xs text-prayas-ink">
+                              <span className="font-serif font-bold text-xs text-[#2E5339] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/70">
                                 {milestone.year}
                               </span>
-                              <span
-                                className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${catStyle.badgeBg}`}
-                              >
+                              <span className="text-[10px] font-semibold text-prayas-muted uppercase tracking-wider truncate">
                                 {(milestone.categoryLabel || "Seva").split(" ")[0]}
                               </span>
                             </div>
@@ -216,14 +198,14 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
                           </div>
                         </div>
 
-                        {/* Location & Impact Micro Label */}
+                        {/* Location & Details Link */}
                         <div className="mt-2.5 pt-2 border-t border-prayas-rule/60 flex items-center justify-between text-[10px] text-prayas-muted">
-                          <span className="truncate max-w-[160px] flex items-center gap-1">
+                          <span className="truncate max-w-[150px] flex items-center gap-1">
                             <MapPin className="w-2.5 h-2.5 text-rose-500 shrink-0" />
                             <span>{milestone.location.split(",")[0]}</span>
                           </span>
                           <span className="text-[#2E5339] font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                            Details →
+                            View Story →
                           </span>
                         </div>
                       </Link>
@@ -237,36 +219,36 @@ export default function HomeHorizontalTimeline({ milestones }: HomeHorizontalTim
               {/* ========================================================================= */}
               <div className="relative flex flex-col items-center w-72 sm:w-80 shrink-0 pl-2">
                 {/* Node marker on the line */}
-                <div className="z-20 w-11 h-11 rounded-full bg-gradient-to-br from-[#2E5339] to-emerald-900 text-white shadow-xl flex items-center justify-center ring-4 ring-emerald-100 animate-pulse">
-                  <ArrowRight className="w-5 h-5" />
+                <div className="z-20 w-9 h-9 rounded-full bg-[#2E5339] text-white shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                  <ArrowRight className="w-4 h-4" />
                 </div>
 
                 {/* Connecting Stem */}
                 <div
-                  className="absolute top-1/2 translate-y-5.5 w-0.5 h-11 bg-gradient-to-b from-emerald-700 to-emerald-500"
+                  className="absolute top-1/2 translate-y-4.5 w-px h-11 bg-stone-300"
                   aria-hidden="true"
                 />
 
                 {/* Card linked to About page */}
-                <div className="absolute top-1/2 mt-[68px] w-full">
+                <div className="absolute top-1/2 mt-[60px] w-full">
                   <Link
                     href="/about#timeline"
-                    className="block p-5 rounded-2xl border-2 border-emerald-700/70 bg-gradient-to-br from-[#1C2421] via-[#23352A] to-[#2E5339] text-white shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-102 group"
+                    className="block p-4 sm:p-5 rounded-2xl border border-[#23432B] bg-[#2E5339] text-white shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
                   >
-                    <div className="flex items-center justify-between gap-2 mb-2.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-white/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-white/10 px-2 py-0.5 rounded border border-white/15">
                         15-Year Archive
                       </span>
-                      <ExternalLink className="w-3.5 h-3.5 text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
+                      <ExternalLink className="w-3.5 h-3.5 text-emerald-200 group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                    <h3 className="font-serif font-bold text-base text-white mb-1.5">
-                      See Full Timeline
+                    <h3 className="font-serif font-bold text-sm sm:text-base text-white mb-1">
+                      Explore Full Chronicle
                     </h3>
-                    <p className="text-[11px] text-[#C2CDC7] leading-relaxed mb-3.5">
-                      Explore all 10 verified milestones with documentary photos, sevadar archives, and audit records on our About page.
+                    <p className="text-[11px] text-emerald-100/90 leading-relaxed mb-3">
+                      View all verified milestones with photos, volunteer records, and community growth.
                     </p>
                     <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 group-hover:text-amber-200">
-                      <span>View Complete Chronicle</span>
+                      <span>Read Complete Timeline</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </Link>

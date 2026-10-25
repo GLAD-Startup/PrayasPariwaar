@@ -188,11 +188,11 @@ export default async function HomePage() {
         percentAashayein={percentAashayein}
       />
 
-      <div className="space-y-12 sm:space-y-16 lg:space-y-24 2xl:space-y-28 pb-20 pt-8 sm:pt-12">
+      <div className="space-y-6 sm:space-y-8 lg:space-y-10 pb-12 pt-4 sm:pt-6">
         {/* ========================================================================= */}
         {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND                                */}
         {/* ========================================================================= */}
-        <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border border-prayas-rule bg-white rounded-2xl shadow-card overflow-hidden">
             <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-prayas-rule text-center">
@@ -262,7 +262,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 3. ABOUT PRAYAS PARIWAAR — 18-YEAR LEGACY                                 */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
             {/* Left: Overlapping Photo Composition */}
@@ -383,8 +383,8 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}
       {/* ========================================================================= */}
-      <section className="w-full overflow-hidden py-4 sm:py-6 bg-gradient-to-b from-transparent via-emerald-950/[0.02] to-transparent">
-        <div className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="w-full overflow-hidden py-2 bg-gradient-to-b from-transparent via-emerald-950/[0.02] to-transparent">
+        <div className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
           <ScrollReveal>
             <div className="border-b border-prayas-rule pb-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
@@ -417,7 +417,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 5. MOMENTS OF SEVA — DYNAMIC ON-GROUND PHOTO GALLERY                       */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -578,7 +578,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 6. VOICES OF TRANSFORMATION & COMMUNITY TESTIMONIALS                       */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border border-prayas-rule bg-white rounded-2xl p-5 sm:p-8 2xl:p-12 shadow-card space-y-6 sm:space-y-8">
             <div className="border-b border-prayas-rule pb-4">
@@ -619,7 +619,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 7. HOW YOUR ₹500 REACHES A CHILD — DONOR TRANSPARENCY JOURNEY              */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border border-prayas-rule bg-white rounded-2xl p-5 sm:p-8 2xl:p-12 shadow-card space-y-6 sm:space-y-8">
             <div className="border-b border-prayas-rule pb-4 text-center">
@@ -698,7 +698,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 8. FAQ — EVERYTHING SUPPORTERS & DONORS ASK                                */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8">
             <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
@@ -719,7 +719,7 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 9. CALL TO ACTION BANNER (SPONSOR, VOLUNTEER, CSR PARTNER)                */}
       {/* ========================================================================= */}
-      <section className="max-w-7xl 2xl:max-w-[1440px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
           <div className="border border-prayas-rule bg-prayas-stone rounded-2xl p-6 sm:p-10 2xl:p-14 text-center space-y-5 sm:space-y-6 shadow-card">
             {/* Logo in CTA */}
