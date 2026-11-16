@@ -42,7 +42,13 @@ export function getUploadsDir(): string {
   return defaultDir;
 }
 
-export const ALLOWED_SERVE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+export {
+  ALLOWED_IMAGE_EXTENSIONS,
+  ALLOWED_VIDEO_EXTENSIONS,
+  ALLOWED_SERVE_EXTENSIONS,
+  isVideoUrl,
+} from "./media";
+import { ALLOWED_SERVE_EXTENSIONS } from "./media";
 
 /**
  * Locates an uploaded file across all candidate directory locations.
@@ -120,6 +126,10 @@ const SAFE_MIME_TYPES: Record<string, string> = {
   ".png": "image/png",
   ".webp": "image/webp",
   ".gif": "image/gif",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
+  ".mov": "video/quicktime",
 };
 
 export function getMimeType(filePath: string): string {
@@ -134,18 +144,22 @@ export function getMimeType(filePath: string): string {
 export function generateUniqueFilename(validatedExtOrOriginalName: string, mimeType?: string): string {
   let ext = path.extname(validatedExtOrOriginalName).toLowerCase();
 
-  // If first argument is directly an extension (e.g. ".jpg", ".png")
-  if (validatedExtOrOriginalName.startsWith(".") && [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(validatedExtOrOriginalName)) {
+  // If first argument is directly an extension (e.g. ".jpg", ".png", ".mp4")
+  if (validatedExtOrOriginalName.startsWith(".") && ALLOWED_SERVE_EXTENSIONS.includes(validatedExtOrOriginalName)) {
     ext = validatedExtOrOriginalName.toLowerCase();
   } else if (!ext || ext === ".") {
     // Derive from mimeType if available
-    if (mimeType?.includes("png")) ext = ".png";
+    if (mimeType?.includes("mp4")) ext = ".mp4";
+    else if (mimeType?.includes("webm")) ext = ".webm";
+    else if (mimeType?.includes("ogg")) ext = ".ogg";
+    else if (mimeType?.includes("quicktime")) ext = ".mov";
+    else if (mimeType?.includes("png")) ext = ".png";
     else if (mimeType?.includes("webp")) ext = ".webp";
     else if (mimeType?.includes("gif")) ext = ".gif";
     else ext = ".jpg";
   }
 
-  // Ensure extension is strictly an allowed raster extension
+  // Ensure extension is strictly an allowed extension
   if (!ALLOWED_SERVE_EXTENSIONS.includes(ext)) {
     ext = ".jpg";
   }

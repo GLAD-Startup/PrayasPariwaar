@@ -90,8 +90,8 @@ export default function MobileFooterNav() {
                   <div
                     className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 active:scale-90 ${
                       active
-                        ? "bg-gradient-to-tr from-[#123824] via-[#1E5338] to-[#2E5339] text-white ring-4 ring-emerald-100 shadow-emerald-900/30 scale-105"
-                        : "bg-gradient-to-tr from-[#1E5338] via-[#2E5339] to-[#3B6E4C] text-white hover:brightness-110 shadow-emerald-900/20"
+                        ? "bg-gradient-to-tr from-[#123824] via-[#23432B] to-[#2E5339] text-white ring-4 ring-emerald-100 shadow-emerald-900/30 scale-105"
+                        : "bg-gradient-to-tr from-[#23432B] via-[#2E5339] to-[#3B6E4C] text-white hover:brightness-110 shadow-emerald-900/20"
                     }`}
                   >
                     <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110 fill-white/20" />
@@ -116,7 +116,7 @@ export default function MobileFooterNav() {
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all duration-200 active:scale-95 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${
                   active
-                    ? "text-[#1E5338] font-bold"
+                    ? "text-[#2E5339] font-bold"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
               >
@@ -124,14 +124,14 @@ export default function MobileFooterNav() {
                 <div
                   className={`relative flex items-center justify-center w-9 h-7 rounded-lg transition-all duration-200 ${
                     active
-                      ? "bg-emerald-50 text-[#1E5338]"
+                      ? "bg-emerald-50 text-[#2E5339]"
                       : "group-hover:bg-slate-100 text-slate-500"
                   }`}
                 >
                   <Icon
                     className={`w-[19px] h-[19px] transition-transform duration-200 ${
                       active
-                        ? "scale-110 text-[#1E5338]"
+                        ? "scale-110 text-[#2E5339]"
                         : "text-slate-500 group-hover:text-slate-800"
                     }`}
                   />
@@ -150,7 +150,7 @@ export default function MobileFooterNav() {
                 <span
                   className={`text-[10px] mt-0.5 tracking-tight transition-all duration-150 ${
                     active
-                      ? "text-[#1E5338] font-bold"
+                      ? "text-[#2E5339] font-bold"
                       : "text-slate-500 font-medium group-hover:text-slate-800"
                   }`}
                 >

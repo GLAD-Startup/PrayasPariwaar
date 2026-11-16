@@ -14,6 +14,7 @@
     "@prayas/utils": "*",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "fs": "^0.0.1-security",
     "jose": "^6.2.12",
     "jsonwebtoken": "^9.0.2",
     "lenis": "^1.3.26",

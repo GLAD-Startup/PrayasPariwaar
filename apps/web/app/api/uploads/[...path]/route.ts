@@ -28,8 +28,39 @@ export async function GET(
     }
 
     const stat = fs.statSync(filePath);
-    const fileBuffer = await readFile(filePath);
     const mimeType = getMimeType(filePath);
+    const isMedia = mimeType.startsWith("image/") || mimeType.startsWith("video/");
+
+    // Handle HTTP Range Requests for smooth video streaming and scrubbing
+    const rangeHeader = req.headers.get("range");
+    if (rangeHeader && mimeType.startsWith("video/")) {
+      const parts = rangeHeader.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+
+      if (!isNaN(start) && start < stat.size) {
+        const safeEnd = Math.min(isNaN(end) ? stat.size - 1 : end, stat.size - 1);
+        const chunksize = safeEnd - start + 1;
+
+        const fileBuffer = await readFile(filePath);
+        const chunk = fileBuffer.subarray(start, safeEnd + 1);
+
+        return new NextResponse(chunk, {
+          status: 206,
+          headers: {
+            "Content-Range": `bytes ${start}-${safeEnd}/${stat.size}`,
+            "Accept-Ranges": "bytes",
+            "Content-Length": chunksize.toString(),
+            "Content-Type": mimeType,
+            "Content-Disposition": "inline",
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "X-Content-Type-Options": "nosniff",
+          },
+        });
+      }
+    }
+
+    const fileBuffer = await readFile(filePath);
 
     return new NextResponse(fileBuffer, {
       status: 200,
@@ -39,8 +70,7 @@ export async function GET(
         "Cache-Control": "public, max-age=31536000, immutable",
         "Accept-Ranges": "bytes",
         "X-Content-Type-Options": "nosniff",
-        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
-        "Content-Disposition": mimeType.startsWith("image/") ? "inline" : "attachment",
+        "Content-Disposition": isMedia ? "inline" : "attachment",
       },
     });
   } catch (error: any) {

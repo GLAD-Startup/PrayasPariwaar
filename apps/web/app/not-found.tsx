@@ -130,7 +130,7 @@ export default function NotFound() {
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link
             href="/"
-            className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#1E5338] hover:bg-[#16432B] text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm bg-[#2E5339] hover:bg-[#23432b] text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Homepage</span>

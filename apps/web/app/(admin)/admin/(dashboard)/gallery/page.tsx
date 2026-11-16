@@ -19,7 +19,11 @@ import {
   UploadCloud,
   Images,
   Filter,
+  Film,
+  Play,
+  Video,
 } from "lucide-react";
+import { isVideoUrl } from "@/lib/media";
 
 const CATEGORIES = [
   "Free Education",
@@ -35,6 +39,7 @@ export default function AdminGalleryPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [selectedAlbumFilter, setSelectedAlbumFilter] = useState<string>("ALL");
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<"ALL" | "PHOTO" | "VIDEO">("ALL");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Modal states
@@ -242,11 +247,16 @@ export default function AdminGalleryPage() {
     }
   };
 
-  // Filter photos by selected album
-  const displayedPhotos =
-    selectedAlbumFilter === "ALL"
-      ? recentPhotos
-      : recentPhotos.filter((p) => p.albumId === selectedAlbumFilter);
+  // Filter photos and videos by selected album and media type
+  const displayedPhotos = recentPhotos.filter((p) => {
+    if (selectedAlbumFilter !== "ALL" && p.albumId !== selectedAlbumFilter) {
+      return false;
+    }
+    const isVideo = isVideoUrl(p.url);
+    if (mediaTypeFilter === "PHOTO" && isVideo) return false;
+    if (mediaTypeFilter === "VIDEO" && !isVideo) return false;
+    return true;
+  });
 
   const activeFilteredAlbum =
     selectedAlbumFilter !== "ALL"
@@ -446,20 +456,60 @@ export default function AdminGalleryPage() {
         )}
       </div>
 
-      {/* 3. Photos Grid with Album Filter Indicator */}
+      {/* 3. Media Grid with Album and Media Type Filters */}
       <div className="space-y-3 pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-serif text-lg font-bold text-prayas-ink flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-emerald-700" />
               <span>
                 {activeFilteredAlbum
-                  ? `Photos in Album: "${activeFilteredAlbum.title}"`
-                  : `Uploaded Photos Archive`}
+                  ? `Media in Album: "${activeFilteredAlbum.title}"`
+                  : `Uploaded Media Archive`}
                 {" "}
                 ({displayedPhotos.length})
               </span>
             </h2>
+
+            {/* Media Type Filter Pills (All / Photos / Videos) */}
+            <div className="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setMediaTypeFilter("ALL")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                  mediaTypeFilter === "ALL"
+                    ? "bg-white text-emerald-900 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                All Media
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaTypeFilter("PHOTO")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1 ${
+                  mediaTypeFilter === "PHOTO"
+                    ? "bg-white text-emerald-900 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <ImageIcon className="w-3 h-3" />
+                Photos
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaTypeFilter("VIDEO")}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-all flex items-center gap-1 ${
+                  mediaTypeFilter === "VIDEO"
+                    ? "bg-white text-emerald-900 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Film className="w-3 h-3 text-amber-600" />
+                Videos
+              </button>
+            </div>
+
             {selectedAlbumFilter !== "ALL" && (
               <button
                 onClick={() => setSelectedAlbumFilter("ALL")}
@@ -476,7 +526,7 @@ export default function AdminGalleryPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 transition-all shadow-sm"
             >
               <UploadCloud className="w-3.5 h-3.5" />
-              <span>+ Bulk Upload More Photos to this Album</span>
+              <span>+ Bulk Upload to this Album</span>
             </button>
           )}
         </div>
@@ -485,8 +535,8 @@ export default function AdminGalleryPage() {
           <div className="p-8 text-center text-xs text-prayas-muted bg-white border border-prayas-rule rounded-2xl space-y-2">
             <p>
               {selectedAlbumFilter !== "ALL"
-                ? `No photos uploaded to this album yet.`
-                : `No standalone photos uploaded yet.`}
+                ? `No media uploaded to this album yet.`
+                : `No standalone photos or videos uploaded yet.`}
             </p>
             {activeFilteredAlbum ? (
               <button
@@ -494,7 +544,7 @@ export default function AdminGalleryPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white"
               >
                 <UploadCloud className="w-3.5 h-3.5" />
-                <span>Bulk Upload Photos Now</span>
+                <span>Bulk Upload Media Now</span>
               </button>
             ) : null}
           </div>
@@ -503,14 +553,33 @@ export default function AdminGalleryPage() {
             {displayedPhotos.map((photo) => (
               <div
                 key={photo.id}
-                className="bg-white border border-prayas-rule rounded-xl overflow-hidden shadow-sm group aspect-square relative"
+                className="bg-slate-900 border border-prayas-rule rounded-xl overflow-hidden shadow-sm group aspect-square relative"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.url}
-                  alt={photo.title || "Seva Photo"}
-                  className="w-full h-full object-cover"
-                />
+                {isVideoUrl(photo.url) ? (
+                  <div className="relative w-full h-full bg-black">
+                    <video
+                      src={photo.url}
+                      muted
+                      preload="metadata"
+                      className="w-full h-full object-cover opacity-85"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
+                        <Play className="w-4 h-4 fill-white translate-x-0.5" />
+                      </div>
+                    </div>
+                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-amber-600/90 text-white text-[9px] font-bold flex items-center gap-1 pointer-events-none shadow-sm">
+                      <Film className="w-2.5 h-2.5" /> Video
+                    </span>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.url}
+                    alt={photo.title || "Seva Photo"}
+                    className="w-full h-full object-cover"
+                  />
+                )}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between text-white text-[10px]">
                   <span className="line-clamp-2 font-bold">{photo.title || photo.category}</span>
                   <div className="flex items-center justify-between">
@@ -520,7 +589,7 @@ export default function AdminGalleryPage() {
                     <button
                       onClick={() => handleDeletePhoto(photo.id)}
                       className="p-1 text-red-400 hover:text-red-300"
-                      title="Delete photo"
+                      title="Delete media"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -630,12 +699,13 @@ export default function AdminGalleryPage() {
                 </div>
               </div>
 
-              {/* Multi-Image File Uploader */}
+              {/* Multi-Image & Video File Uploader */}
               <div>
                 <ImageUpload
-                  label="Select Multiple Photos (Hold Ctrl/Shift to choose multiple, or Drag & Drop)"
-                  description="Supports uploading multiple JPG, PNG, WEBP files at once (up to 35 files per batch)"
+                  label="Select Multiple Photos or Videos (Hold Ctrl/Shift, or Drag & Drop)"
+                  description="Supports uploading multiple JPG, PNG, WEBP, and MP4/WebM videos (up to 35 files per batch)"
                   multiple={true}
+                  allowVideo={true}
                   value={bulkUrls}
                   onChange={(urls) => setBulkUrls(urls)}
                 />
@@ -814,7 +884,7 @@ export default function AdminGalleryPage() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-prayas-rule space-y-4 my-8 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-prayas-rule pb-3 shrink-0">
-              <h3 className="font-serif text-lg font-bold text-prayas-ink">Upload Single Photo</h3>
+              <h3 className="font-serif text-lg font-bold text-prayas-ink">Upload Photo or Video</h3>
               <button onClick={() => setPhotoModalOpen(false)}>
                 <X className="w-5 h-5 text-slate-400" />
               </button>
@@ -823,7 +893,9 @@ export default function AdminGalleryPage() {
             <form onSubmit={handleAddPhoto} className="space-y-3.5 text-xs overflow-y-auto pr-1 flex-1">
               <div>
                 <ImageUpload
-                  label="Upload Photo from Computer"
+                  label="Upload Photo or Video from Computer"
+                  description="Supports JPG, PNG, WEBP, and MP4/WebM videos up to 100MB"
+                  allowVideo={true}
                   value={photoUrl}
                   onChange={(url) => setPhotoUrl(url)}
                 />

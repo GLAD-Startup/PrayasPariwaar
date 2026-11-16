@@ -38,7 +38,10 @@ import {
   Send,
   UserCheck,
   FolderOpen,
+  Film,
+  Play,
 } from "lucide-react";
+import { isVideoUrl } from "@/lib/media";
 
 import type { Metadata } from "next";
 
@@ -190,7 +193,7 @@ export default async function HomePage() {
         percentAashayein={percentAashayein}
       />
 
-      <div className="space-y-6 sm:space-y-8 lg:space-y-10 pb-12 pt-4 sm:pt-6">
+      <div className="space-y-20 sm:space-y-28 lg:space-y-36 pb-24 pt-16 sm:pt-20 lg:pt-24">
         {/* ========================================================================= */}
         {/* 2. KEY IMPACT LEDGER & STATUTORY TRUST BAND (ANIMATED & DYNAMIC)          */}
         {/* ========================================================================= */}
@@ -241,8 +244,9 @@ export default async function HomePage() {
             {/* Right: Institutional Narrative & Credentials */}
             <div className="lg:col-span-6 space-y-5 sm:space-y-6 2xl:space-y-8">
               <div className="space-y-2">
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#B45309]">
-                  ABOUT PRAYAS PARIWAAR • EST. 2006
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-2">
+                  <span className="w-2 h-2 bg-prayas-neem shrink-0 rounded-full" />
+                  About Prayas Pariwaar • Est. 2006
                 </span>
                 <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold text-[#1C2421] leading-[1.2]">
                   An 18-Year Legacy of Selfless Community Seva in Vrindavan
@@ -324,10 +328,10 @@ export default async function HomePage() {
       {/* ========================================================================= */}
       {/* 4. DYNAMIC 3D COVERFLOW PROGRAMS SHOWCASE                                */}
       {/* ========================================================================= */}
-      <section className="w-full overflow-hidden py-2 bg-gradient-to-b from-transparent via-emerald-950/[0.02] to-transparent">
+      <section className="w-full overflow-hidden py-8 sm:py-12 bg-gradient-to-b from-transparent via-emerald-950/[0.02] to-transparent">
         <div className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
           <ScrollReveal>
-            <div className="border-b border-prayas-rule pb-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-2">
                   <span className="w-2 h-2 bg-prayas-neem shrink-0" />
@@ -418,27 +422,49 @@ export default async function HomePage() {
               const categoryName = photo.category && photo.category !== "All" ? photo.category : "Field Seva";
               const badgeLabel = albumName || categoryName;
 
+              const isVideo = isVideoUrl(photo.url || photo.src);
+
               return (
                 <ScrollReveal key={photo.id || idx} delay={idx * 50}>
                   <Link
                     href={targetUrl}
-                    className="group relative overflow-hidden rounded-xl bg-prayas-stone border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
+                    className="group relative overflow-hidden rounded-xl bg-slate-900 border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
                   >
-                    <Image
-                      src={assetPath(photo.url || photo.src)}
-                      alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
+                    {isVideo ? (
+                      <div className="relative w-full h-full bg-black">
+                        <video
+                          src={assetPath(photo.url || photo.src)}
+                          muted
+                          preload="metadata"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                          <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/30 group-hover:scale-110 transition-transform shadow-lg">
+                            <Play className="w-4 h-4 fill-white translate-x-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Image
+                        src={assetPath(photo.url || photo.src)}
+                        alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    )}
                     {/* Rich Dark Gradient for 100% Text Legibility */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
 
                     {/* Top Badge: Single, Dignified Glassmorphic Pill */}
                     <div className="absolute top-2.5 left-2.5 z-20">
                       <span className="px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold border border-white/25 shadow-sm flex items-center gap-1">
-                        <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                        {isVideo ? (
+                          <Film className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                        ) : (
+                          <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                        )}
                         <span className="truncate max-w-[140px]">{badgeLabel}</span>
                       </span>
                     </div>

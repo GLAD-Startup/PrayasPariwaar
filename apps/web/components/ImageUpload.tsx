@@ -14,8 +14,11 @@ import {
   Copy,
   Check,
   Crop,
+  Film,
+  Play,
 } from "lucide-react";
 import { apiFetch, assetPath } from "@/lib/api";
+import { isVideoUrl } from "@/lib/media";
 import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 import PhotoAdjustmentModal from "@/components/PhotoAdjustmentModal";
 
@@ -29,6 +32,7 @@ interface ImageUploadProps {
   aspectRatio?: "video" | "square" | "portrait" | "auto";
   shape?: "rect" | "circle";
   allowAdjustment?: boolean;
+  allowVideo?: boolean;
 }
 
 /**
@@ -114,6 +118,7 @@ export default function ImageUpload({
   aspectRatio = "video",
   shape = "rect",
   allowAdjustment = true,
+  allowVideo = false,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(
@@ -367,13 +372,17 @@ export default function ImageUpload({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif"
+        accept={
+          allowVideo
+            ? "image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif,video/mp4,video/webm,video/ogg,video/quicktime"
+            : "image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif"
+        }
         multiple={multiple}
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
 
-      {/* Single Mode with Existing Image */}
+      {/* Single Mode with Existing Image or Video */}
       {!multiple && imageList.length > 0 ? (
         <div className="space-y-2.5">
           <div
@@ -385,7 +394,14 @@ export default function ImageUpload({
                 : "aspect-[16/9] max-h-60"
             }`}
           >
-            {!failedImages[imageList[0]] ? (
+            {isVideoUrl(imageList[0]) ? (
+              <video
+                src={assetPath(imageList[0])}
+                controls
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : !failedImages[imageList[0]] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={assetPath(imageList[0])}
@@ -404,13 +420,13 @@ export default function ImageUpload({
             )}
 
             {/* Optional circular dashed overlay guide for avatar mode */}
-            {shape === "circle" && (
+            {shape === "circle" && !isVideoUrl(imageList[0]) && (
               <div className="absolute inset-0 pointer-events-none rounded-full border-2 border-dashed border-emerald-400/60 m-3 shadow-inner" />
             )}
 
             {/* Hover Action Bar */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-[2px] p-2 flex-wrap">
-              {allowAdjustment && (
+              {allowAdjustment && !isVideoUrl(imageList[0]) && (
                 <button
                   type="button"
                   onClick={() => setAdjustModalOpen(true)}
@@ -463,8 +479,13 @@ export default function ImageUpload({
               <span className="px-2 py-0.5 rounded-lg bg-black/70 text-white text-[10px] font-mono backdrop-blur-md max-w-[70%] truncate">
                 {imageList[0]}
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-semibold">
-                Ready
+              <span
+                className={`px-2 py-0.5 rounded-md text-white text-[10px] font-semibold flex items-center gap-1 ${
+                  isVideoUrl(imageList[0]) ? "bg-amber-600" : "bg-emerald-600"
+                }`}
+              >
+                {isVideoUrl(imageList[0]) ? <Film className="w-3 h-3" /> : null}
+                {isVideoUrl(imageList[0]) ? "Video" : "Ready"}
               </span>
             </div>
           </div>
@@ -548,9 +569,26 @@ export default function ImageUpload({
             {imageList.map((url, idx) => (
               <div
                 key={idx}
-                className="relative rounded-xl overflow-hidden border border-prayas-rule bg-slate-100 aspect-square group shadow-sm"
+                className="relative rounded-xl overflow-hidden border border-prayas-rule bg-slate-900 aspect-square group shadow-sm"
               >
-                {!failedImages[url] ? (
+                {isVideoUrl(url) ? (
+                  <div className="relative w-full h-full bg-black">
+                    <video
+                      src={assetPath(url)}
+                      muted
+                      preload="metadata"
+                      className="w-full h-full object-cover opacity-80"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
+                        <Play className="w-4 h-4 fill-white translate-x-0.5" />
+                      </div>
+                    </div>
+                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-amber-600/90 text-white text-[9px] font-bold flex items-center gap-0.5 pointer-events-none">
+                      <Film className="w-2.5 h-2.5" /> Video
+                    </span>
+                  </div>
+                ) : !failedImages[url] ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={assetPath(url)}

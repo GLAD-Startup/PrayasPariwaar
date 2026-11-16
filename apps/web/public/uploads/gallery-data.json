@@ -14,6 +14,16 @@
   ],
   "photos": [
     {
+      "id": "photo-1794846443403-0-tvt97",
+      "albumId": "cmvmla6zi001hhjc9xq6u7nsk",
+      "title": "Free Education & Evening Tutoring Centers",
+      "caption": "",
+      "url": "/prayas/uploads/1794846432882-fe2e039ee766e4174f7848688c24bd21.mp4",
+      "category": "Free Education",
+      "location": "Mathura / Vrindavan",
+      "createdAt": "2026-11-16T16:27:23.403Z"
+    },
+    {
       "id": "photo-1790253448457-0-tkurl",
       "albumId": "cmue6878v00004le0dym93qfg",
       "title": "Aadhaar And Vocational training (1)",
@@ -102,6 +112,16 @@
       "category": "Vocational Training",
       "location": "Mathura / Vrindavan",
       "createdAt": "2026-09-23T14:01:26.321Z"
+    },
+    {
+      "id": "video-prayas-seva-children",
+      "albumId": "cmue6878v00004le0dym93qfg",
+      "title": "Evening Education & Children Field Chronicle",
+      "caption": "Children walking together after evening tutoring classes in Vrindavan",
+      "url": "/prayas/videos/ai_video.mp4",
+      "category": "Free Education",
+      "location": "Vrindavan, UP",
+      "createdAt": "2026-11-16T16:00:00.000Z"
     }
   ]
 }
