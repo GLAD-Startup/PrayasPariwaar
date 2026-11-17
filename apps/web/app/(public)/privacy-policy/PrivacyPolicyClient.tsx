@@ -995,6 +995,16 @@ export default function PrivacyPolicyClient() {
                   <li><strong>No Residential Disclosure:</strong> We never publicly disclose the home addresses, contact numbers, or specific vulnerabilities of child beneficiaries on the website or social media.</li>
                   <li><strong>Volunteer Screening:</strong> All volunteers who interact directly with children in classroom settings undergo personal identity verification and agree to our Child Safeguarding Code of Conduct.</li>
                 </ul>
+
+                <div className="pt-3 border-t border-prayas-rule flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-xs text-slate-600">Review our zero-tolerance policies and reporting mechanisms:</span>
+                  <Link
+                    href="/child-safety"
+                    className="text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Institutional Standards Against CSAE & Child Exploitation →</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </section>

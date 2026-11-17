@@ -188,12 +188,15 @@ export default function PublicLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
               <Link href="/about" className="hover:text-white transition-colors">
                 Transparency & Governance
               </Link>
               <Link href="/privacy-policy" className="hover:text-white transition-colors">
                 Privacy Policy
+              </Link>
+              <Link href="/child-safety" className="hover:text-white transition-colors">
+                Child Safety (CSAE)
               </Link>
               <Link href="/contact" className="hover:text-white transition-colors">
                 Contact Office
