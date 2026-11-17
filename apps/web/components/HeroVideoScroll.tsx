@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { assetPath } from "@/lib/api";
 
 
@@ -19,7 +18,8 @@ export default function HeroVideoScroll({
   percentAashayein,
 }: HeroVideoScrollProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
 
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isDimmed, setIsDimmed] = useState(false);
@@ -93,28 +93,31 @@ export default function HeroVideoScroll({
     requestAnimationFrame(animateTransition);
   }, []);
 
-  // Detect mobile device: skip video wait and reveal hero image immediately
+  // Detect mobile device
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setIsVideoLoaded(true);
-        settleHero();
-      }
+      setIsMobile(window.innerWidth < 768);
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
     }
-  }, [settleHero]);
+  }, []);
 
-  // Strictly enforce 0.85x playback speed and permanent silence (zero voice/sound),
-  // and trigger auto-settlement after 3-5 seconds of video playing (not full video)
+  // Strictly enforce permanent silence (muted autoplay requirement)
+  // and trigger auto-settlement after 3.8 seconds of video playing
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const desktopVideo = desktopVideoRef.current;
+    const mobileVideo = mobileVideoRef.current;
+    const activeVideos = [desktopVideo, mobileVideo].filter(Boolean) as HTMLVideoElement[];
+    if (activeVideos.length === 0) return;
 
     const enforceSettings = () => {
-      if (!video) return;
-      video.muted = true;
-      video.defaultMuted = true;
+      activeVideos.forEach((v) => {
+        v.muted = true;
+        v.defaultMuted = true;
+      });
     };
 
     enforceSettings();
@@ -127,9 +130,8 @@ export default function HeroVideoScroll({
       if (triggered) return;
       triggered = true;
       enforceSettings();
-      video.play().catch(() => {
-        enforceSettings();
-        video.play().catch(() => {});
+      activeVideos.forEach((v) => {
+        v.play().catch(() => {});
       });
       // If already scrolled down, reveal immediately; otherwise give 150ms black buffer before slow fade
       if (typeof window !== "undefined" && window.scrollY > 100) {
@@ -146,34 +148,34 @@ export default function HeroVideoScroll({
       enforceSettings();
       if (hasCompletedHeroRef.current) return;
       if (!autoSettleTimer) {
-        // ~3.8 seconds from actual playback start ensures visitor enjoys 3-5s of intro video
         autoSettleTimer = setTimeout(() => {
           settleHero();
         }, 3800);
       }
     };
 
-    const handleTimeUpdate = () => {
+    const handleTimeUpdate = (e: Event) => {
       if (hasCompletedHeroRef.current) return;
-      // 3.5s video currentTime at 0.85x speed equals ~4.1 real-world seconds
-      if (video.currentTime >= 3.5) {
+      const target = e.target as HTMLVideoElement;
+      if (target && target.currentTime >= 3.5) {
         settleHero();
       }
     };
 
-    if (video.readyState >= 2) {
-      triggerSlowFade();
-    } else {
-      video.addEventListener("loadeddata", triggerSlowFade, { once: true });
-      video.addEventListener("canplaythrough", triggerSlowFade, { once: true });
-      video.addEventListener("playing", triggerSlowFade, { once: true });
-    }
+    activeVideos.forEach((video) => {
+      if (video.readyState >= 2) {
+        triggerSlowFade();
+      } else {
+        video.addEventListener("loadeddata", triggerSlowFade, { once: true });
+        video.addEventListener("canplaythrough", triggerSlowFade, { once: true });
+        video.addEventListener("playing", triggerSlowFade, { once: true });
+      }
 
-    video.addEventListener("playing", handlePlaying);
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("play", enforceSettings);
-    video.addEventListener("loadedmetadata", enforceSettings);
-
+      video.addEventListener("playing", handlePlaying);
+      video.addEventListener("timeupdate", handleTimeUpdate);
+      video.addEventListener("play", enforceSettings);
+      video.addEventListener("loadedmetadata", enforceSettings);
+    });
 
     const fallbackTimer = setTimeout(() => {
       setIsVideoLoaded(true);
@@ -192,13 +194,15 @@ export default function HeroVideoScroll({
       clearTimeout(fallbackTimer);
       clearTimeout(safetyTimer);
       if (autoSettleTimer) clearTimeout(autoSettleTimer);
-      video.removeEventListener("loadeddata", triggerSlowFade);
-      video.removeEventListener("canplaythrough", triggerSlowFade);
-      video.removeEventListener("playing", triggerSlowFade);
-      video.removeEventListener("playing", handlePlaying);
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("play", enforceSettings);
-      video.removeEventListener("loadedmetadata", enforceSettings);
+      activeVideos.forEach((video) => {
+        video.removeEventListener("loadeddata", triggerSlowFade);
+        video.removeEventListener("canplaythrough", triggerSlowFade);
+        video.removeEventListener("playing", triggerSlowFade);
+        video.removeEventListener("playing", handlePlaying);
+        video.removeEventListener("timeupdate", handleTimeUpdate);
+        video.removeEventListener("play", enforceSettings);
+        video.removeEventListener("loadedmetadata", enforceSettings);
+      });
     };
   }, [settleHero]);
 
@@ -286,12 +290,12 @@ export default function HeroVideoScroll({
         className="w-full overflow-hidden flex items-center justify-center bg-black border-b border-prayas-rule"
       >
         {/* ===================================================================== */}
-        {/* Background: Video on Desktop, Optimized Portrait Image on Mobile       */}
+        {/* Background: Video on Desktop, Optimized Portrait Video on Mobile      */}
         {/* ===================================================================== */}
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
-          {/* Desktop Video (hidden on mobile to save bandwidth & optimize battery) */}
+          {/* Desktop Landscape Video */}
           <video
-            ref={videoRef}
+            ref={desktopVideoRef}
             src={assetPath("/videos/ai_video.mp4")}
             autoPlay
             muted
@@ -307,17 +311,24 @@ export default function HeroVideoScroll({
             }`}
           />
 
-          {/* Mobile Optimized Image (portrait golden hour photo of children) */}
-          <div className="block md:hidden relative w-full h-full">
-            <Image
-              src={assetPath("/images/hero-mobile-children.jpg")}
-              alt="Prayas Pariwaar children in school uniform walking in Vrindavan"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-center"
-            />
-          </div>
+          {/* Mobile Portrait Video (optimized vertical cut for mobile screens) */}
+          <video
+            ref={mobileVideoRef}
+            src={assetPath("/videos/ai_mobile.mp4")}
+            poster={assetPath("/images/hero-mobile-children.jpg")}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{
+              filter: isDimmed ? "brightness(0.85)" : "brightness(1)",
+              transition: "filter 1400ms ease-in-out, opacity 2400ms ease-out",
+            }}
+            className={`block md:hidden w-full h-full object-cover object-center will-change-transform ${
+              isVideoLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          />
         </div>
 
         {/* Clean, balanced overlay for readability (darker on lower-left on desktop, darker at bottom on mobile) */}

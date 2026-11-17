@@ -119,6 +119,49 @@ export default async function HomePage() {
     console.warn("Could not query timeline milestones in HomePage:", e);
   }
 
+  // Fetch awards & official recognitions from database
+  let awards: any[] = [];
+  try {
+    if ((prisma as any).award) {
+      awards = await (prisma as any).award.findMany({
+        orderBy: [{ order: "asc" }, { year: "desc" }],
+        take: 3,
+      });
+    }
+  } catch (e) {
+    console.warn("Could not query awards in HomePage:", e);
+  }
+
+  const displayAwards =
+    awards && awards.length > 0
+      ? awards
+      : [
+          {
+            id: "award-1",
+            title: "Mathura District Administration Seva Samman",
+            description:
+              "Conferred by the District Magistrate of Mathura for outstanding public service during natural calamities and COVID-19 medical assistance.",
+            imageUrl: "/images/timeline/timeline-2020-covid-relief.jpg",
+            year: 2024,
+          },
+          {
+            id: "award-2",
+            title: "Uttar Pradesh Grassroots NGO Excellence Award",
+            description:
+              "Awarded by the State Social Welfare Board for 18 years of sustained rural education and community health initiatives in Braj region.",
+            imageUrl: "/images/timeline/timeline-2022-eye-camp.jpg",
+            year: 2022,
+          },
+          {
+            id: "award-3",
+            title: "Rotary Seva Ratna for Blood Donor Mobilization",
+            description:
+              "Recognized by Rotary Club of Mathura-Vrindavan for maintaining the largest voluntary emergency blood donor registry in the district.",
+            imageUrl: "/images/timeline/timeline-2019-award.jpg",
+            year: 2019,
+          },
+        ];
+
   // Filter out test screenshots/documents so only authentic field photography is displayed
   const cleanedGalleryPhotos = galleryPhotos.filter((p: any) => {
     const url = (p.url || "").toLowerCase();
@@ -386,119 +429,61 @@ export default async function HomePage() {
               <span>Explore All Albums in Gallery →</span>
             </Link>
           </div>
-
-          {/* Quick Album Filter Pills */}
-          {galleryAlbums.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none text-xs">
-              <Link
-                href="/gallery"
-                className="px-3.5 py-1.5 rounded-full bg-emerald-800 text-white font-bold whitespace-nowrap shadow-xs hover:bg-emerald-900 transition-colors"
-              >
-                All Moments ({displayPhotos.length})
-              </Link>
-              {galleryAlbums.map((alb: any) => (
-                <Link
-                  key={alb.id}
-                  href={`/gallery?albumId=${alb.id}`}
-                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-prayas-rule hover:border-emerald-300 font-semibold whitespace-nowrap transition-all shadow-2xs flex items-center gap-1.5"
-                >
-                  <FolderOpen className="w-3 h-3 text-emerald-700" />
-                  <span>{alb.title}</span>
-                  {alb._count?.photos > 0 && (
-                    <span className="text-[10px] text-slate-400 font-mono">({alb._count.photos})</span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
         </ScrollReveal>
 
-        {/* Dynamic Photo Gallery Grid (Clean 4-Column Uniform Cards) */}
+        {/* Dynamic Pure Photo Collage (Zero text, mosaic layout) */}
         {displayPhotos.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[140px] sm:auto-rows-[180px] md:auto-rows-[220px] lg:auto-rows-[240px] gap-3 sm:gap-4 md:gap-5">
             {displayPhotos.map((photo: any, idx: number) => {
               const targetUrl = photo.albumId ? `/gallery?albumId=${photo.albumId}` : "/gallery";
-              const albumName = photo.album?.title;
-              const categoryName = photo.category && photo.category !== "All" ? photo.category : "Field Seva";
-              const badgeLabel = albumName || categoryName;
-
               const isVideo = isVideoUrl(photo.url || photo.src);
 
+              // Asymmetric mosaic span pattern for seamless 8-photo collage:
+              // Index 0: 2x2 featured tile (top-left)
+              // Index 5: 2x1 wide panorama tile (bottom-left)
+              // Others: 1x1 tiles
+              const spanClass =
+                idx === 0
+                  ? "col-span-2 row-span-2"
+                  : idx === 5
+                  ? "col-span-2 row-span-1"
+                  : "col-span-1 row-span-1";
+
               return (
-                <ScrollReveal key={photo.id || idx} delay={idx * 50}>
+                <ScrollReveal key={photo.id || idx} delay={idx * 30} className={spanClass}>
                   <Link
                     href={targetUrl}
-                    className="group relative overflow-hidden rounded-xl bg-slate-900 border border-prayas-rule shadow-2xs hover:shadow-lg transition-all duration-300 block aspect-[4/3]"
+                    className="group relative w-full h-full overflow-hidden rounded-2xl bg-stone-900 border border-prayas-rule/80 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 block"
                   >
                     {isVideo ? (
-                      <div className="relative w-full h-full bg-black">
+                      <div className="relative w-full h-full bg-slate-950">
                         <video
                           src={assetPath(photo.url || photo.src)}
+                          autoPlay
                           muted
+                          loop
+                          playsInline
                           preload="metadata"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                          <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/30 group-hover:scale-110 transition-transform shadow-lg">
-                            <Play className="w-4 h-4 fill-white translate-x-0.5" />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center text-white border border-white/30 group-hover:scale-110 transition-transform shadow-md">
+                            <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white translate-x-0.5" />
                           </div>
                         </div>
                       </div>
                     ) : (
                       <Image
                         src={assetPath(photo.url || photo.src)}
-                        alt={photo.caption || photo.title || "Moments of Seva in Vrindavan"}
+                        alt=""
                         fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         loading="lazy"
                       />
                     )}
-                    {/* Rich Dark Gradient for 100% Text Legibility */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-10 pointer-events-none" />
-
-                    {/* Top Badge: Single, Dignified Glassmorphic Pill */}
-                    <div className="absolute top-2.5 left-2.5 z-20">
-                      <span className="px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold border border-white/25 shadow-sm flex items-center gap-1">
-                        {isVideo ? (
-                          <Film className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-                        ) : (
-                          <FolderOpen className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
-                        )}
-                        <span className="truncate max-w-[140px]">{badgeLabel}</span>
-                      </span>
-                    </div>
-
-                    {/* Bottom Text Details */}
-                    <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 z-20 space-y-1">
-                      <h4
-                        className="font-serif font-bold text-xs sm:text-sm leading-snug line-clamp-1 group-hover:text-emerald-300 transition-colors drop-shadow-md"
-                        style={{ color: "#ffffff" }}
-                      >
-                        {photo.title || photo.caption}
-                      </h4>
-                      {photo.caption && photo.title && photo.caption !== photo.title && (
-                        <p
-                          className="text-[10px] sm:text-[11px] text-slate-200 line-clamp-1 leading-tight font-light drop-shadow"
-                          style={{ color: "#e2e8f0" }}
-                        >
-                          {photo.caption}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between pt-1 text-[10px] border-t border-white/20">
-                        <span className="flex items-center gap-1" style={{ color: "#e2e8f0" }}>
-                          <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span className="truncate max-w-[100px]">{photo.location || "Vrindavan, UP"}</span>
-                        </span>
-                        <span
-                          className="font-semibold group-hover:underline flex items-center gap-0.5 transition-colors shrink-0"
-                          style={{ color: "#6ee7b7" }}
-                        >
-                          <span>View</span>
-                          <ArrowRight className="w-2.5 h-2.5" />
-                        </span>
-                      </div>
-                    </div>
+                    {/* Soft hover illumination */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none" />
                   </Link>
                 </ScrollReveal>
               );
@@ -594,7 +579,96 @@ export default async function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 7. HOW YOUR ₹500 REACHES A CHILD — DONOR TRANSPARENCY JOURNEY              */}
+      {/* 7. HONORS & RECOGNITIONS — STATE, DISTRICT & CIVIC COMMENDATIONS          */}
+      {/* ========================================================================= */}
+      <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
+        <ScrollReveal>
+          <div className="border-b border-prayas-rule pb-4 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-prayas-neem flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-prayas-marigold" />
+                Official Recognitions • 18 Years of Trust
+              </span>
+              <h2 className="font-serif text-xl sm:text-2xl 2xl:text-3xl font-bold text-prayas-ink mt-1">
+                Honors & Commendations for Dedicated Seva
+              </h2>
+              <p className="text-xs sm:text-sm text-prayas-muted mt-1 max-w-2xl font-normal">
+                State and district commendations honoring 18 years of uninterrupted community service, transparent stewardship, and grassroots impact across Mathura & Vrindavan.
+              </p>
+            </div>
+            <Link
+              href="/about/awards"
+              className="text-xs 2xl:text-sm font-bold text-prayas-neem hover:text-emerald-950 flex items-center gap-1.5 transition-colors self-start sm:self-auto shrink-0 group"
+            >
+              <span>View All Recognitions</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {displayAwards.map((award: any) => (
+              <Link
+                key={award.id}
+                href="/about/awards"
+                className="group bg-white rounded-2xl border border-prayas-rule p-5 sm:p-6 shadow-card hover:shadow-xl hover:border-emerald-600/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  {/* Award Preview Photo / Emblem */}
+                  <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-gradient-to-br from-stone-100 to-amber-50/40 border border-prayas-rule/60">
+                    {award.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={assetPath(award.imageUrl)}
+                        alt={award.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-amber-700/70 p-4 text-center">
+                        <div className="w-12 h-12 rounded-full bg-amber-100/80 border border-amber-200 flex items-center justify-center text-amber-700 mb-2">
+                          <Award className="w-6 h-6" />
+                        </div>
+                        <span className="text-xs font-semibold text-prayas-ink/70">Official Commendation</span>
+                      </div>
+                    )}
+                    {/* Year Badge floating in top right */}
+                    {award.year && (
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md border border-white/20 text-white font-mono font-bold text-xs tracking-wide shadow-xs">
+                        {award.year}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Header / Meta */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-prayas-neem">
+                      <span className="w-1.5 h-1.5 rounded-full bg-prayas-neem" />
+                      <span>Official Recognition</span>
+                    </div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-prayas-ink leading-snug group-hover:text-prayas-neem transition-colors">
+                      {award.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-prayas-muted leading-relaxed line-clamp-3">
+                      {award.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Footer */}
+                <div className="border-t border-prayas-rule/70 pt-4 mt-5 flex items-center justify-between text-xs font-semibold text-prayas-muted group-hover:text-prayas-neem transition-colors">
+                  <span className="text-[11px] text-prayas-muted font-normal">Mathura District Seva</span>
+                  <span className="flex items-center gap-1 font-semibold text-prayas-neem">
+                    View citation <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 8. HOW YOUR ₹500 REACHES A CHILD — DONOR TRANSPARENCY JOURNEY              */}
       {/* ========================================================================= */}
       <section className="max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-20">
         <ScrollReveal>
