@@ -11,7 +11,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
+        "EXPO_PUBLIC_API_URL": "https://prayaspariwaar.org/api"
       }
     },
     "development:simulator": {
@@ -21,7 +21,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
+        "EXPO_PUBLIC_API_URL": "https://prayaspariwaar.org/api"
       }
     },
     "preview": {
@@ -30,7 +30,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
+        "EXPO_PUBLIC_API_URL": "https://prayaspariwaar.org/api"
       }
     },
     "preview:simulator": {
@@ -39,7 +39,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
+        "EXPO_PUBLIC_API_URL": "https://prayaspariwaar.org/api"
       }
     },
     "production": {
@@ -48,7 +48,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://gladstudio.net/prayas/api"
+        "EXPO_PUBLIC_API_URL": "https://prayaspariwaar.org/api"
       }
     }
   },

@@ -1,4 +1,5 @@
-export const CANONICAL_BASE_URL = "https://prayaspariwaar.com";
+export const CANONICAL_BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://prayaspariwaar.org";
 export const ORGANIZATION_ID = `${CANONICAL_BASE_URL}/#organization`;
 export const WEBSITE_ID = `${CANONICAL_BASE_URL}/#website`;
 export const LOGO_ID = `${CANONICAL_BASE_URL}/#logo`;

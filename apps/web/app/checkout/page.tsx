@@ -56,7 +56,7 @@ function CheckoutContent() {
       currency: currency.toUpperCase(),
       name: "Prayas Samiti",
       description: `${cause} • Seva Contribution`,
-      image: "https://gladstudio.net/prayas/images/logo.png",
+      image: `${process.env.NEXT_PUBLIC_APP_URL || "https://prayaspariwaar.org"}/images/prayas-logo.png`,
       order_id: orderId,
       prefill: {
         name: donorName,

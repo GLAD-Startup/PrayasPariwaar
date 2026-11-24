@@ -312,7 +312,7 @@ function DonateForm() {
           currency: data.currency || "INR",
           name: "Prayas Pariwaar",
           description: `Nishkam Seva: ${cause}`,
-          image: "https://gladstudio.net/prayas/icon.png",
+          image: `${process.env.NEXT_PUBLIC_APP_URL || "https://prayaspariwaar.org"}/icon.png`,
           order_id: data.order_id,
           prefill: {
             name: donorName,
