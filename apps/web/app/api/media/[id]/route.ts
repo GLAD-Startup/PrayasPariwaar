@@ -2,6 +2,38 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { MediaType } from "@prisma/client";
+import { parseMediaImages, formatMediaImages } from "@/lib/media";
+
+// GET /api/media/[id] - Get single media coverage item
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const item = await prisma.mediaCoverage.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: "Media item not found" }, { status: 404 });
+    }
+
+    const parsedImages = parseMediaImages(item.imageUrl);
+    const enriched = {
+      ...item,
+      images: parsedImages,
+      primaryImage: parsedImages[0] || item.imageUrl || null,
+    };
+
+    return NextResponse.json({ success: true, data: enriched });
+  } catch (error: any) {
+    console.error("[Media GET Single Error]", error);
+    return NextResponse.json(
+      { error: "Failed to fetch media item", details: error.message },
+      { status: 500 }
+    );
+  }
+}
 
 // PATCH /api/media/[id] - Update media coverage item
 export async function PATCH(
@@ -15,7 +47,20 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { title, type, source, url, imageUrl, publishedDate, order } = body;
+    const { title, type, source, url, imageUrl, images, publishedDate, order } = body;
+
+    let finalImageUrl: string | null | undefined = undefined;
+    if (images !== undefined) {
+      finalImageUrl = Array.isArray(images) ? formatMediaImages(images) : null;
+    } else if (imageUrl !== undefined) {
+      if (Array.isArray(imageUrl)) {
+        finalImageUrl = formatMediaImages(imageUrl);
+      } else if (typeof imageUrl === "string") {
+        finalImageUrl = imageUrl.trim() || null;
+      } else {
+        finalImageUrl = null;
+      }
+    }
 
     const item = await prisma.mediaCoverage.update({
       where: { id: params.id },
@@ -24,13 +69,20 @@ export async function PATCH(
         ...(type && { type: type === "ELECTRONIC" ? MediaType.ELECTRONIC : MediaType.PRINT }),
         ...(source !== undefined && { source: source ? source.trim() : null }),
         ...(url !== undefined && { url: url ? url.trim() : null }),
-        ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
+        ...(finalImageUrl !== undefined && { imageUrl: finalImageUrl }),
         ...(publishedDate !== undefined && { publishedDate: publishedDate ? new Date(publishedDate) : null }),
         ...(order !== undefined && { order: Number(order) }),
       },
     });
 
-    return NextResponse.json({ success: true, data: item });
+    const parsedImages = parseMediaImages(item.imageUrl);
+    const enriched = {
+      ...item,
+      images: parsedImages,
+      primaryImage: parsedImages[0] || item.imageUrl || null,
+    };
+
+    return NextResponse.json({ success: true, data: enriched });
   } catch (error: any) {
     console.error("[Media PATCH Error]", error);
     return NextResponse.json(

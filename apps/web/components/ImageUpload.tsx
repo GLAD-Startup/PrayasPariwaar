@@ -18,7 +18,13 @@ import {
   Play,
 } from "lucide-react";
 import { apiFetch, assetPath } from "@/lib/api";
-import { isVideoUrl } from "@/lib/media";
+import {
+  isVideoUrl,
+  isVideoLink,
+  extractYouTubeId,
+  getYouTubeThumbnail,
+  getVideoEmbedUrl,
+} from "@/lib/media";
 import TimelineImagePlaceholder from "@/components/TimelineImagePlaceholder";
 import PhotoAdjustmentModal from "@/components/PhotoAdjustmentModal";
 
@@ -131,6 +137,7 @@ export default function ImageUpload({
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Normalize value to array for multi or string for single
@@ -394,7 +401,29 @@ export default function ImageUpload({
                 : "aspect-[16/9] max-h-60"
             }`}
           >
-            {isVideoUrl(imageList[0]) ? (
+            {extractYouTubeId(imageList[0]) ? (
+              <div className="relative w-full h-full bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getYouTubeThumbnail(extractYouTubeId(imageList[0])!, "maxres")}
+                  alt="YouTube Video Thumbnail"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVideoModalUrl(imageList[0])}
+                  className="absolute inset-0 flex items-center justify-center bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
+                  title="Click to play preview"
+                >
+                  <div className="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 fill-white translate-x-0.5" />
+                  </div>
+                </button>
+                <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-red-600/90 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-xs flex items-center gap-1 shadow-sm">
+                  <Play className="w-3 h-3 fill-white" /> YouTube Broadcast
+                </span>
+              </div>
+            ) : isVideoUrl(imageList[0]) ? (
               <video
                 src={assetPath(imageList[0])}
                 controls
@@ -571,7 +600,29 @@ export default function ImageUpload({
                 key={idx}
                 className="relative rounded-xl overflow-hidden border border-prayas-rule bg-slate-900 aspect-square group shadow-sm"
               >
-                {isVideoUrl(url) ? (
+                {extractYouTubeId(url) ? (
+                  <div className="relative w-full h-full bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getYouTubeThumbnail(extractYouTubeId(url)!, "hq")}
+                      alt={`Video thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setVideoModalUrl(url)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors cursor-pointer"
+                      title="Play video preview"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow hover:scale-110 transition-transform">
+                        <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
+                      </div>
+                    </button>
+                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-red-600/95 text-white text-[9px] font-bold flex items-center gap-0.5 pointer-events-none">
+                      <Film className="w-2.5 h-2.5" /> YouTube
+                    </span>
+                  </div>
+                ) : isVideoUrl(url) ? (
                   <div className="relative w-full h-full bg-black">
                     <video
                       src={assetPath(url)}
@@ -660,6 +711,46 @@ export default function ImageUpload({
           aspectRatio={aspectRatio === "portrait" ? "portrait" : "square"}
           title={label ? `Adjust ${label} Framing` : "Adjust Photo Framing"}
         />
+      )}
+
+      {/* Interactive Video Preview Modal */}
+      {videoModalUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setVideoModalUrl(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20 aspect-video"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setVideoModalUrl(null)}
+              className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Close Preview"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {extractYouTubeId(videoModalUrl) ? (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(videoModalUrl)}?autoplay=1&rel=0`}
+                title="Video Preview"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                src={assetPath(videoModalUrl)}
+                controls
+                autoPlay
+                className="w-full h-full object-contain"
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
