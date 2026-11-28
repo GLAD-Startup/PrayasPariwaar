@@ -19,17 +19,17 @@ export function getApiBaseUrl(): string {
     if (hostUri) {
       const hostIp = hostUri.split(":")[0];
       if (hostIp && hostIp !== "localhost" && hostIp !== "127.0.0.1") {
-        return `http://${hostIp}:3005/prayas/api`;
+        return `http://${hostIp}:3005/api`;
       }
     }
 
     // 2. Android emulator loopback alias
     if (Platform.OS === "android") {
-      return "http://10.0.2.2:3005/prayas/api";
+      return "http://10.0.2.2:3005/api";
     }
   }
 
-  return envUrl || "http://localhost:3005/prayas/api";
+  return envUrl || "https://prayaspariwaar.org/api";
 }
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -204,8 +204,8 @@ export function resolveImageUrl(url: any, fallback?: any): any {
     return { uri: rawUrl };
   }
 
-  const webBase = getWebBaseUrl(); // e.g. "https://gladstudio.net/prayas" or "http://192.168.1.41:3005/prayas"
-  const origin = getWebOrigin();   // e.g. "https://gladstudio.net" or "http://192.168.1.41:3005"
+  const webBase = getWebBaseUrl(); // e.g. "https://prayaspariwaar.org" or local dev host
+  const origin = getWebOrigin();   // e.g. "https://prayaspariwaar.org"
 
   // Check if it's an absolute URL
   if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
@@ -221,7 +221,7 @@ export function resolveImageUrl(url: any, fallback?: any): any {
         let cleanPath = parsed.pathname;
         if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
         if (cleanPath.startsWith("/prayas/")) {
-          return { uri: `${origin}${cleanPath}${parsed.search}` };
+          cleanPath = cleanPath.replace(/^\/prayas/, "");
         }
         return { uri: `${webBase}${cleanPath}${parsed.search}` };
       }
@@ -237,9 +237,9 @@ export function resolveImageUrl(url: any, fallback?: any): any {
   let pathStr = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
 
   // If already prefixed with /prayas/ (e.g. /prayas/uploads/... or /prayas/api/uploads/...)
-  // Prepend origin ONLY to avoid duplicated /prayas/prayas/
+  // Strip legacy /prayas prefix so it resolves cleanly on root domain
   if (pathStr.startsWith("/prayas/")) {
-    return { uri: `${origin}${pathStr}` };
+    pathStr = pathStr.replace(/^\/prayas/, "");
   }
 
   // Standard relative uploads path (/uploads/... or /api/uploads/...)

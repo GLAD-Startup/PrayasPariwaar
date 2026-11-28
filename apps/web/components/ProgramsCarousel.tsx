@@ -106,7 +106,7 @@ const defaultFallbackPrograms: ProgramItem[] = [
     raisedAmount: 120000,
     location: "Vrindavan & Mathura Hospitals",
     tagline: "24/7 Zero-delay emergency blood coordination helpline",
-    impactMetric: "8,200+ Blood Units Coordinated",
+    impactMetric: "6,304+ Blood Units Coordinated",
     album: { id: "alb-blood", title: "Blood Seva" },
   },
 ];

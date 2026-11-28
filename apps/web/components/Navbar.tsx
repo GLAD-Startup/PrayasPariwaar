@@ -236,7 +236,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-slate-900 transition-colors"
               >
                 <Trees className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Vrindavan Harit Kranti: 5,400+ Native Trees Planted</span>
+                <span>Vrindavan Harit Kranti: 3,400+ Native Trees Planted</span>
               </Link>
 
               <span className="text-slate-300 select-none">•</span>
@@ -285,7 +285,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-slate-900 transition-colors"
               >
                 <Trees className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Vrindavan Harit Kranti: 5,400+ Native Trees Planted</span>
+                <span>Vrindavan Harit Kranti: 3,400+ Native Trees Planted</span>
               </Link>
 
               <span className="text-slate-300 select-none">•</span>

@@ -252,16 +252,16 @@ export const MILESTONES: TimelineMilestone[] = [
     subtitle: "Blending 15 years of sacred grassroots tradition with transparent modern technology",
     location: "Barsana, Vrindavan & All Mathura District",
     imageUrl: "/images/timeline/timeline-2026-smart-pathshala.jpg",
-    impactBadge: "320+ Daily Students • 8,200+ Blood Units • 5,400+ Trees",
+    impactBadge: "385+ Daily Students • 6,304+ Blood Units • 3,400+ Trees",
     summary:
       "Equipping rural learning centers with solar power and interactive STEM tablets, synchronized with an automated real-time web portal and mobile app for instant emergency blood matching.",
     story:
       "Fifteen years after three college students unfolded a jute mat under a banyan tree, Prayas Pariwaar reaches its landmark era in 2026. Rural learning centers are now powered by clean solar energy with interactive tablets where village children solve math puzzles, code basic logic, and read digital encyclopedias. Simultaneously, our real-time platform matches emergency blood donors within minutes across Uttar Pradesh.",
     quote: "From slates under the sacred banyan in 2011 to solar smart classrooms in 2026: Nishkam Seva never stops.",
     keyStats: [
-      { label: "Daily Tutored Children", value: "320+ Students" },
-      { label: "Emergency Blood Units", value: "8,200+ Units" },
-      { label: "Native Trees Thriving", value: "5,400+ Trees" },
+      { label: "Daily Tutored Children", value: "385+ Students" },
+      { label: "Emergency Blood Units", value: "6,304+ Units" },
+      { label: "Native Trees Thriving", value: "3,400+ Trees" },
       { label: "Volunteer Sevadars", value: "180+ Active" },
     ],
     highlightTag: "Present Frontier",

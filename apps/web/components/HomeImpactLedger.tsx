@@ -19,7 +19,7 @@ const stats: StatItem[] = [
   {
     id: "tutoring",
     category: "STUDENTS",
-    numericValue: 320,
+    numericValue: 385,
     suffix: "+",
     title: "Children Tutored Daily",
     subtitle: "6 Evening learning centers in Vrindavan",
@@ -29,7 +29,7 @@ const stats: StatItem[] = [
   {
     id: "trees",
     category: "PLANTATION",
-    numericValue: 5400,
+    numericValue: 3400,
     suffix: "+",
     title: "Native Trees Planted",
     subtitle: "Neem & Kadamba with protective guards",
@@ -39,7 +39,7 @@ const stats: StatItem[] = [
   {
     id: "blood",
     category: "EMERGENCY BLOOD",
-    numericValue: 8200,
+    numericValue: 6304,
     suffix: "+",
     title: "Blood Units Coordinated",
     subtitle: "24/7 volunteer emergency donor network",
@@ -73,7 +73,7 @@ export default function HomeImpactLedger() {
     if (!el) return;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setCounts({ tutoring: 320, trees: 5400, blood: 8200, legacy: 18 });
+      setCounts({ tutoring: 385, trees: 3400, blood: 6304, legacy: 18 });
       setHasAnimated(true);
       return;
     }
@@ -91,16 +91,16 @@ export default function HomeImpactLedger() {
             const ease = 1 - Math.pow(1 - progress, 3); // cubic ease-out
 
             setCounts({
-              tutoring: Math.floor(ease * 320),
-              trees: Math.floor(ease * 5400),
-              blood: Math.floor(ease * 8200),
+              tutoring: Math.floor(ease * 385),
+              trees: Math.floor(ease * 3400),
+              blood: Math.floor(ease * 6304),
               legacy: Math.floor(ease * 18),
             });
 
             if (progress < 1) {
               requestAnimationFrame(animate);
             } else {
-              setCounts({ tutoring: 320, trees: 5400, blood: 8200, legacy: 18 });
+              setCounts({ tutoring: 385, trees: 3400, blood: 6304, legacy: 18 });
             }
           };
 
