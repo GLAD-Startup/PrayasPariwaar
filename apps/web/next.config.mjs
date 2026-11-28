@@ -188,6 +188,29 @@ const nextConfig = {
     }
     return [];
   },
+  async rewrites() {
+    if (!basePath) {
+      return [
+        {
+          source: "/prayas/uploads/:path*",
+          destination: "/uploads/:path*",
+        },
+        {
+          source: "/prayas/api/uploads/:path*",
+          destination: "/api/uploads/:path*",
+        },
+        {
+          source: "/prayas/images/:path*",
+          destination: "/images/:path*",
+        },
+        {
+          source: "/prayas/api/:path*",
+          destination: "/api/:path*",
+        },
+      ];
+    }
+    return [];
+  },
 };
 
 export default nextConfig;

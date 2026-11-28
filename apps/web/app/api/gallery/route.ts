@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth";
 import fs from "fs";
 import path from "path";
 import { getUploadsDir } from "@/lib/uploads";
+import { assetPath } from "@/lib/api";
 
 function getStorageFilePath(): string {
   return path.join(getUploadsDir(), "gallery-data.json");
@@ -69,7 +70,12 @@ export async function GET(req: Request) {
 
         const formattedAlbums = (albums || []).map((alb: any) => ({
           ...alb,
+          coverImage: assetPath(alb.coverImage),
           photoCount: alb.photos?.length || 0,
+          photos: (alb.photos || []).map((p: any) => ({
+            ...p,
+            url: assetPath(p.url),
+          })),
         }));
 
         const recentPhotos = await (prisma as any).galleryPhoto.findMany({
@@ -84,11 +90,17 @@ export async function GET(req: Request) {
           orderBy: { createdAt: "desc" },
         });
 
+        const formattedPhotos = (recentPhotos || []).map((p: any) => ({
+          ...p,
+          url: assetPath(p.url),
+          album: p.album ? { ...p.album, coverImage: assetPath(p.album.coverImage) } : p.album,
+        }));
+
         return NextResponse.json({
           success: true,
           data: {
             albums: formattedAlbums,
-            recentPhotos: recentPhotos || [],
+            recentPhotos: formattedPhotos,
           },
         });
       } catch (prismaErr) {
@@ -105,13 +117,18 @@ export async function GET(req: Request) {
         const count = store.photos.filter((p) => p.albumId === a.id).length;
         return {
           ...a,
+          coverImage: assetPath(a.coverImage),
           photoCount: count > 0 ? count : (a.photoCount || 0),
         };
       });
 
     const filteredPhotos = store.photos
       .filter((p) => !albumId || p.albumId === albumId)
-      .filter((p) => !category || category === "All" || p.category === category);
+      .filter((p) => !category || category === "All" || p.category === category)
+      .map((p) => ({
+        ...p,
+        url: assetPath(p.url),
+      }));
 
     return NextResponse.json({
       success: true,

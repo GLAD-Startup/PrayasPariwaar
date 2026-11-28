@@ -50,9 +50,15 @@ export function assetPath(path?: string | null): string {
     return path;
   }
 
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  let cleanPath = path.startsWith("/") ? path : `/${path}`;
   const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim() || "";
   if (!rawBasePath) {
+    // When no basePath is configured (e.g. on root domain),
+    // sanitize legacy /prayas/ prefix so all DB/JSON stored paths resolve cleanly
+    if (cleanPath.startsWith("/prayas/")) {
+      cleanPath = cleanPath.slice(7);
+      if (!cleanPath.startsWith("/")) cleanPath = `/${cleanPath}`;
+    }
     return cleanPath;
   }
 
