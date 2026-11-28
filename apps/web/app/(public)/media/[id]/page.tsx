@@ -200,7 +200,10 @@ export default async function MediaArticlePage({ params }: MediaArticlePageProps
 
             {/* Published Date */}
             {item.publishedDate && (
-              <span className="flex items-center gap-1 text-prayas-muted font-medium ml-auto">
+              <time
+                dateTime={item.publishedDate.toISOString()}
+                className="flex items-center gap-1 text-prayas-muted font-medium ml-auto"
+              >
                 <Calendar className="w-3.5 h-3.5 text-prayas-neem" />
                 <span>
                   {new Date(item.publishedDate).toLocaleDateString("en-IN", {
@@ -209,12 +212,12 @@ export default async function MediaArticlePage({ params }: MediaArticlePageProps
                     year: "numeric",
                   })}
                 </span>
-              </span>
+              </time>
             )}
           </div>
 
-          {/* Big Editorial Headline */}
-          <h1 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold text-prayas-ink leading-[1.2]">
+          {/* Journalistic Headline - Balanced Editorial Scale */}
+          <h1 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-prayas-ink leading-snug tracking-tight">
             {item.title}
           </h1>
 
